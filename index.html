@@ -12,1385 +12,604 @@
   <meta name="theme-color" content="#0f0e0b" />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
   <style>
-    :root {
-      --bg: #0f0e0b;
-      --surface: #1a1915;
-      --surface2: #222118;
-      --border: #2e2c24;
-      --accent: #c8a96e;
-      --accent2: #7db88a;
-      --text: #f0ebe0;
-      --text2: #9e9880;
-      --danger: #c96e6e;
-      --radius: 12px;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: 'DM Sans', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* ── AUTH SCREEN ── */
-    #auth-screen {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      padding: 24px;
-      background: radial-gradient(ellipse at 60% 0%, #2a2210 0%, var(--bg) 60%);
-    }
-
-    .auth-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 48px 40px;
-      width: 100%;
-      max-width: 420px;
-      box-shadow: 0 32px 80px rgba(0,0,0,0.5);
-    }
-
-    .auth-logo {
-      text-align: center;
-      margin-bottom: 36px;
-    }
-
-    .auth-logo img {
-      max-height: 72px;
-      max-width: 200px;
-      object-fit: contain;
-    }
-
-    .auth-logo .default-logo {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .auth-logo .logo-icon {
-      font-size: 48px;
-      line-height: 1;
-    }
-
-    .auth-logo h1 {
-      font-family: 'Playfair Display', serif;
-      font-size: 26px;
-      color: var(--accent);
-      letter-spacing: 0.5px;
-    }
-
-    .auth-logo p {
-      font-size: 12px;
-      color: var(--text2);
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      margin-top: 2px;
-    }
-
-    .auth-tabs {
-      display: flex;
-      gap: 4px;
-      background: var(--surface2);
-      border-radius: 10px;
-      padding: 4px;
-      margin-bottom: 28px;
-    }
-
-    .auth-tab {
-      flex: 1;
-      padding: 10px;
-      border: none;
-      border-radius: 8px;
-      background: transparent;
-      color: var(--text2);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .auth-tab.active {
-      background: var(--accent);
-      color: #0f0e0b;
-    }
-
-    .form-group {
-      margin-bottom: 16px;
-    }
-
-    .form-group label {
-      display: block;
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--text2);
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      margin-bottom: 8px;
-    }
-
-    .form-group input {
-      width: 100%;
-      padding: 12px 16px;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      color: var(--text);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 15px;
-      transition: border-color 0.2s;
-      outline: none;
-    }
-
-    .form-group input:focus {
-      border-color: var(--accent);
-    }
-
-    .btn-primary {
-      width: 100%;
-      padding: 14px;
-      background: var(--accent);
-      color: #0f0e0b;
-      border: none;
-      border-radius: var(--radius);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-      margin-top: 8px;
-      transition: opacity 0.2s, transform 0.1s;
-    }
-
-    .btn-primary:hover { opacity: 0.9; }
-    .btn-primary:active { transform: scale(0.98); }
-    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
-
-    .error-msg {
-      background: rgba(201,110,110,0.1);
-      border: 1px solid rgba(201,110,110,0.3);
-      color: var(--danger);
-      padding: 12px 16px;
-      border-radius: var(--radius);
-      font-size: 13px;
-      margin-bottom: 16px;
-      display: none;
-    }
-
-    /* ── MAIN APP ── */
-    #app-screen { display: none; flex-direction: column; min-height: 100vh; }
-
-    /* Top bar */
-    .topbar {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 0 24px;
-      height: 64px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-
-    .topbar-logo {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .topbar-logo img {
-      max-height: 36px;
-      max-width: 120px;
-      object-fit: contain;
-    }
-
-    .topbar-logo .default-topbar-logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .topbar-logo .logo-icon-sm { font-size: 28px; }
-
-    .topbar-logo h2 {
-      font-family: 'Playfair Display', serif;
-      font-size: 18px;
-      color: var(--accent);
-    }
-
-    .topbar-right {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-
-    .user-badge {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 13px;
-      color: var(--text2);
-    }
-
-    .user-avatar {
-      width: 32px;
-      height: 32px;
-      background: var(--accent);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 13px;
-      font-weight: 600;
-      color: #0f0e0b;
-    }
-
-    .btn-icon {
-      background: none;
-      border: 1px solid var(--border);
-      color: var(--text2);
-      border-radius: 8px;
-      padding: 7px 12px;
-      font-size: 13px;
-      cursor: pointer;
-      transition: all 0.2s;
-      font-family: 'DM Sans', sans-serif;
-    }
-
-    .btn-icon:hover {
-      border-color: var(--accent);
-      color: var(--accent);
-    }
-
-    /* Nav */
-    .nav-bottom {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: var(--surface);
-      border-top: 1px solid var(--border);
-      display: flex;
-      z-index: 100;
-    }
-
-    .nav-item {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 10px 0;
-      gap: 4px;
-      font-size: 10px;
-      color: var(--text2);
-      cursor: pointer;
-      transition: color 0.2s;
-      border: none;
-      background: none;
-      font-family: 'DM Sans', sans-serif;
-    }
-
-    .nav-item span:first-child { font-size: 20px; }
-    .nav-item.active { color: var(--accent); }
-
-    /* Content */
-    .content {
-      flex: 1;
-      padding: 24px;
-      padding-bottom: 80px;
-      max-width: 800px;
-      margin: 0 auto;
-      width: 100%;
-    }
-
-    .page { display: none; }
-    .page.active { display: block; }
-
-    .page-title {
-      font-family: 'Playfair Display', serif;
-      font-size: 28px;
-      color: var(--text);
-      margin-bottom: 8px;
-    }
-
-    .page-subtitle {
-      font-size: 14px;
-      color: var(--text2);
-      margin-bottom: 28px;
-    }
-
-    /* Dashboard cards */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-      margin-bottom: 28px;
-    }
-
-    @media (min-width: 600px) {
-      .stats-grid { grid-template-columns: repeat(4, 1fr); }
-    }
-
-    .stat-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 20px 16px;
-      text-align: center;
-    }
-
-    .stat-card .stat-icon { font-size: 28px; margin-bottom: 8px; }
-    .stat-card .stat-value {
-      font-family: 'Playfair Display', serif;
-      font-size: 28px;
-      color: var(--accent);
-      line-height: 1;
-    }
-    .stat-card .stat-label {
-      font-size: 11px;
-      color: var(--text2);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-top: 4px;
-    }
-
-    /* Alerts */
-    .alerts-section { margin-bottom: 28px; }
-    .section-title {
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--text2);
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-      margin-bottom: 12px;
-    }
-
-    .alert-item {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-left: 3px solid var(--accent);
-      border-radius: var(--radius);
-      padding: 14px 16px;
-      margin-bottom: 8px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .alert-item.urgent { border-left-color: var(--danger); }
-    .alert-item.ready { border-left-color: var(--accent2); }
-    .alert-icon { font-size: 20px; }
-    .alert-text { flex: 1; }
-    .alert-text strong { font-size: 14px; font-weight: 600; }
-    .alert-text p { font-size: 12px; color: var(--text2); margin-top: 2px; }
-
-    /* Settings page */
-    .settings-section {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 24px;
-      margin-bottom: 16px;
-    }
-
-    .settings-section h3 {
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--text2);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 16px;
-    }
-
-    .logo-upload-area {
-      border: 2px dashed var(--border);
-      border-radius: var(--radius);
-      padding: 32px;
-      text-align: center;
-      cursor: pointer;
-      transition: border-color 0.2s;
-      position: relative;
-    }
-
-    .logo-upload-area:hover { border-color: var(--accent); }
-    .logo-upload-area input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
-    .logo-upload-area .upload-icon { font-size: 36px; margin-bottom: 8px; }
-    .logo-upload-area p { font-size: 13px; color: var(--text2); }
-    .logo-upload-area .logo-preview { max-height: 80px; max-width: 200px; object-fit: contain; }
-
-    .logo-actions { display: flex; gap: 8px; margin-top: 12px; justify-content: center; }
-
-    .btn-secondary {
-      padding: 8px 16px;
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--text);
-      border-radius: 8px;
-      font-size: 13px;
-      cursor: pointer;
-      font-family: 'DM Sans', sans-serif;
-      transition: all 0.2s;
-    }
-
-    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
-
-    .btn-danger {
-      padding: 8px 16px;
-      background: transparent;
-      border: 1px solid rgba(201,110,110,0.4);
-      color: var(--danger);
-      border-radius: 8px;
-      font-size: 13px;
-      cursor: pointer;
-      font-family: 'DM Sans', sans-serif;
-      transition: all 0.2s;
-    }
-
-    .info-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px 0;
-      border-bottom: 1px solid var(--border);
-      font-size: 14px;
-    }
-
-    .info-row:last-child { border-bottom: none; }
-    .info-row span:first-child { color: var(--text2); }
-    .info-row span:last-child { font-weight: 500; }
-
-    /* Toast */
-    .toast {
-      position: fixed;
-      bottom: 90px;
-      left: 50%;
-      transform: translateX(-50%) translateY(20px);
-      background: var(--surface);
-      border: 1px solid var(--accent);
-      color: var(--text);
-      padding: 12px 24px;
-      border-radius: 100px;
-      font-size: 13px;
-      font-weight: 500;
-      opacity: 0;
-      transition: all 0.3s;
-      pointer-events: none;
-      white-space: nowrap;
-      z-index: 999;
-    }
-
-    .toast.show {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
-
-    /* Loading */
-    .loading {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      color: var(--text2);
-      font-size: 14px;
-      padding: 48px;
-    }
-
-    .spinner {
-      width: 20px;
-      height: 20px;
-      border: 2px solid var(--border);
-      border-top-color: var(--accent);
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
-    }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .empty-state {
-      text-align: center;
-      padding: 48px 24px;
-      color: var(--text2);
-    }
-
-    .empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; }
-    .empty-state p { font-size: 14px; }
-
-    /* ── INGREDIENTES ── */
-    .cat-tabs {
-      display: flex;
-      gap: 8px;
-      overflow-x: auto;
-      padding-bottom: 4px;
-      margin-bottom: 20px;
-      scrollbar-width: none;
-    }
-    .cat-tabs::-webkit-scrollbar { display: none; }
-
-    .cat-tab {
-      flex-shrink: 0;
-      padding: 7px 16px;
-      border-radius: 100px;
-      border: 1px solid var(--border);
-      background: transparent;
-      color: var(--text2);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 13px;
-      cursor: pointer;
-      transition: all 0.2s;
-      white-space: nowrap;
-    }
-    .cat-tab.active {
-      background: var(--accent);
-      color: #0f0e0b;
-      border-color: var(--accent);
-      font-weight: 600;
-    }
-
-    .ing-list { display: flex; flex-direction: column; gap: 8px; }
-
-    .ing-item {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 14px 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      animation: fadeIn 0.2s ease;
-    }
-
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
-
-    .ing-info { flex: 1; }
-    .ing-name { font-size: 15px; font-weight: 500; }
-    .ing-cat {
-      font-size: 11px;
-      color: var(--text2);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-top: 2px;
-    }
-
-    .ing-actions { display: flex; gap: 8px; }
-
-    .btn-edit {
-      background: none;
-      border: 1px solid var(--border);
-      color: var(--text2);
-      border-radius: 8px;
-      padding: 6px 10px;
-      font-size: 13px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .btn-edit:hover { border-color: var(--accent); color: var(--accent); }
-
-    .btn-del {
-      background: none;
-      border: 1px solid transparent;
-      color: var(--text2);
-      border-radius: 8px;
-      padding: 6px 10px;
-      font-size: 13px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .btn-del:hover { color: var(--danger); border-color: rgba(201,110,110,0.3); }
-
-    /* FAB */
-    .fab {
-      position: fixed;
-      bottom: 84px;
-      right: 20px;
-      width: 52px;
-      height: 52px;
-      background: var(--accent);
-      color: #0f0e0b;
-      border: none;
-      border-radius: 50%;
-      font-size: 24px;
-      cursor: pointer;
-      box-shadow: 0 4px 20px rgba(200,169,110,0.4);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 99;
-      transition: transform 0.2s;
-    }
-    .fab:hover { transform: scale(1.08); }
-    .fab.visible { display: flex; }
-
-    /* Modal */
-    .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.7);
-      display: flex;
-      align-items: flex-end;
-      justify-content: center;
-      z-index: 200;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.25s;
-    }
-    .modal-overlay.open { opacity: 1; pointer-events: all; }
-
-    .modal {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 20px 20px 0 0;
-      padding: 28px 24px 40px;
-      width: 100%;
-      max-width: 500px;
-      transform: translateY(40px);
-      transition: transform 0.25s;
-    }
-    .modal-overlay.open .modal { transform: translateY(0); }
-
-    .modal-title {
-      font-family: 'Playfair Display', serif;
-      font-size: 20px;
-      margin-bottom: 20px;
-    }
-
-    .modal-actions {
-      display: flex;
-      gap: 10px;
-      margin-top: 20px;
-    }
-
-    .cat-select {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 8px;
-      margin-bottom: 4px;
-    }
-
-    .cat-option {
-      padding: 10px;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      background: transparent;
-      color: var(--text2);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 13px;
-      cursor: pointer;
-      text-align: center;
-      transition: all 0.2s;
-    }
-    .cat-option.selected {
-      border-color: var(--accent);
-      color: var(--accent);
-      background: rgba(200,169,110,0.08);
-    }
-
-    /* Notification permission banner */
-    .notif-banner {
-      background: rgba(200, 169, 110, 0.1);
-      border: 1px solid rgba(200, 169, 110, 0.3);
-      border-radius: var(--radius);
-      padding: 14px 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 20px;
-      font-size: 13px;
-    }
-
-    .notif-banner p { color: var(--text2); flex: 1; }
-    .notif-banner strong { color: var(--accent); }
+    :root { --bg:#0f0e0b;--surface:#1a1915;--surface2:#222118;--border:#2e2c24;--accent:#c8a96e;--accent2:#7db88a;--text:#f0ebe0;--text2:#9e9880;--danger:#c96e6e;--radius:12px; }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;}
+    #auth-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px;background:radial-gradient(ellipse at 60% 0%,#2a2210 0%,var(--bg) 60%);}
+    .auth-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:48px 40px;width:100%;max-width:420px;box-shadow:0 32px 80px rgba(0,0,0,.5);}
+    .auth-logo{text-align:center;margin-bottom:36px;}
+    .auth-logo .default-logo{display:flex;flex-direction:column;align-items:center;gap:8px;}
+    .auth-logo .logo-icon{font-size:48px;line-height:1;}
+    .auth-logo h1{font-family:'Playfair Display',serif;font-size:26px;color:var(--accent);}
+    .auth-logo p{font-size:12px;color:var(--text2);letter-spacing:2px;text-transform:uppercase;margin-top:2px;}
+    .auth-tabs{display:flex;gap:4px;background:var(--surface2);border-radius:10px;padding:4px;margin-bottom:28px;}
+    .auth-tab{flex:1;padding:10px;border:none;border-radius:8px;background:transparent;color:var(--text2);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all .2s;}
+    .auth-tab.active{background:var(--accent);color:#0f0e0b;}
+    .form-group{margin-bottom:16px;}
+    .form-group label{display:block;font-size:12px;font-weight:500;color:var(--text2);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;}
+    .form-group input,.form-group select{width:100%;padding:12px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;transition:border-color .2s;outline:none;}
+    .form-group input:focus,.form-group select:focus{border-color:var(--accent);}
+    .form-group select option{background:var(--surface2);}
+    .btn-primary{width:100%;padding:14px;background:var(--accent);color:#0f0e0b;border:none;border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;margin-top:8px;transition:opacity .2s,transform .1s;}
+    .btn-primary:hover{opacity:.9;}.btn-primary:active{transform:scale(.98);}.btn-primary:disabled{opacity:.5;cursor:not-allowed;}
+    .error-msg{background:rgba(201,110,110,.1);border:1px solid rgba(201,110,110,.3);color:var(--danger);padding:12px 16px;border-radius:var(--radius);font-size:13px;margin-bottom:16px;display:none;}
+    #app-screen{display:none;flex-direction:column;min-height:100vh;}
+    .topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+    .topbar-logo{display:flex;align-items:center;gap:12px;}
+    .topbar-logo .default-topbar-logo{display:flex;align-items:center;gap:10px;}
+    .topbar-logo .logo-icon-sm{font-size:28px;}
+    .topbar-logo h2{font-family:'Playfair Display',serif;font-size:18px;color:var(--accent);}
+    .topbar-right{display:flex;align-items:center;gap:16px;}
+    .user-avatar{width:32px;height:32px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#0f0e0b;}
+    .btn-icon{background:none;border:1px solid var(--border);color:var(--text2);border-radius:8px;padding:7px 12px;font-size:13px;cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;}
+    .btn-icon:hover{border-color:var(--accent);color:var(--accent);}
+    .nav-bottom{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);display:flex;z-index:100;}
+    .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 0;gap:4px;font-size:10px;color:var(--text2);cursor:pointer;transition:color .2s;border:none;background:none;font-family:'DM Sans',sans-serif;}
+    .nav-item span:first-child{font-size:20px;}.nav-item.active{color:var(--accent);}
+    .content{flex:1;padding:24px;padding-bottom:80px;max-width:800px;margin:0 auto;width:100%;}
+    .page{display:none;}.page.active{display:block;}
+    .page-title{font-family:'Playfair Display',serif;font-size:28px;color:var(--text);margin-bottom:8px;}
+    .page-subtitle{font-size:14px;color:var(--text2);margin-bottom:28px;}
+    .sub-tabs{display:flex;gap:4px;background:var(--surface2);border-radius:10px;padding:4px;margin-bottom:20px;}
+    .sub-tab{flex:1;padding:10px;border:none;border-radius:8px;background:transparent;color:var(--text2);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all .2s;}
+    .sub-tab.active{background:var(--accent);color:#0f0e0b;}
+    .cat-tabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:20px;scrollbar-width:none;}
+    .cat-tabs::-webkit-scrollbar{display:none;}
+    .cat-tab{flex-shrink:0;padding:7px 16px;border-radius:100px;border:1px solid var(--border);background:transparent;color:var(--text2);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;transition:all .2s;}
+    .cat-tab.active{background:var(--accent);color:#0f0e0b;border-color:var(--accent);font-weight:600;}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+    .ing-list,.recipe-list{display:flex;flex-direction:column;gap:8px;}
+    .ing-item,.recipe-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;animation:fadeIn .2s ease;}
+    .recipe-item{flex-direction:column;align-items:flex-start;}
+    .recipe-header{display:flex;align-items:center;justify-content:space-between;width:100%;}
+    .ing-info,.recipe-info{flex:1;}
+    .ing-name,.recipe-name{font-size:15px;font-weight:500;}
+    .ing-cat,.recipe-meta{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-top:2px;}
+    .recipe-ings-preview{font-size:12px;color:var(--text2);margin-top:8px;line-height:1.6;}
+    .ing-actions{display:flex;gap:8px;}
+    .btn-edit{background:none;border:1px solid var(--border);color:var(--text2);border-radius:8px;padding:6px 10px;font-size:13px;cursor:pointer;transition:all .2s;}
+    .btn-edit:hover{border-color:var(--accent);color:var(--accent);}
+    .btn-del{background:none;border:1px solid transparent;color:var(--text2);border-radius:8px;padding:6px 10px;font-size:13px;cursor:pointer;transition:all .2s;}
+    .btn-del:hover{color:var(--danger);border-color:rgba(201,110,110,.3);}
+    .stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:28px;}
+    @media(min-width:600px){.stats-grid{grid-template-columns:repeat(4,1fr);}}
+    .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px 16px;text-align:center;}
+    .stat-card .stat-icon{font-size:28px;margin-bottom:8px;}
+    .stat-card .stat-value{font-family:'Playfair Display',serif;font-size:28px;color:var(--accent);line-height:1;}
+    .stat-card .stat-label{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-top:4px;}
+    .section-title{font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px;}
+    .alert-item{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:var(--radius);padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px;}
+    .alert-item.urgent{border-left-color:var(--danger);}.alert-item.ready{border-left-color:var(--accent2);}
+    .alert-icon{font-size:20px;}.alert-text{flex:1;}
+    .alert-text strong{font-size:14px;font-weight:600;}.alert-text p{font-size:12px;color:var(--text2);margin-top:2px;}
+    .activity-item{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);}
+    .activity-item:last-child{border-bottom:none;}
+    .activity-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);margin-top:6px;flex-shrink:0;}
+    .activity-text{flex:1;font-size:13px;line-height:1.5;}
+    .activity-text strong{color:var(--accent);}
+    .activity-time{font-size:11px;color:var(--text2);margin-top:2px;}
+    .settings-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:16px;}
+    .settings-section h3{font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:16px;}
+    .logo-upload-area{border:2px dashed var(--border);border-radius:var(--radius);padding:32px;text-align:center;cursor:pointer;transition:border-color .2s;position:relative;}
+    .logo-upload-area:hover{border-color:var(--accent);}
+    .logo-upload-area input{position:absolute;inset:0;opacity:0;cursor:pointer;}
+    .logo-upload-area .upload-icon{font-size:36px;margin-bottom:8px;}
+    .logo-upload-area p{font-size:13px;color:var(--text2);}
+    .logo-upload-area .logo-preview{max-height:80px;max-width:200px;object-fit:contain;}
+    .logo-actions{display:flex;gap:8px;margin-top:12px;justify-content:center;}
+    .info-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);font-size:14px;}
+    .info-row:last-child{border-bottom:none;}
+    .info-row span:first-child{color:var(--text2);}.info-row span:last-child{font-weight:500;}
+    .btn-secondary{padding:8px 16px;background:transparent;border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;}
+    .btn-secondary:hover{border-color:var(--accent);color:var(--accent);}
+    .btn-danger{padding:8px 16px;background:transparent;border:1px solid rgba(201,110,110,.4);color:var(--danger);border-radius:8px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;}
+    .fab{position:fixed;bottom:84px;right:20px;width:52px;height:52px;background:var(--accent);color:#0f0e0b;border:none;border-radius:50%;font-size:24px;cursor:pointer;box-shadow:0 4px 20px rgba(200,169,110,.4);display:none;align-items:center;justify-content:center;z-index:99;transition:transform .2s;}
+    .fab:hover{transform:scale(1.08);}.fab.visible{display:flex;}
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:flex-end;justify-content:center;z-index:200;opacity:0;pointer-events:none;transition:opacity .25s;}
+    .modal-overlay.open{opacity:1;pointer-events:all;}
+    .modal{background:var(--surface);border:1px solid var(--border);border-radius:20px 20px 0 0;padding:28px 24px 40px;width:100%;max-width:500px;transform:translateY(40px);transition:transform .25s;max-height:90vh;overflow-y:auto;}
+    .modal-overlay.open .modal{transform:translateY(0);}
+    .modal-title{font-family:'Playfair Display',serif;font-size:20px;margin-bottom:20px;}
+    .modal-actions{display:flex;gap:10px;margin-top:20px;}
+    .cat-select{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:4px;}
+    .cat-option{padding:10px;border:1px solid var(--border);border-radius:var(--radius);background:transparent;color:var(--text2);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;text-align:center;transition:all .2s;}
+    .cat-option.selected{border-color:var(--accent);color:var(--accent);background:rgba(200,169,110,.08);}
+    .ing-row{display:flex;gap:8px;align-items:center;margin-bottom:8px;}
+    .add-ing-btn{display:flex;align-items:center;gap:8px;background:none;border:1px dashed var(--border);color:var(--text2);border-radius:var(--radius);padding:10px 16px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;width:100%;justify-content:center;margin-top:4px;transition:all .2s;}
+    .add-ing-btn:hover{border-color:var(--accent);color:var(--accent);}
+    .notif-banner{background:rgba(200,169,110,.1);border:1px solid rgba(200,169,110,.3);border-radius:var(--radius);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px;font-size:13px;}
+    .notif-banner p{color:var(--text2);flex:1;}.notif-banner strong{color:var(--accent);}
+    .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--surface);border:1px solid var(--accent);color:var(--text);padding:12px 24px;border-radius:100px;font-size:13px;font-weight:500;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;z-index:999;}
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+    .loading{display:flex;align-items:center;justify-content:center;gap:8px;color:var(--text2);font-size:14px;padding:48px;}
+    .spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .empty-state{text-align:center;padding:48px 24px;color:var(--text2);}
+    .empty-state .empty-icon{font-size:48px;margin-bottom:12px;}
+    .empty-state p{font-size:14px;}
   </style>
 </head>
 <body>
 
-<!-- AUTH SCREEN -->
 <div id="auth-screen">
   <div class="auth-card">
     <div class="auth-logo" id="auth-logo-area">
-      <div class="default-logo">
-        <span class="logo-icon">🍵</span>
-        <h1>Kombucha App</h1>
-        <p>Control de producción</p>
-      </div>
+      <div class="default-logo"><span class="logo-icon">🍵</span><h1>Kombuchan</h1><p>Control de producción</p></div>
     </div>
-
     <div class="auth-tabs">
       <button class="auth-tab active" onclick="switchTab('login')">Iniciar sesión</button>
       <button class="auth-tab" onclick="switchTab('register')">Registrarse</button>
     </div>
-
     <div id="auth-error" class="error-msg"></div>
-
-    <!-- Login form -->
     <div id="login-form">
-      <div class="form-group">
-        <label>Correo electrónico</label>
-        <input type="email" id="login-email" placeholder="tu@correo.com" />
-      </div>
-      <div class="form-group">
-        <label>Contraseña</label>
-        <input type="password" id="login-password" placeholder="••••••••" />
-      </div>
+      <div class="form-group"><label>Correo electrónico</label><input type="email" id="login-email" placeholder="tu@correo.com"/></div>
+      <div class="form-group"><label>Contraseña</label><input type="password" id="login-password" placeholder="••••••••"/></div>
       <button class="btn-primary" id="login-btn" onclick="handleLogin()">Entrar</button>
     </div>
-
-    <!-- Register form -->
     <div id="register-form" style="display:none">
-      <div class="form-group">
-        <label>Nombre</label>
-        <input type="text" id="reg-name" placeholder="Tu nombre" />
-      </div>
-      <div class="form-group">
-        <label>Correo electrónico</label>
-        <input type="email" id="reg-email" placeholder="tu@correo.com" />
-      </div>
-      <div class="form-group">
-        <label>Contraseña</label>
-        <input type="password" id="reg-password" placeholder="Mínimo 6 caracteres" />
-      </div>
+      <div class="form-group"><label>Nombre</label><input type="text" id="reg-name" placeholder="Tu nombre"/></div>
+      <div class="form-group"><label>Correo</label><input type="email" id="reg-email" placeholder="tu@correo.com"/></div>
+      <div class="form-group"><label>Contraseña</label><input type="password" id="reg-password" placeholder="Mínimo 6 caracteres"/></div>
       <button class="btn-primary" id="register-btn" onclick="handleRegister()">Crear cuenta</button>
     </div>
   </div>
 </div>
 
-<!-- MAIN APP -->
 <div id="app-screen">
-  <!-- Topbar -->
   <div class="topbar">
     <div class="topbar-logo" id="topbar-logo-area">
-      <div class="default-topbar-logo">
-        <span class="logo-icon-sm">🍵</span>
-        <h2>Kombucha App</h2>
-      </div>
+      <div class="default-topbar-logo"><span class="logo-icon-sm">🍵</span><h2>Kombuchan</h2></div>
     </div>
     <div class="topbar-right">
-      <div class="user-badge">
-        <div class="user-avatar" id="user-avatar">?</div>
-        <span id="user-name-display" style="display:none"></span>
-      </div>
+      <div class="user-avatar" id="user-avatar">?</div>
       <button class="btn-icon" onclick="handleLogout()">Salir</button>
     </div>
   </div>
 
-  <!-- Content -->
   <div class="content">
 
-    <!-- Dashboard -->
     <div class="page active" id="page-dashboard">
       <p class="page-title">Panel principal</p>
       <p class="page-subtitle">Resumen de tu producción</p>
-
       <div id="notif-banner" class="notif-banner" style="display:none">
-        <p>🔔 Activa las <strong>notificaciones push</strong> para recibir alertas de tus lotes</p>
+        <p>🔔 Activa las <strong>notificaciones push</strong> para recibir alertas</p>
         <button class="btn-secondary" onclick="requestNotifPermission()">Activar</button>
       </div>
-
       <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-icon">🫙</div>
-          <div class="stat-value" id="stat-f1">0</div>
-          <div class="stat-label">Lotes F1</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon">🍶</div>
-          <div class="stat-value" id="stat-f2">0</div>
-          <div class="stat-label">Lotes F2</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon">✅</div>
-          <div class="stat-value" id="stat-ready">0</div>
-          <div class="stat-label">Listos</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon">📦</div>
-          <div class="stat-value" id="stat-bottles">0</div>
-          <div class="stat-label">Botellas</div>
-        </div>
+        <div class="stat-card"><div class="stat-icon">🫙</div><div class="stat-value" id="stat-f1">0</div><div class="stat-label">Lotes F1</div></div>
+        <div class="stat-card"><div class="stat-icon">🍶</div><div class="stat-value" id="stat-f2">0</div><div class="stat-label">Lotes F2</div></div>
+        <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-value" id="stat-ready">0</div><div class="stat-label">Listos</div></div>
+        <div class="stat-card"><div class="stat-icon">📦</div><div class="stat-value" id="stat-bottles">0</div><div class="stat-label">Botellas</div></div>
       </div>
-
-      <div class="alerts-section">
+      <div class="alerts-section" style="margin-bottom:28px">
         <p class="section-title">🔔 Alertas activas</p>
-        <div id="alerts-list">
-          <div class="empty-state">
-            <div class="empty-icon">🌿</div>
-            <p>No hay alertas por ahora.<br>Los lotes aparecerán aquí cuando estén listos.</p>
-          </div>
+        <div id="alerts-list"><div class="empty-state"><div class="empty-icon">🌿</div><p>No hay alertas por ahora.</p></div></div>
+      </div>
+      <div>
+        <p class="section-title">🕐 Actividad reciente</p>
+        <div id="activity-list"><div class="loading"><div class="spinner"></div> Cargando...</div></div>
+      </div>
+    </div>
+
+    <div class="page" id="page-ingredientes">
+      <p class="page-title">Ingredientes & Recetas</p>
+      <p class="page-subtitle" id="ing-page-subtitle">Gestiona tu catálogo y recetas</p>
+      <div class="sub-tabs">
+        <button class="sub-tab active" onclick="switchSubTab('ingredientes',this)">🌿 Ingredientes</button>
+        <button class="sub-tab" onclick="switchSubTab('recetas',this)">📋 Recetas</button>
+      </div>
+      <div id="subtab-ingredientes">
+        <div class="cat-tabs">
+          <button class="cat-tab active" onclick="filterCat('todos',this)">Todos</button>
+          <button class="cat-tab" onclick="filterCat('Tés',this)">🍃 Tés</button>
+          <button class="cat-tab" onclick="filterCat('Frutas',this)">🍓 Frutas</button>
+          <button class="cat-tab" onclick="filterCat('Azúcares',this)">🍯 Azúcares</button>
+          <button class="cat-tab" onclick="filterCat('Otros',this)">🌿 Otros</button>
         </div>
+        <div class="ing-list" id="ing-list"><div class="loading"><div class="spinner"></div> Cargando...</div></div>
+      </div>
+      <div id="subtab-recetas" style="display:none">
+        <div class="recipe-list" id="recipe-list"><div class="loading"><div class="spinner"></div> Cargando...</div></div>
       </div>
     </div>
 
-    <!-- Ingredientes -->
-    <div class="page" id="page-lotes">
-      <p class="page-title">Ingredientes</p>
-      <p class="page-subtitle">Catálogo de ingredientes por categoría</p>
-
-      <div class="cat-tabs" id="cat-tabs">
-        <button class="cat-tab active" onclick="filterCat('todos', this)">Todos</button>
-        <button class="cat-tab" onclick="filterCat('Tés', this)">🍃 Tés</button>
-        <button class="cat-tab" onclick="filterCat('Frutas', this)">🍓 Frutas</button>
-        <button class="cat-tab" onclick="filterCat('Azúcares', this)">🍯 Azúcares</button>
-        <button class="cat-tab" onclick="filterCat('Otros', this)">🌿 Otros</button>
-      </div>
-
-      <div class="ing-list" id="ing-list">
-        <div class="loading"><div class="spinner"></div> Cargando...</div>
-      </div>
-    </div>
-
-    <!-- Inventario (placeholder) -->
     <div class="page" id="page-inventario">
-      <p class="page-title">Inventario</p>
-      <p class="page-subtitle">Módulo 5 — próximamente</p>
-      <div class="empty-state">
-        <div class="empty-icon">📦</div>
-        <p>El control de inventario se construirá<br>en el Módulo 5.</p>
-      </div>
+      <p class="page-title">Inventario</p><p class="page-subtitle">Módulo 5 — próximamente</p>
+      <div class="empty-state"><div class="empty-icon">📦</div><p>El control de inventario se construirá en el Módulo 5.</p></div>
     </div>
 
-    <!-- Ventas (placeholder) -->
     <div class="page" id="page-ventas">
-      <p class="page-title">Ventas</p>
-      <p class="page-subtitle">Módulo 6 — próximamente</p>
-      <div class="empty-state">
-        <div class="empty-icon">💰</div>
-        <p>El seguimiento de ventas se construirá<br>en el Módulo 6.</p>
-      </div>
+      <p class="page-title">Ventas</p><p class="page-subtitle">Módulo 6 — próximamente</p>
+      <div class="empty-state"><div class="empty-icon">💰</div><p>El seguimiento de ventas se construirá en el Módulo 6.</p></div>
     </div>
 
-    <!-- Ajustes -->
     <div class="page" id="page-ajustes">
-      <p class="page-title">Ajustes</p>
-      <p class="page-subtitle">Personaliza tu app</p>
-
+      <p class="page-title">Ajustes</p><p class="page-subtitle">Personaliza tu app</p>
       <div class="settings-section">
         <h3>Logo de marca</h3>
-        <div class="logo-upload-area" id="logo-drop-area">
-          <input type="file" id="logo-input" accept="image/*" onchange="handleLogoUpload(event)" />
-          <div id="logo-placeholder">
-            <div class="upload-icon">🖼️</div>
-            <p>Toca para subir tu logo<br><span style="font-size:11px;opacity:0.6">PNG, JPG, SVG — recomendado fondo transparente</span></p>
-          </div>
-          <img id="logo-preview-img" class="logo-preview" style="display:none" />
+        <div class="logo-upload-area">
+          <input type="file" id="logo-input" accept="image/*" onchange="handleLogoUpload(event)"/>
+          <div id="logo-placeholder"><div class="upload-icon">🖼️</div><p>Toca para subir tu logo</p></div>
+          <img id="logo-preview-img" class="logo-preview" style="display:none"/>
         </div>
         <div class="logo-actions" id="logo-actions" style="display:none">
-          <button class="btn-secondary" onclick="triggerLogoInput()">Cambiar logo</button>
+          <button class="btn-secondary" onclick="document.getElementById('logo-input').click()">Cambiar</button>
           <button class="btn-danger" onclick="removeLogo()">Eliminar</button>
         </div>
       </div>
-
       <div class="settings-section">
         <h3>Mi cuenta</h3>
-        <div class="info-row">
-          <span>Nombre</span>
-          <span id="settings-name">—</span>
-        </div>
-        <div class="info-row">
-          <span>Correo</span>
-          <span id="settings-email">—</span>
-        </div>
-        <div class="info-row">
-          <span>Plan</span>
-          <span style="color: var(--accent2)">Spark (Gratuito)</span>
-        </div>
+        <div class="info-row"><span>Nombre</span><span id="settings-name">—</span></div>
+        <div class="info-row"><span>Correo</span><span id="settings-email">—</span></div>
+        <div class="info-row"><span>Plan</span><span style="color:var(--accent2)">Spark (Gratuito)</span></div>
       </div>
-
       <div class="settings-section">
         <h3>Notificaciones</h3>
-        <div class="info-row">
-          <span>Estado</span>
-          <span id="notif-status">—</span>
-        </div>
-        <button class="btn-secondary" style="margin-top:12px; width:100%" onclick="requestNotifPermission()">
-          Activar notificaciones push
-        </button>
+        <div class="info-row"><span>Estado</span><span id="notif-status">—</span></div>
+        <button class="btn-secondary" style="margin-top:12px;width:100%" onclick="requestNotifPermission()">Activar notificaciones push</button>
       </div>
-
-      <button class="btn-danger" style="width:100%; padding:14px; margin-top:8px" onclick="handleLogout()">
-        Cerrar sesión
-      </button>
+      <button class="btn-danger" style="width:100%;padding:14px;margin-top:8px" onclick="handleLogout()">Cerrar sesión</button>
     </div>
 
-  </div><!-- /content -->
+  </div>
 
-  <!-- Bottom Nav -->
   <nav class="nav-bottom">
-    <button class="nav-item active" onclick="showPage('dashboard', this)">
-      <span>🏠</span><span>Inicio</span>
-    </button>
-    <button class="nav-item" onclick="showPage('lotes', this)">
-      <span>🌿</span><span>Ingredientes</span>
-    </button>
-    <button class="nav-item" onclick="showPage('inventario', this)">
-      <span>📦</span><span>Inventario</span>
-    </button>
-    <button class="nav-item" onclick="showPage('ventas', this)">
-      <span>💰</span><span>Ventas</span>
-    </button>
-    <button class="nav-item" onclick="showPage('ajustes', this)">
-      <span>⚙️</span><span>Ajustes</span>
-    </button>
+    <button class="nav-item active" onclick="showPage('dashboard',this)"><span>🏠</span><span>Inicio</span></button>
+    <button class="nav-item" onclick="showPage('ingredientes',this)"><span>🌿</span><span>Recetas</span></button>
+    <button class="nav-item" onclick="showPage('inventario',this)"><span>📦</span><span>Inventario</span></button>
+    <button class="nav-item" onclick="showPage('ventas',this)"><span>💰</span><span>Ventas</span></button>
+    <button class="nav-item" onclick="showPage('ajustes',this)"><span>⚙️</span><span>Ajustes</span></button>
   </nav>
 </div>
 
-<!-- Toast -->
 <div class="toast" id="toast"></div>
+<button class="fab" id="fab-main" onclick="onFabClick()">+</button>
 
-<!-- Firebase -->
+<!-- Modal Ingrediente -->
+<div class="modal-overlay" id="ing-modal" onclick="closeModal('ing-modal',event)">
+  <div class="modal">
+    <p class="modal-title" id="ing-modal-title">Nuevo ingrediente</p>
+    <div class="form-group"><label>Nombre</label><input type="text" id="ing-name-input" placeholder="Ej: Té negro, Mango..."/></div>
+    <div class="form-group">
+      <label>Categoría</label>
+      <div class="cat-select">
+        <button class="cat-option" onclick="selectCatOpt('Tés',this)">🍃 Tés</button>
+        <button class="cat-option" onclick="selectCatOpt('Frutas',this)">🍓 Frutas</button>
+        <button class="cat-option" onclick="selectCatOpt('Azúcares',this)">🍯 Azúcares</button>
+        <button class="cat-option" onclick="selectCatOpt('Otros',this)">🌿 Otros</button>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" style="flex:1" onclick="closeModal('ing-modal')">Cancelar</button>
+      <button class="btn-primary" style="flex:2;margin-top:0" onclick="saveIngrediente()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Receta -->
+<div class="modal-overlay" id="recipe-modal" onclick="closeModal('recipe-modal',event)">
+  <div class="modal">
+    <p class="modal-title" id="recipe-modal-title">Nueva receta</p>
+    <div class="form-group"><label>Nombre de la receta</label><input type="text" id="recipe-name-input" placeholder="Ej: Kombucha de mango y jengibre"/></div>
+    <div class="form-group">
+      <label>Etapa</label>
+      <div class="cat-select">
+        <button class="cat-option" onclick="selectEtapaOpt('F1',this)">🫙 F1 — Base</button>
+        <button class="cat-option" onclick="selectEtapaOpt('F2',this)">🍶 F2 — Sabor</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Ingredientes</label>
+      <div id="recipe-ings-builder"></div>
+      <button class="add-ing-btn" onclick="addIngRow()">+ Agregar ingrediente</button>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" style="flex:1" onclick="closeModal('recipe-modal')">Cancelar</button>
+      <button class="btn-primary" style="flex:2;margin-top:0" onclick="saveReceta()">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
   import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
-  import { getFirestore, doc, setDoc, getDoc, deleteDoc, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+  import { getFirestore, doc, setDoc, getDoc, deleteDoc, collection, getDocs, addDoc, orderBy, query, limit } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyAPml56n0khA_qxa1snpl4MTKKkZNo11Ww",
-    authDomain: "kombucha-app-b7a2d.firebaseapp.com",
-    projectId: "kombucha-app-b7a2d",
-    storageBucket: "kombucha-app-b7a2d.firebasestorage.app",
-    messagingSenderId: "291901072311",
-    appId: "1:291901072311:web:dfb864fca040de1143be32"
-  };
-
-  const app = initializeApp(firebaseConfig);
+  const app = initializeApp({
+    apiKey:"AIzaSyAPml56n0khA_qxa1snpl4MTKKkZNo11Ww",
+    authDomain:"kombucha-app-b7a2d.firebaseapp.com",
+    projectId:"kombucha-app-b7a2d",
+    storageBucket:"kombucha-app-b7a2d.firebasestorage.app",
+    messagingSenderId:"291901072311",
+    appId:"1:291901072311:web:dfb864fca040de1143be32"
+  });
   const auth = getAuth(app);
   const db = getFirestore(app);
+  window._auth=auth; window._db=db;
+  window._fb={doc,setDoc,getDoc,deleteDoc,collection,getDocs,addDoc,orderBy,query,limit,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,updateProfile};
 
-  // Expose to window
-  window._auth = auth;
-  window._db = db;
-  window._firebase = { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile, doc, setDoc, getDoc, deleteDoc, collection, getDocs, addDoc };
-
-  // Auth state listener
-  onAuthStateChanged(auth, async (user) => {
+  onAuthStateChanged(auth, async user => {
     if (user) {
-      document.getElementById('auth-screen').style.display = 'none';
-      document.getElementById('app-screen').style.display = 'flex';
-
-      // Set user info
-      const name = user.displayName || user.email.split('@')[0];
-      document.getElementById('user-avatar').textContent = name[0].toUpperCase();
-      document.getElementById('user-name-display').textContent = name;
-      document.getElementById('settings-name').textContent = name;
-      document.getElementById('settings-email').textContent = user.email;
-
-      // Load logo
-      await loadLogo();
-
-      // Load dashboard stats
-      await loadDashboard();
-
-      // Check notifications
-      checkNotifStatus();
-
+      document.getElementById('auth-screen').style.display='none';
+      document.getElementById('app-screen').style.display='flex';
+      const name = user.displayName||user.email.split('@')[0];
+      document.getElementById('user-avatar').textContent=name[0].toUpperCase();
+      document.getElementById('settings-name').textContent=name;
+      document.getElementById('settings-email').textContent=user.email;
+      window._currentUser={uid:user.uid,name};
+      await loadLogo(); await loadDashboard(); checkNotifStatus();
     } else {
-      document.getElementById('auth-screen').style.display = 'flex';
-      document.getElementById('app-screen').style.display = 'none';
+      document.getElementById('auth-screen').style.display='flex';
+      document.getElementById('app-screen').style.display='none';
+      window._currentUser=null;
     }
   });
 
   async function loadLogo() {
     try {
-      const snap = await window._firebase.getDoc(window._firebase.doc(window._db, 'settings', 'branding'));
-      if (snap.exists() && snap.data().logoDataUrl) {
-        applyLogo(snap.data().logoDataUrl);
-      }
-    } catch(e) {}
+      const snap=await window._fb.getDoc(window._fb.doc(db,'settings','branding'));
+      if(snap.exists()&&snap.data().logoDataUrl) applyLogo(snap.data().logoDataUrl);
+    } catch(e){}
   }
+
+  function applyLogo(url) {
+    document.getElementById('auth-logo-area').innerHTML=`<img src="${url}" style="max-height:80px;max-width:200px;object-fit:contain;margin-bottom:8px"/><p style="font-size:11px;color:var(--text2);letter-spacing:2px;text-transform:uppercase">Control de producción</p>`;
+    document.getElementById('topbar-logo-area').innerHTML=`<img src="${url}" style="max-height:36px;max-width:120px;object-fit:contain"/>`;
+    const p=document.getElementById('logo-preview-img');
+    p.src=url;p.style.display='block';
+    document.getElementById('logo-placeholder').style.display='none';
+    document.getElementById('logo-actions').style.display='flex';
+  }
+  window.applyLogo=applyLogo; window.loadLogo=loadLogo;
 
   async function loadDashboard() {
     try {
-      const snap = await window._firebase.getDocs(window._firebase.collection(window._db, 'lotes'));
-      let f1 = 0, f2 = 0, ready = 0, bottles = 0;
-      const alerts = [];
-      const now = Date.now();
-
-      snap.forEach(d => {
-        const l = d.data();
-        if (l.etapa === 'F1') f1++;
-        if (l.etapa === 'F2') f2++;
-        if (l.estado === 'listo') ready++;
-        bottles += (l.botellas || 0);
-
-        // Check alerts
-        if (l.fechaListoF1 && l.estado === 'activo' && l.etapa === 'F1') {
-          const diff = Math.ceil((l.fechaListoF1 - now) / 86400000);
-          if (diff <= 0) alerts.push({ type: 'ready', icon: '✅', title: `Lote ${l.codigo} — F1 lista`, desc: 'Listo para envasar' });
-          else if (diff <= 1) alerts.push({ type: 'urgent', icon: '⏰', title: `Lote ${l.codigo} — F1 en ${diff}d`, desc: 'Pronto listo para envasar' });
+      const snap=await window._fb.getDocs(window._fb.collection(db,'lotes'));
+      let f1=0,f2=0,ready=0,bottles=0; const alerts=[]; const now=Date.now();
+      snap.forEach(d=>{
+        const l=d.data();
+        if(l.etapa==='F1')f1++;if(l.etapa==='F2')f2++;
+        if(l.estado==='listo')ready++;bottles+=(l.botellas||0);
+        if(l.fechaListoF1&&l.estado==='activo'&&l.etapa==='F1'){
+          const diff=Math.ceil((l.fechaListoF1-now)/86400000);
+          if(diff<=0)alerts.push({type:'ready',icon:'✅',title:`Lote ${l.codigo} — F1 lista`,desc:'Listo para envasar'});
+          else if(diff<=1)alerts.push({type:'urgent',icon:'⏰',title:`Lote ${l.codigo} — F1 en ${diff}d`,desc:'Pronto listo'});
         }
       });
-
-      document.getElementById('stat-f1').textContent = f1;
-      document.getElementById('stat-f2').textContent = f2;
-      document.getElementById('stat-ready').textContent = ready;
-      document.getElementById('stat-bottles').textContent = bottles;
-
-      const alertsList = document.getElementById('alerts-list');
-      if (alerts.length === 0) {
-        alertsList.innerHTML = `<div class="empty-state"><div class="empty-icon">🌿</div><p>No hay alertas por ahora.<br>Los lotes aparecerán aquí cuando estén listos.</p></div>`;
-      } else {
-        alertsList.innerHTML = alerts.map(a => `
-          <div class="alert-item ${a.type}">
-            <span class="alert-icon">${a.icon}</span>
-            <div class="alert-text"><strong>${a.title}</strong><p>${a.desc}</p></div>
-          </div>`).join('');
-      }
-    } catch(e) {}
+      ['stat-f1','stat-f2','stat-ready','stat-bottles'].forEach((id,i)=>document.getElementById(id).textContent=[f1,f2,ready,bottles][i]);
+      const al=document.getElementById('alerts-list');
+      al.innerHTML=alerts.length?alerts.map(a=>`<div class="alert-item ${a.type}"><span class="alert-icon">${a.icon}</span><div class="alert-text"><strong>${a.title}</strong><p>${a.desc}</p></div></div>`).join(''):'<div class="empty-state"><div class="empty-icon">🌿</div><p>No hay alertas por ahora.</p></div>';
+    } catch(e){}
+    await loadActivity();
   }
 
-  window.loadDashboard = loadDashboard;
-  window.applyLogo = applyLogo;
-  window.loadLogo = loadLogo;
-
-  function applyLogo(dataUrl) {
-    // Auth screen
-    const authArea = document.getElementById('auth-logo-area');
-    authArea.innerHTML = `<img src="${dataUrl}" style="max-height:80px;max-width:200px;object-fit:contain;margin-bottom:8px" /><p style="font-size:11px;color:var(--text2);letter-spacing:2px;text-transform:uppercase">Control de producción</p>`;
-
-    // Topbar
-    const topArea = document.getElementById('topbar-logo-area');
-    topArea.innerHTML = `<img src="${dataUrl}" style="max-height:36px;max-width:120px;object-fit:contain" />`;
-
-    // Preview in settings
-    const preview = document.getElementById('logo-preview-img');
-    const placeholder = document.getElementById('logo-placeholder');
-    const actions = document.getElementById('logo-actions');
-    preview.src = dataUrl;
-    preview.style.display = 'block';
-    placeholder.style.display = 'none';
-    actions.style.display = 'flex';
-  }
-</script>
-
-<script>
-  // Tab switching
-  function switchTab(tab) {
-    document.querySelectorAll('.auth-tab').forEach((t,i) => t.classList.toggle('active', (i===0 && tab==='login') || (i===1 && tab==='register')));
-    document.getElementById('login-form').style.display = tab === 'login' ? 'block' : 'none';
-    document.getElementById('register-form').style.display = tab === 'register' ? 'block' : 'none';
-    document.getElementById('auth-error').style.display = 'none';
-  }
-
-  function showError(msg) {
-    const el = document.getElementById('auth-error');
-    el.textContent = msg;
-    el.style.display = 'block';
-  }
-
-  async function handleLogin() {
-    const email = document.getElementById('login-email').value.trim();
-    const password = document.getElementById('login-password').value;
-    if (!email || !password) return showError('Completa todos los campos');
-    const btn = document.getElementById('login-btn');
-    btn.disabled = true; btn.textContent = 'Entrando...';
+  async function loadActivity() {
     try {
-      await window._firebase.signInWithEmailAndPassword(window._auth, email, password);
-    } catch(e) {
-      showError(firebaseErrorMsg(e.code));
-      btn.disabled = false; btn.textContent = 'Entrar';
-    }
-  }
-
-  async function handleRegister() {
-    const name = document.getElementById('reg-name').value.trim();
-    const email = document.getElementById('reg-email').value.trim();
-    const password = document.getElementById('reg-password').value;
-    if (!name || !email || !password) return showError('Completa todos los campos');
-    if (password.length < 6) return showError('La contraseña debe tener al menos 6 caracteres');
-    const btn = document.getElementById('register-btn');
-    btn.disabled = true; btn.textContent = 'Creando cuenta...';
-    try {
-      const cred = await window._firebase.createUserWithEmailAndPassword(window._auth, email, password);
-      await window._firebase.updateProfile(cred.user, { displayName: name });
-      await window._firebase.setDoc(window._firebase.doc(window._db, 'usuarios', cred.user.uid), {
-        nombre: name, email, creadoEn: Date.now(), rol: 'usuario'
+      const q=window._fb.query(window._fb.collection(db,'auditoria'),window._fb.orderBy('fecha','desc'),window._fb.limit(10));
+      const snap=await window._fb.getDocs(q);
+      const el=document.getElementById('activity-list');
+      if(snap.empty){el.innerHTML='<div class="empty-state" style="padding:24px 0"><p>Sin actividad registrada aún.</p></div>';return;}
+      el.innerHTML='';
+      snap.forEach(d=>{
+        const a=d.data();
+        const f=new Date(a.fecha);
+        const t=f.toLocaleDateString('es-MX',{day:'2-digit',month:'short'})+' '+f.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
+        el.innerHTML+=`<div class="activity-item"><div class="activity-dot"></div><div class="activity-text"><strong>${a.usuario}</strong> ${a.accion}<div class="activity-time">${t}</div></div></div>`;
       });
-    } catch(e) {
-      showError(firebaseErrorMsg(e.code));
-      btn.disabled = false; btn.textContent = 'Crear cuenta';
-    }
+    } catch(e){}
   }
-
-  async function handleLogout() {
-    await window._firebase.signOut(window._auth);
-  }
-
-  function firebaseErrorMsg(code) {
-    const msgs = {
-      'auth/user-not-found': 'No existe una cuenta con ese correo',
-      'auth/wrong-password': 'Contraseña incorrecta',
-      'auth/invalid-email': 'Correo electrónico inválido',
-      'auth/email-already-in-use': 'Ya existe una cuenta con ese correo',
-      'auth/weak-password': 'La contraseña es muy débil',
-      'auth/invalid-credential': 'Correo o contraseña incorrectos',
-      'auth/too-many-requests': 'Demasiados intentos. Intenta más tarde',
-    };
-    return msgs[code] || 'Ocurrió un error. Intenta de nuevo.';
-  }
-
-  // Navigation
-  function showPage(name, btn) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    document.getElementById('page-' + name).classList.add('active');
-    btn.classList.add('active');
-
-    // FAB visibility
-    const fab = document.getElementById('fab-ing');
-    if (name === 'lotes') {
-      fab.classList.add('visible');
-      if (window.loadIngredientes) window.loadIngredientes();
-    } else {
-      fab.classList.remove('visible');
-    }
-  }
-
-  // Logo upload
-  function triggerLogoInput() {
-    document.getElementById('logo-input').click();
-  }
-
-  async function handleLogoUpload(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = async (ev) => {
-      const dataUrl = ev.target.result;
-      try {
-        await window._firebase.setDoc(window._firebase.doc(window._db, 'settings', 'branding'), { logoDataUrl: dataUrl });
-        window.applyLogo(dataUrl);
-        showToast('✅ Logo guardado');
-      } catch(err) {
-        showToast('❌ Error al guardar el logo');
-      }
-    };
-    reader.readAsDataURL(file);
-  }
-
-  async function removeLogo() {
-    try {
-      await window._firebase.setDoc(window._firebase.doc(window._db, 'settings', 'branding'), { logoDataUrl: null });
-      document.getElementById('logo-preview-img').style.display = 'none';
-      document.getElementById('logo-placeholder').style.display = 'block';
-      document.getElementById('logo-actions').style.display = 'none';
-      // Reset logos
-      document.getElementById('auth-logo-area').innerHTML = `<div class="default-logo"><span class="logo-icon">🍵</span><h1>Kombucha App</h1><p>Control de producción</p></div>`;
-      document.getElementById('topbar-logo-area').innerHTML = `<div class="default-topbar-logo"><span class="logo-icon-sm">🍵</span><h2>Kombucha App</h2></div>`;
-      showToast('Logo eliminado');
-    } catch(e) { showToast('❌ Error'); }
-  }
-
-  // Notifications
-  function checkNotifStatus() {
-    if (!('Notification' in window)) {
-      document.getElementById('notif-status').textContent = 'No soportado en este navegador';
-      return;
-    }
-    const perm = Notification.permission;
-    document.getElementById('notif-status').textContent = perm === 'granted' ? '✅ Activas' : perm === 'denied' ? '❌ Bloqueadas' : '⚠️ Sin activar';
-    if (perm !== 'granted') {
-      document.getElementById('notif-banner').style.display = 'flex';
-    }
-  }
-
-  async function requestNotifPermission() {
-    if (!('Notification' in window)) return showToast('Tu navegador no soporta notificaciones');
-    const perm = await Notification.requestPermission();
-    if (perm === 'granted') {
-      showToast('✅ Notificaciones activadas');
-      document.getElementById('notif-banner').style.display = 'none';
-      document.getElementById('notif-status').textContent = '✅ Activas';
-    } else {
-      showToast('Notificaciones bloqueadas');
-    }
-  }
-
-  window.requestNotifPermission = requestNotifPermission;
-
-  // Toast
-  function showToast(msg) {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 2800);
-  }
-</script>
-
-<!-- FAB Ingredientes -->
-<button class="fab" id="fab-ing" onclick="openIngModal()">+</button>
-
-<!-- Modal Ingrediente -->
-<div class="modal-overlay" id="ing-modal-overlay" onclick="closeIngModal(event)">
-  <div class="modal">
-    <p class="modal-title" id="ing-modal-title">Nuevo ingrediente</p>
-    <div class="form-group">
-      <label>Nombre del ingrediente</label>
-      <input type="text" id="ing-name-input" placeholder="Ej: Té negro, Mango, Piloncillo..." />
-    </div>
-    <div class="form-group">
-      <label>Categoría</label>
-      <div class="cat-select">
-        <button class="cat-option" onclick="selectCatOption('Tés', this)">🍃 Tés</button>
-        <button class="cat-option" onclick="selectCatOption('Frutas', this)">🍓 Frutas</button>
-        <button class="cat-option" onclick="selectCatOption('Azúcares', this)">🍯 Azúcares</button>
-        <button class="cat-option" onclick="selectCatOption('Otros', this)">🌿 Otros</button>
-      </div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn-secondary" style="flex:1" onclick="closeIngModal()">Cancelar</button>
-      <button class="btn-primary" style="flex:2; margin-top:0" onclick="saveIngrediente()">Guardar</button>
-    </div>
-  </div>
-</div>
-
-<script>
-  // ── INGREDIENTES MODULE ──
-  let allIngredientes = [];
-  let currentCatFilter = 'todos';
-  let editingIngId = null;
-  let selectedCat = null;
-
-  async function loadIngredientes() {
-    try {
-      const snap = await window._firebase.getDocs(window._firebase.collection(window._db, 'ingredientes'));
-      allIngredientes = [];
-      snap.forEach(d => allIngredientes.push({ id: d.id, ...d.data() }));
-      allIngredientes.sort((a, b) => a.nombre.localeCompare(b.nombre));
-      renderIngredientes();
-    } catch(e) {
-      document.getElementById('ing-list').innerHTML = '<div class="empty-state"><p>Error al cargar ingredientes.</p></div>';
-    }
-  }
-
-  function renderIngredientes() {
-    const list = document.getElementById('ing-list');
-    const filtered = currentCatFilter === 'todos'
-      ? allIngredientes
-      : allIngredientes.filter(i => i.categoria === currentCatFilter);
-
-    if (filtered.length === 0) {
-      list.innerHTML = `<div class="empty-state"><div class="empty-icon">🌿</div><p>No hay ingredientes en esta categoría.<br>Toca + para agregar uno.</p></div>`;
-      return;
-    }
-
-    const catIcons = { 'Tés': '🍃', 'Frutas': '🍓', 'Azúcares': '🍯', 'Otros': '🌿' };
-    list.innerHTML = filtered.map(ing => `
-      <div class="ing-item">
-        <div class="ing-info">
-          <div class="ing-name">${catIcons[ing.categoria] || '🌿'} ${ing.nombre}</div>
-          <div class="ing-cat">${ing.categoria}</div>
-        </div>
-        <div class="ing-actions">
-          <button class="btn-edit" onclick="editIngrediente('${ing.id}')">✏️</button>
-          <button class="btn-del" onclick="deleteIngrediente('${ing.id}', '${ing.nombre}')">🗑️</button>
-        </div>
-      </div>`).join('');
-  }
-
-  function filterCat(cat, btn) {
-    currentCatFilter = cat;
-    document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
-    btn.classList.add('active');
-    renderIngredientes();
-  }
-
-  function openIngModal(id) {
-    editingIngId = id || null;
-    selectedCat = null;
-    document.getElementById('ing-modal-title').textContent = id ? 'Editar ingrediente' : 'Nuevo ingrediente';
-    document.getElementById('ing-name-input').value = '';
-    document.querySelectorAll('.cat-option').forEach(o => o.classList.remove('selected'));
-
-    if (id) {
-      const ing = allIngredientes.find(i => i.id === id);
-      if (ing) {
-        document.getElementById('ing-name-input').value = ing.nombre;
-        selectedCat = ing.categoria;
-        document.querySelectorAll('.cat-option').forEach(o => {
-          if (o.textContent.includes(ing.categoria)) o.classList.add('selected');
-        });
-      }
-    }
-
-    document.getElementById('ing-modal-overlay').classList.add('open');
-    setTimeout(() => document.getElementById('ing-name-input').focus(), 300);
-  }
-
-  function closeIngModal(e) {
-    if (e && e.target !== document.getElementById('ing-modal-overlay')) return;
-    document.getElementById('ing-modal-overlay').classList.remove('open');
-  }
-
-  function selectCatOption(cat, btn) {
-    selectedCat = cat;
-    document.querySelectorAll('.cat-option').forEach(o => o.classList.remove('selected'));
-    btn.classList.add('selected');
-  }
-
-  async function saveIngrediente() {
-    const nombre = document.getElementById('ing-name-input').value.trim();
-    if (!nombre) return showToast('⚠️ Escribe el nombre del ingrediente');
-    if (!selectedCat) return showToast('⚠️ Selecciona una categoría');
-
-    try {
-      const data = { nombre, categoria: selectedCat, creadoEn: Date.now() };
-      if (editingIngId) {
-        await window._firebase.setDoc(window._firebase.doc(window._db, 'ingredientes', editingIngId), data);
-        showToast('✅ Ingrediente actualizado');
-      } else {
-        const newDoc = window._firebase.doc(window._firebase.collection(window._db, 'ingredientes'));
-        await window._firebase.setDoc(newDoc, data);
-        showToast('✅ Ingrediente agregado');
-      }
-      document.getElementById('ing-modal-overlay').classList.remove('open');
-      await loadIngredientes();
-    } catch(e) {
-      showToast('❌ Error al guardar');
-    }
-  }
-
-  function editIngrediente(id) {
-    openIngModal(id);
-  }
-
-  async function deleteIngrediente(id, nombre) {
-    if (!confirm(`¿Eliminar "${nombre}"?`)) return;
-    try {
-      await window._firebase.deleteDoc(window._firebase.doc(window._db, 'ingredientes', id));
-      allIngredientes = allIngredientes.filter(i => i.id !== id);
-      renderIngredientes();
-      showToast('Ingrediente eliminado');
-    } catch(e) {
-      showToast('❌ Error al eliminar');
-    }
-  }
-
-  window.filterCat = filterCat;
-  window.openIngModal = openIngModal;
-  window.closeIngModal = closeIngModal;
-  window.selectCatOption = selectCatOption;
-  window.saveIngrediente = saveIngrediente;
-  window.editIngrediente = editIngrediente;
-  window.deleteIngrediente = deleteIngrediente;
-  window.loadIngredientes = loadIngredientes;
+  window.loadDashboard=loadDashboard;
 </script>
 
 <script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/sw.js').catch(e => console.log('SW error:', e));
-    });
+  // AUTH
+  function switchTab(t){
+    document.querySelectorAll('.auth-tab').forEach((b,i)=>b.classList.toggle('active',(i===0&&t==='login')||(i===1&&t==='register')));
+    document.getElementById('login-form').style.display=t==='login'?'block':'none';
+    document.getElementById('register-form').style.display=t==='register'?'block':'none';
+    document.getElementById('auth-error').style.display='none';
   }
+  function showAuthError(m){const e=document.getElementById('auth-error');e.textContent=m;e.style.display='block';}
+  async function handleLogin(){
+    const em=document.getElementById('login-email').value.trim(),pw=document.getElementById('login-password').value;
+    if(!em||!pw)return showAuthError('Completa todos los campos');
+    const btn=document.getElementById('login-btn');btn.disabled=true;btn.textContent='Entrando...';
+    try{await window._fb.signInWithEmailAndPassword(window._auth,em,pw);}
+    catch(e){showAuthError(fbErr(e.code));btn.disabled=false;btn.textContent='Entrar';}
+  }
+  async function handleRegister(){
+    const n=document.getElementById('reg-name').value.trim(),em=document.getElementById('reg-email').value.trim(),pw=document.getElementById('reg-password').value;
+    if(!n||!em||!pw)return showAuthError('Completa todos los campos');
+    if(pw.length<6)return showAuthError('Mínimo 6 caracteres');
+    const btn=document.getElementById('register-btn');btn.disabled=true;btn.textContent='Creando...';
+    try{
+      const c=await window._fb.createUserWithEmailAndPassword(window._auth,em,pw);
+      await window._fb.updateProfile(c.user,{displayName:n});
+      await window._fb.setDoc(window._fb.doc(window._db,'usuarios',c.user.uid),{nombre:n,email:em,creadoEn:Date.now(),rol:'usuario'});
+    }catch(e){showAuthError(fbErr(e.code));btn.disabled=false;btn.textContent='Crear cuenta';}
+  }
+  async function handleLogout(){await window._fb.signOut(window._auth);}
+  function fbErr(c){return{'auth/invalid-credential':'Correo o contraseña incorrectos','auth/email-already-in-use':'Ya existe una cuenta con ese correo','auth/weak-password':'Contraseña muy débil','auth/too-many-requests':'Demasiados intentos'}[c]||'Ocurrió un error.';}
+
+  // NAV
+  let currentSubTab='ingredientes';
+  function showPage(name,btn){
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+    document.getElementById('page-'+name).classList.add('active');
+    btn.classList.add('active');
+    document.getElementById('fab-main').classList.toggle('visible',name==='ingredientes');
+    if(name==='ingredientes'){currentSubTab==='ingredientes'?loadIngredientes():loadRecetas();}
+    if(name==='dashboard')window.loadDashboard&&window.loadDashboard();
+  }
+  function switchSubTab(tab,btn){
+    currentSubTab=tab;
+    document.querySelectorAll('.sub-tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');
+    document.getElementById('subtab-ingredientes').style.display=tab==='ingredientes'?'block':'none';
+    document.getElementById('subtab-recetas').style.display=tab==='recetas'?'block':'none';
+    tab==='ingredientes'?loadIngredientes():loadRecetas();
+  }
+  function onFabClick(){currentSubTab==='ingredientes'?openIngModal():openRecipeModal();}
+
+  // AUDIT
+  async function logAudit(accion){
+    if(!window._currentUser)return;
+    try{await window._fb.addDoc(window._fb.collection(window._db,'auditoria'),{accion,usuario:window._currentUser.name,uid:window._currentUser.uid,fecha:Date.now()});}
+    catch(e){}
+  }
+
+  // INGREDIENTES
+  let allIng=[],catFilter='todos',editIngId=null,selCat=null;
+  async function loadIngredientes(){
+    document.getElementById('ing-list').innerHTML='<div class="loading"><div class="spinner"></div> Cargando...</div>';
+    try{
+      const snap=await window._fb.getDocs(window._fb.collection(window._db,'ingredientes'));
+      allIng=[];snap.forEach(d=>allIng.push({id:d.id,...d.data()}));
+      allIng.sort((a,b)=>a.nombre.localeCompare(b.nombre));renderIng();
+    }catch(e){document.getElementById('ing-list').innerHTML='<div class="empty-state"><p>Error al cargar.</p></div>';}
+  }
+  function renderIng(){
+    const list=document.getElementById('ing-list');
+    const f=catFilter==='todos'?allIng:allIng.filter(i=>i.categoria===catFilter);
+    if(!f.length){list.innerHTML='<div class="empty-state"><div class="empty-icon">🌿</div><p>No hay ingredientes aquí.<br>Toca + para agregar.</p></div>';return;}
+    const icons={'Tés':'🍃','Frutas':'🍓','Azúcares':'🍯','Otros':'🌿'};
+    list.innerHTML=f.map(i=>`<div class="ing-item"><div class="ing-info"><div class="ing-name">${icons[i.categoria]||'🌿'} ${i.nombre}</div><div class="ing-cat">${i.categoria}</div></div><div class="ing-actions"><button class="btn-edit" onclick="openIngModal('${i.id}')">✏️</button><button class="btn-del" onclick="deleteIng('${i.id}','${i.nombre}')">🗑️</button></div></div>`).join('');
+  }
+  function filterCat(cat,btn){catFilter=cat;document.querySelectorAll('.cat-tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');renderIng();}
+  function openIngModal(id){
+    editIngId=id||null;selCat=null;
+    document.getElementById('ing-modal-title').textContent=id?'Editar ingrediente':'Nuevo ingrediente';
+    document.getElementById('ing-name-input').value='';
+    document.querySelectorAll('#ing-modal .cat-option').forEach(o=>o.classList.remove('selected'));
+    if(id){const i=allIng.find(x=>x.id===id);if(i){document.getElementById('ing-name-input').value=i.nombre;selCat=i.categoria;document.querySelectorAll('#ing-modal .cat-option').forEach(o=>{if(o.textContent.includes(i.categoria))o.classList.add('selected');});}}
+    document.getElementById('ing-modal').classList.add('open');
+    setTimeout(()=>document.getElementById('ing-name-input').focus(),300);
+  }
+  function selectCatOpt(cat,btn){selCat=cat;document.querySelectorAll('#ing-modal .cat-option').forEach(o=>o.classList.remove('selected'));btn.classList.add('selected');}
+  async function saveIngrediente(){
+    const n=document.getElementById('ing-name-input').value.trim();
+    if(!n)return showToast('⚠️ Escribe el nombre');if(!selCat)return showToast('⚠️ Selecciona categoría');
+    try{
+      const data={nombre:n,categoria:selCat,creadoEn:Date.now()};
+      if(editIngId){await window._fb.setDoc(window._fb.doc(window._db,'ingredientes',editIngId),data);await logAudit(`editó el ingrediente "${n}"`);showToast('✅ Actualizado');}
+      else{await window._fb.addDoc(window._fb.collection(window._db,'ingredientes'),data);await logAudit(`agregó el ingrediente "${n}"`);showToast('✅ Ingrediente agregado');}
+      closeModal('ing-modal');await loadIngredientes();
+    }catch(e){showToast('❌ Error al guardar');}
+  }
+  async function deleteIng(id,nombre){
+    if(!confirm(`¿Eliminar "${nombre}"?`))return;
+    try{await window._fb.deleteDoc(window._fb.doc(window._db,'ingredientes',id));await logAudit(`eliminó el ingrediente "${nombre}"`);allIng=allIng.filter(i=>i.id!==id);renderIng();showToast('Ingrediente eliminado');}
+    catch(e){showToast('❌ Error');}
+  }
+
+  // RECETAS
+  let allRecetas=[],editRecipeId=null,selEtapa=null;
+  async function loadRecetas(){
+    document.getElementById('recipe-list').innerHTML='<div class="loading"><div class="spinner"></div> Cargando...</div>';
+    try{
+      const snap=await window._fb.getDocs(window._fb.collection(window._db,'recetas'));
+      allRecetas=[];snap.forEach(d=>allRecetas.push({id:d.id,...d.data()}));
+      allRecetas.sort((a,b)=>a.nombre.localeCompare(b.nombre));renderRecetas();
+    }catch(e){document.getElementById('recipe-list').innerHTML='<div class="empty-state"><p>Error al cargar.</p></div>';}
+  }
+  function renderRecetas(){
+    const list=document.getElementById('recipe-list');
+    if(!allRecetas.length){list.innerHTML='<div class="empty-state"><div class="empty-icon">📋</div><p>No hay recetas aún.<br>Toca + para crear la primera.</p></div>';return;}
+    list.innerHTML=allRecetas.map(r=>{
+      const prev=r.ingredientes&&r.ingredientes.length?r.ingredientes.map(i=>`${i.cantidad} ${i.unidad} de ${i.nombre}`).join(' · '):'Sin ingredientes';
+      const badge=r.etapa==='F1'?'background:rgba(200,169,110,.15);color:var(--accent)':'background:rgba(125,184,138,.15);color:var(--accent2)';
+      return `<div class="recipe-item"><div class="recipe-header"><div class="recipe-info"><div class="recipe-name">${r.nombre}</div><div style="margin-top:4px"><span style="display:inline-block;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:600;${badge}">${r.etapa}</span></div></div><div class="ing-actions"><button class="btn-edit" onclick="openRecipeModal('${r.id}');event.stopPropagation()">✏️</button><button class="btn-del" onclick="deleteReceta('${r.id}','${r.nombre}');event.stopPropagation()">🗑️</button></div></div><div class="recipe-ings-preview">${prev}</div></div>`;
+    }).join('');
+  }
+  function openRecipeModal(id){
+    editRecipeId=id||null;selEtapa=null;
+    document.getElementById('recipe-modal-title').textContent=id?'Editar receta':'Nueva receta';
+    document.getElementById('recipe-name-input').value='';
+    document.querySelectorAll('#recipe-modal .cat-option').forEach(o=>o.classList.remove('selected'));
+    document.getElementById('recipe-ings-builder').innerHTML='';
+    if(id){
+      const r=allRecetas.find(x=>x.id===id);
+      if(r){document.getElementById('recipe-name-input').value=r.nombre;selEtapa=r.etapa;document.querySelectorAll('#recipe-modal .cat-option').forEach(o=>{if(o.textContent.includes(r.etapa))o.classList.add('selected');});if(r.ingredientes)r.ingredientes.forEach(i=>addIngRow(i));}
+    }
+    if(!id||!document.getElementById('recipe-ings-builder').children.length)addIngRow();
+    document.getElementById('recipe-modal').classList.add('open');
+  }
+  function selectEtapaOpt(e,btn){selEtapa=e;document.querySelectorAll('#recipe-modal .cat-option').forEach(o=>o.classList.remove('selected'));btn.classList.add('selected');}
+  function addIngRow(data){
+    const b=document.getElementById('recipe-ings-builder');
+    const d=document.createElement('div');d.className='ing-row';
+    const opts=allIng.map(i=>`<option value="${i.nombre}" ${data&&data.nombre===i.nombre?'selected':''}>${i.nombre}</option>`).join('');
+    d.innerHTML=`<select style="flex:3;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 8px;font-family:'DM Sans',sans-serif;min-width:0"><option value="">Ingrediente</option>${opts}</select><input type="number" placeholder="Cant." min="0" step="any" value="${data?data.cantidad:''}" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px;font-family:'DM Sans',sans-serif;width:65px"/><input type="text" placeholder="g/ml/pz" value="${data?data.unidad:''}" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px;font-family:'DM Sans',sans-serif;width:60px"/><button onclick="this.parentElement.remove()" style="background:none;border:1px solid rgba(201,110,110,.4);color:var(--danger);border-radius:8px;padding:8px 10px;cursor:pointer;flex-shrink:0">✕</button>`;
+    b.appendChild(d);
+  }
+  async function saveReceta(){
+    const n=document.getElementById('recipe-name-input').value.trim();
+    if(!n)return showToast('⚠️ Escribe el nombre');if(!selEtapa)return showToast('⚠️ Selecciona la etapa');
+    const rows=document.querySelectorAll('#recipe-ings-builder .ing-row');
+    const ings=[];
+    for(const row of rows){const s=row.querySelector('select').value,c=row.querySelectorAll('input')[0].value,u=row.querySelectorAll('input')[1].value.trim();if(s&&c)ings.push({nombre:s,cantidad:parseFloat(c),unidad:u});}
+    try{
+      const data={nombre:n,etapa:selEtapa,ingredientes:ings,creadoEn:Date.now()};
+      if(editRecipeId){await window._fb.setDoc(window._fb.doc(window._db,'recetas',editRecipeId),data);await logAudit(`editó la receta "${n}"`);showToast('✅ Receta actualizada');}
+      else{await window._fb.addDoc(window._fb.collection(window._db,'recetas'),data);await logAudit(`creó la receta "${n}"`);showToast('✅ Receta guardada');}
+      closeModal('recipe-modal');await loadRecetas();
+    }catch(e){showToast('❌ Error al guardar');}
+  }
+  async function deleteReceta(id,nombre){
+    if(!confirm(`¿Eliminar "${nombre}"?`))return;
+    try{await window._fb.deleteDoc(window._fb.doc(window._db,'recetas',id));await logAudit(`eliminó la receta "${nombre}"`);allRecetas=allRecetas.filter(r=>r.id!==id);renderRecetas();showToast('Receta eliminada');}
+    catch(e){showToast('❌ Error');}
+  }
+
+  // MODALS
+  function closeModal(id,e){if(e&&e.target!==document.getElementById(id))return;document.getElementById(id).classList.remove('open');}
+
+  // LOGO
+  async function handleLogoUpload(e){
+    const f=e.target.files[0];if(!f)return;
+    const r=new FileReader();
+    r.onload=async ev=>{
+      try{await window._fb.setDoc(window._fb.doc(window._db,'settings','branding'),{logoDataUrl:ev.target.result});window.applyLogo(ev.target.result);await logAudit('actualizó el logo');showToast('✅ Logo guardado');}
+      catch(e){showToast('❌ Error');}
+    };r.readAsDataURL(f);
+  }
+  async function removeLogo(){
+    await window._fb.setDoc(window._fb.doc(window._db,'settings','branding'),{logoDataUrl:null});
+    document.getElementById('logo-preview-img').style.display='none';
+    document.getElementById('logo-placeholder').style.display='block';
+    document.getElementById('logo-actions').style.display='none';
+    document.getElementById('auth-logo-area').innerHTML='<div class="default-logo"><span class="logo-icon">🍵</span><h1>Kombuchan</h1><p>Control de producción</p></div>';
+    document.getElementById('topbar-logo-area').innerHTML='<div class="default-topbar-logo"><span class="logo-icon-sm">🍵</span><h2>Kombuchan</h2></div>';
+    showToast('Logo eliminado');
+  }
+
+  // NOTIFS
+  function checkNotifStatus(){
+    if(!('Notification'in window)){document.getElementById('notif-status').textContent='No soportado';return;}
+    const p=Notification.permission;
+    document.getElementById('notif-status').textContent=p==='granted'?'✅ Activas':p==='denied'?'❌ Bloqueadas':'⚠️ Sin activar';
+    if(p!=='granted')document.getElementById('notif-banner').style.display='flex';
+  }
+  async function requestNotifPermission(){
+    if(!('Notification'in window))return showToast('No soportado');
+    const p=await Notification.requestPermission();
+    if(p==='granted'){showToast('✅ Notificaciones activadas');document.getElementById('notif-banner').style.display='none';document.getElementById('notif-status').textContent='✅ Activas';}
+    else showToast('Notificaciones bloqueadas');
+  }
+
+  // TOAST
+  function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
+
+  // GLOBALS
+  window.switchTab=switchTab;window.handleLogin=handleLogin;window.handleRegister=handleRegister;window.handleLogout=handleLogout;
+  window.showPage=showPage;window.switchSubTab=switchSubTab;window.onFabClick=onFabClick;
+  window.filterCat=filterCat;window.openIngModal=openIngModal;window.selectCatOpt=selectCatOpt;window.saveIngrediente=saveIngrediente;window.deleteIng=deleteIng;
+  window.openRecipeModal=openRecipeModal;window.selectEtapaOpt=selectEtapaOpt;window.addIngRow=addIngRow;window.saveReceta=saveReceta;window.deleteReceta=deleteReceta;
+  window.closeModal=closeModal;window.handleLogoUpload=handleLogoUpload;window.removeLogo=removeLogo;window.requestNotifPermission=requestNotifPermission;
+</script>
+
+<script>
+  if('serviceWorker'in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('/sw.js').catch(e=>console.log('SW:',e));});}
 </script>
 </body>
 </html>

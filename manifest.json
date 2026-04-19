@@ -1,0 +1,24 @@
+{
+  "name": "Kombucha App",
+  "short_name": "Kombuchan",
+  "description": "Control de producción de kombucha",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f0e0b",
+  "theme_color": "#0f0e0b",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

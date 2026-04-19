@@ -405,12 +405,24 @@
       <input type="number" id="lote-botellas" placeholder="0" min="0"/>
     </div>
     <div class="form-group">
-      <label>Fecha de elaboración</label>
+      <label>📅 Fecha de elaboración</label>
       <input type="date" id="lote-fecha-inicio"/>
     </div>
     <div class="form-group">
-      <label>Fecha estimada de término</label>
-      <input type="date" id="lote-fecha-fin"/>
+      <label>🫙 Fin estimado F1 — ¿Cuándo estará lista para envasar?</label>
+      <input type="date" id="lote-fecha-fin-f1"/>
+    </div>
+    <div class="form-group">
+      <label>🍶 Fin estimado F2 — ¿Cuándo estará lista para venta? <span style="color:var(--text2);font-weight:400">(opcional)</span></label>
+      <input type="date" id="lote-fecha-fin-f2"/>
+    </div>
+    <div class="form-group">
+      <label>📥 Fecha real de envasado <span style="color:var(--text2);font-weight:400">(opcional, llenar cuando se envase)</span></label>
+      <input type="date" id="lote-fecha-envasado" oninput="calcCaducidad()"/>
+    </div>
+    <div class="form-group">
+      <label>⚠️ Fecha de caducidad <span style="color:var(--text2);font-weight:400">(se calcula automáticamente 6 meses después del envasado)</span></label>
+      <input type="date" id="lote-fecha-caducidad" readonly style="opacity:.7;cursor:default"/>
     </div>
     <div class="form-group">
       <label>Observaciones</label>
@@ -521,12 +533,24 @@
         if(l.etapa==='F1')f1++;if(l.etapa==='F2')f2++;
         if(l.estado==='venta')ready++;
         bottles+=(l.botellas||0);
-        if(l.fechaFin&&(l.estado==='activo'||l.estado==='f2')){
-          const diff=Math.ceil((l.fechaFin-now)/86400000);
-          const label=l.estado==='activo'?'F1':'F2';
-          if(diff<=0) alerts.push({type:'ready',icon:'✅',title:`${l.codigo} — ${label} lista`,desc:l.estado==='activo'?'Listo para envasar':'Listo para venta'});
-          else if(diff<=1) alerts.push({type:'warn',icon:'⏰',title:`${l.codigo} — ${label} termina mañana`,desc:`Fecha: ${new Date(l.fechaFin).toLocaleDateString('es-MX')}`});
-          else if(diff<=3) alerts.push({type:'',icon:'🕐',title:`${l.codigo} — ${label} en ${diff} días`,desc:`Fecha: ${new Date(l.fechaFin).toLocaleDateString('es-MX')}`});
+        // F1 alert
+        if(l.fechaFinF1||(l.fechaFin&&l.estado==='activo')){
+          const fF1=l.fechaFinF1||l.fechaFin;
+          const diffF1=Math.ceil((fF1-now)/86400000);
+          if(diffF1===0) alerts.push({type:'ready',icon:'✅',title:`${l.codigo} — F1 lista hoy`,desc:'Listo para envasar'});
+          else if(diffF1<0) alerts.push({type:'urgent',icon:'⚠️',title:`${l.codigo} — F1 venció hace ${Math.abs(diffF1)}d`,desc:'Revisa el lote'});
+        }
+        // F2 alert
+        if(l.fechaFinF2){
+          const diffF2=Math.ceil((l.fechaFinF2-now)/86400000);
+          if(diffF2===0) alerts.push({type:'ready',icon:'🍶',title:`${l.codigo} — F2 lista hoy`,desc:'Listo para venta'});
+          else if(diffF2<0) alerts.push({type:'urgent',icon:'⚠️',title:`${l.codigo} — F2 venció hace ${Math.abs(diffF2)}d`,desc:'Revisa el lote'});
+        }
+        // Caducidad alert
+        if(l.fechaCaducidad&&l.estado!=='vendido'){
+          const diffCad=Math.ceil((l.fechaCaducidad-now)/86400000);
+          if(diffCad<=30&&diffCad>=0) alerts.push({type:'warn',icon:'⚠️',title:`${l.codigo} — Caduca en ${diffCad}d`,desc:`Fecha: ${new Date(l.fechaCaducidad).toLocaleDateString('es-MX')}`});
+          else if(diffCad<0) alerts.push({type:'urgent',icon:'🚨',title:`${l.codigo} — CADUCADO`,desc:`Venció el ${new Date(l.fechaCaducidad).toLocaleDateString('es-MX')}`});
         }
       });
       ['stat-f1','stat-f2','stat-ready','stat-bottles'].forEach((id,i)=>document.getElementById(id).textContent=[f1,f2,ready,bottles][i]);
@@ -677,12 +701,13 @@
       const fi=l.fechaInicio?new Date(l.fechaInicio).toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'}):'—';
       const ff=l.fechaFin?new Date(l.fechaFin).toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'}):'—';
       let diasBadge='';
-      if(l.fechaFin&&l.estado!=='vendido'){
-        const diff=Math.ceil((l.fechaFin-now)/86400000);
-        if(diff<0) diasBadge=`<span class="dias-badge dias-late">⚠️ Venció hace ${Math.abs(diff)}d</span>`;
-        else if(diff===0) diasBadge=`<span class="dias-badge dias-warn">⏰ Vence hoy</span>`;
-        else if(diff<=3) diasBadge=`<span class="dias-badge dias-warn">⏰ ${diff}d restantes</span>`;
-        else diasBadge=`<span class="dias-badge dias-ok">🕐 ${diff}d restantes</span>`;
+      const refDate=l.fechaFinF1||l.fechaFin;
+      if(refDate&&l.estado!=='vendido'){
+        const diff=Math.ceil((refDate-now)/86400000);
+        if(diff<0) diasBadge=`<span class="dias-badge dias-late">⚠️ F1 venció hace ${Math.abs(diff)}d</span>`;
+        else if(diff===0) diasBadge=`<span class="dias-badge dias-warn">⏰ F1 vence hoy</span>`;
+        else if(diff<=3) diasBadge=`<span class="dias-badge dias-warn">⏰ F1 en ${diff}d</span>`;
+        else diasBadge=`<span class="dias-badge dias-ok">🕐 F1 en ${diff}d</span>`;
       }
       const nextBtn=`<button class="btn-status" onclick="openEstadoModal('${l.id}')">🔄 Seleccionar estado</button>`;
       const obsHtml=l.observaciones?`<div class="lote-obs">📝 ${l.observaciones}</div>`:'';
@@ -696,8 +721,11 @@
           <div class="lote-stat"><div class="lote-stat-label">Botellas</div><div class="lote-stat-value">🍶 ${l.botellas||0}</div></div>
         </div>
         <div class="lote-dates">
-          <div class="lote-date">📅 Inicio: <strong>${fi}</strong></div>
-          <div class="lote-date">🏁 Término: <strong>${ff}</strong></div>
+          <div class="lote-date">📅 Elaboración: <strong>${fi}</strong></div>
+          ${l.fechaFinF1?`<div class="lote-date">🫙 Fin F1: <strong>${new Date(l.fechaFinF1).toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'})}</strong></div>`:''}
+          ${l.fechaFinF2?`<div class="lote-date">🍶 Fin F2: <strong>${new Date(l.fechaFinF2).toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'})}</strong></div>`:''}
+          ${l.fechaEnvasado?`<div class="lote-date">📥 Envasado: <strong>${new Date(l.fechaEnvasado).toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'})}</strong></div>`:''}
+          ${l.fechaCaducidad?`<div class="lote-date">⚠️ Caducidad: <strong>${new Date(l.fechaCaducidad).toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'})}</strong></div>`:''}
           ${diasBadge?`<div>${diasBadge}</div>`:''}
         </div>
         ${obsHtml}
@@ -740,7 +768,10 @@
     // Set today as default start date
     const today=new Date().toISOString().split('T')[0];
     document.getElementById('lote-fecha-inicio').value=today;
-    document.getElementById('lote-fecha-fin').value='';
+    document.getElementById('lote-fecha-fin-f1').value='';
+    document.getElementById('lote-fecha-fin-f2').value='';
+    document.getElementById('lote-fecha-envasado').value='';
+    document.getElementById('lote-fecha-caducidad').value='';
     if(id){
       const l=allLotes.find(x=>x.id===id);
       if(l){
@@ -751,7 +782,10 @@
         document.getElementById('lote-botellas').value=l.botellas||'';
         if(l.botellas) document.getElementById('lote-botellas-group').style.display='block';
         document.getElementById('lote-fecha-inicio').value=l.fechaInicio?new Date(l.fechaInicio).toISOString().split('T')[0]:'';
-        document.getElementById('lote-fecha-fin').value=l.fechaFin?new Date(l.fechaFin).toISOString().split('T')[0]:'';
+        document.getElementById('lote-fecha-fin-f1').value=l.fechaFinF1?new Date(l.fechaFinF1).toISOString().split('T')[0]:(l.fechaFin?new Date(l.fechaFin).toISOString().split('T')[0]:'');
+        document.getElementById('lote-fecha-fin-f2').value=l.fechaFinF2?new Date(l.fechaFinF2).toISOString().split('T')[0]:'';
+        document.getElementById('lote-fecha-envasado').value=l.fechaEnvasado?new Date(l.fechaEnvasado).toISOString().split('T')[0]:'';
+        document.getElementById('lote-fecha-caducidad').value=l.fechaCaducidad?new Date(l.fechaCaducidad).toISOString().split('T')[0]:'';
         document.getElementById('lote-obs-input').value=l.observaciones||'';
         document.getElementById('lote-prefijo-display').value=l.codigo.split('-')[0]||prefijo;
         document.getElementById('lote-num-display').value=l.codigo.split('-')[1]||num;
@@ -770,8 +804,11 @@
   async function saveLote(){
     if(!selLoteEtapa)return showToast('⚠️ Selecciona la etapa');
     const fi=document.getElementById('lote-fecha-inicio').value;
-    const ff=document.getElementById('lote-fecha-fin').value;
-    if(!fi||!ff)return showToast('⚠️ Completa las fechas');
+    const ff1=document.getElementById('lote-fecha-fin-f1').value;
+    const ff2=document.getElementById('lote-fecha-fin-f2').value;
+    const fenvasado=document.getElementById('lote-fecha-envasado').value;
+    const fcaducidad=document.getElementById('lote-fecha-caducidad').value;
+    if(!fi||!ff1)return showToast('⚠️ Completa la fecha de elaboración y fin de F1');
     const sel=document.getElementById('lote-receta-select');
     const recetaId=sel.value;
     const recetaNombre=sel.options[sel.selectedIndex].text.replace(/ \(F[12]\)$/,'');
@@ -781,7 +818,12 @@
     try{
       if(editLoteId){
         const l=allLotes.find(x=>x.id===editLoteId);
-        const data={etapa:selLoteEtapa,recetaId,recetaNombre:recetaId?recetaNombre:'',jarras,botellas,observaciones:obs,fechaInicio:new Date(fi).getTime(),fechaFin:new Date(ff).getTime()};
+        const data={etapa:selLoteEtapa,recetaId,recetaNombre:recetaId?recetaNombre:'',jarras,botellas,observaciones:obs,
+          fechaInicio:new Date(fi).getTime(),
+          fechaFinF1:new Date(ff1).getTime(),
+          fechaFinF2:ff2?new Date(ff2).getTime():null,
+          fechaEnvasado:fenvasado?new Date(fenvasado).getTime():null,
+          fechaCaducidad:fcaducidad?new Date(fcaducidad).getTime():null};
         await window._updateDoc(window._fb.doc(window._db,'lotes',editLoteId),data);
         await logAudit(`editó el lote "${l?l.codigo:''}"`);
         showToast('✅ Lote actualizado');
@@ -789,7 +831,13 @@
         const newCount=(window._loteCount||0)+1;
         const prefijo=window._prefijo||'KMBC';
         const codigo=`${prefijo}-${String(newCount).padStart(3,'0')}`;
-        const data={codigo,etapa:selLoteEtapa,recetaId,recetaNombre:recetaId?recetaNombre:'',jarras,botellas,observaciones:obs,fechaInicio:new Date(fi).getTime(),fechaFin:new Date(ff).getTime(),estado:'activo',creadoEn:Date.now(),creadoPor:window._currentUser?.name||''};
+        const data={codigo,etapa:selLoteEtapa,recetaId,recetaNombre:recetaId?recetaNombre:'',jarras,botellas,observaciones:obs,
+          fechaInicio:new Date(fi).getTime(),
+          fechaFinF1:new Date(ff1).getTime(),
+          fechaFinF2:ff2?new Date(ff2).getTime():null,
+          fechaEnvasado:fenvasado?new Date(fenvasado).getTime():null,
+          fechaCaducidad:fcaducidad?new Date(fcaducidad).getTime():null,
+          estado:'activo',creadoEn:Date.now(),creadoPor:window._currentUser?.name||''};
         await window._fb.addDoc(window._fb.collection(window._db,'lotes'),data);
         window._loteCount=newCount;
         await window._fb.setDoc(window._fb.doc(window._db,'settings','config'),{prefijo,loteCount:newCount});
@@ -815,8 +863,8 @@
     const l=allLotes.find(x=>x.id===id);if(!l)return;
     document.getElementById('estado-lote-nombre').textContent=`${l.codigo} — ${ESTADOS[l.estado]?.label||l.estado}`;
     document.getElementById('estado-obs-input').value='';
-    document.getElementById('estado-botellas-group').style.display='none';
-    document.getElementById('estado-botellas-input').value='';
+    document.getElementById('estado-botellas-group').style.display='block';
+    document.getElementById('estado-botellas-input').value=l.botellas||0;
     const currentIdx=FLUJO.indexOf(l.estado);
     const opts=document.getElementById('estado-options');
     opts.innerHTML='';
@@ -833,14 +881,11 @@
         selNuevoEstado=e;
         document.querySelectorAll('#estado-options .cat-option').forEach(o=>o.classList.remove('selected'));
         btn.classList.add('selected');
-        document.getElementById('estado-botellas-group').style.display=(e==='envasar'||e==='f2')?'block':'none';
+
       };
       opts.appendChild(btn);
     });
-    // Show botellas field if default is envasar/f2
-    if(defaultEstado==='envasar'||defaultEstado==='f2'){
-      document.getElementById('estado-botellas-group').style.display='block';
-    }
+
     document.getElementById('lote-modal').classList.remove('open');
     document.getElementById('estado-modal').classList.add('open');
   }
@@ -998,6 +1043,16 @@
 
   // TOAST
   function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
+
+  // CADUCIDAD AUTO-CALC
+  function calcCaducidad(){
+    const envasado=document.getElementById('lote-fecha-envasado').value;
+    if(!envasado){document.getElementById('lote-fecha-caducidad').value='';return;}
+    const d=new Date(envasado);
+    d.setMonth(d.getMonth()+6);
+    document.getElementById('lote-fecha-caducidad').value=d.toISOString().split('T')[0];
+  }
+  window.calcCaducidad=calcCaducidad;
 
   // TEST NOTIFICATION
   function testNotification(){

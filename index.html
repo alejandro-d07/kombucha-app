@@ -525,6 +525,176 @@
     .empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; }
     .empty-state p { font-size: 14px; }
 
+    /* ── INGREDIENTES ── */
+    .cat-tabs {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      margin-bottom: 20px;
+      scrollbar-width: none;
+    }
+    .cat-tabs::-webkit-scrollbar { display: none; }
+
+    .cat-tab {
+      flex-shrink: 0;
+      padding: 7px 16px;
+      border-radius: 100px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text2);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .cat-tab.active {
+      background: var(--accent);
+      color: #0f0e0b;
+      border-color: var(--accent);
+      font-weight: 600;
+    }
+
+    .ing-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .ing-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      animation: fadeIn 0.2s ease;
+    }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+    .ing-info { flex: 1; }
+    .ing-name { font-size: 15px; font-weight: 500; }
+    .ing-cat {
+      font-size: 11px;
+      color: var(--text2);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 2px;
+    }
+
+    .ing-actions { display: flex; gap: 8px; }
+
+    .btn-edit {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text2);
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-edit:hover { border-color: var(--accent); color: var(--accent); }
+
+    .btn-del {
+      background: none;
+      border: 1px solid transparent;
+      color: var(--text2);
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-del:hover { color: var(--danger); border-color: rgba(201,110,110,0.3); }
+
+    /* FAB */
+    .fab {
+      position: fixed;
+      bottom: 84px;
+      right: 20px;
+      width: 52px;
+      height: 52px;
+      background: var(--accent);
+      color: #0f0e0b;
+      border: none;
+      border-radius: 50%;
+      font-size: 24px;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(200,169,110,0.4);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 99;
+      transition: transform 0.2s;
+    }
+    .fab:hover { transform: scale(1.08); }
+    .fab.visible { display: flex; }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      z-index: 200;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px 20px 0 0;
+      padding: 28px 24px 40px;
+      width: 100%;
+      max-width: 500px;
+      transform: translateY(40px);
+      transition: transform 0.25s;
+    }
+    .modal-overlay.open .modal { transform: translateY(0); }
+
+    .modal-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      margin-bottom: 20px;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .cat-select {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    .cat-option {
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: transparent;
+      color: var(--text2);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    .cat-option.selected {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(200,169,110,0.08);
+    }
+
     /* Notification permission banner */
     .notif-banner {
       background: rgba(200, 169, 110, 0.1);
@@ -661,13 +831,21 @@
       </div>
     </div>
 
-    <!-- Lotes (placeholder) -->
+    <!-- Ingredientes -->
     <div class="page" id="page-lotes">
-      <p class="page-title">Lotes</p>
-      <p class="page-subtitle">Módulo 3 — próximamente</p>
-      <div class="empty-state">
-        <div class="empty-icon">🫙</div>
-        <p>El registro de lotes se construirá<br>en el Módulo 3.</p>
+      <p class="page-title">Ingredientes</p>
+      <p class="page-subtitle">Catálogo de ingredientes por categoría</p>
+
+      <div class="cat-tabs" id="cat-tabs">
+        <button class="cat-tab active" onclick="filterCat('todos', this)">Todos</button>
+        <button class="cat-tab" onclick="filterCat('Tés', this)">🍃 Tés</button>
+        <button class="cat-tab" onclick="filterCat('Frutas', this)">🍓 Frutas</button>
+        <button class="cat-tab" onclick="filterCat('Azúcares', this)">🍯 Azúcares</button>
+        <button class="cat-tab" onclick="filterCat('Otros', this)">🌿 Otros</button>
+      </div>
+
+      <div class="ing-list" id="ing-list">
+        <div class="loading"><div class="spinner"></div> Cargando...</div>
       </div>
     </div>
 
@@ -752,7 +930,7 @@
       <span>🏠</span><span>Inicio</span>
     </button>
     <button class="nav-item" onclick="showPage('lotes', this)">
-      <span>🫙</span><span>Lotes</span>
+      <span>🌿</span><span>Ingredientes</span>
     </button>
     <button class="nav-item" onclick="showPage('inventario', this)">
       <span>📦</span><span>Inventario</span>
@@ -773,7 +951,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
   import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
-  import { getFirestore, doc, setDoc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+  import { getFirestore, doc, setDoc, getDoc, deleteDoc, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyAPml56n0khA_qxa1snpl4MTKKkZNo11Ww",
@@ -791,7 +969,7 @@
   // Expose to window
   window._auth = auth;
   window._db = db;
-  window._firebase = { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile, doc, setDoc, getDoc, collection, getDocs };
+  window._firebase = { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile, doc, setDoc, getDoc, deleteDoc, collection, getDocs, addDoc };
 
   // Auth state listener
   onAuthStateChanged(auth, async (user) => {
@@ -966,6 +1144,15 @@
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     document.getElementById('page-' + name).classList.add('active');
     btn.classList.add('active');
+
+    // FAB visibility
+    const fab = document.getElementById('fab-ing');
+    if (name === 'lotes') {
+      fab.classList.add('visible');
+      if (window.loadIngredientes) window.loadIngredientes();
+    } else {
+      fab.classList.remove('visible');
+    }
   }
 
   // Logo upload
@@ -1038,6 +1225,166 @@
     setTimeout(() => t.classList.remove('show'), 2800);
   }
 </script>
+
+<!-- FAB Ingredientes -->
+<button class="fab" id="fab-ing" onclick="openIngModal()">+</button>
+
+<!-- Modal Ingrediente -->
+<div class="modal-overlay" id="ing-modal-overlay" onclick="closeIngModal(event)">
+  <div class="modal">
+    <p class="modal-title" id="ing-modal-title">Nuevo ingrediente</p>
+    <div class="form-group">
+      <label>Nombre del ingrediente</label>
+      <input type="text" id="ing-name-input" placeholder="Ej: Té negro, Mango, Piloncillo..." />
+    </div>
+    <div class="form-group">
+      <label>Categoría</label>
+      <div class="cat-select">
+        <button class="cat-option" onclick="selectCatOption('Tés', this)">🍃 Tés</button>
+        <button class="cat-option" onclick="selectCatOption('Frutas', this)">🍓 Frutas</button>
+        <button class="cat-option" onclick="selectCatOption('Azúcares', this)">🍯 Azúcares</button>
+        <button class="cat-option" onclick="selectCatOption('Otros', this)">🌿 Otros</button>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" style="flex:1" onclick="closeIngModal()">Cancelar</button>
+      <button class="btn-primary" style="flex:2; margin-top:0" onclick="saveIngrediente()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── INGREDIENTES MODULE ──
+  let allIngredientes = [];
+  let currentCatFilter = 'todos';
+  let editingIngId = null;
+  let selectedCat = null;
+
+  async function loadIngredientes() {
+    try {
+      const snap = await window._firebase.getDocs(window._firebase.collection(window._db, 'ingredientes'));
+      allIngredientes = [];
+      snap.forEach(d => allIngredientes.push({ id: d.id, ...d.data() }));
+      allIngredientes.sort((a, b) => a.nombre.localeCompare(b.nombre));
+      renderIngredientes();
+    } catch(e) {
+      document.getElementById('ing-list').innerHTML = '<div class="empty-state"><p>Error al cargar ingredientes.</p></div>';
+    }
+  }
+
+  function renderIngredientes() {
+    const list = document.getElementById('ing-list');
+    const filtered = currentCatFilter === 'todos'
+      ? allIngredientes
+      : allIngredientes.filter(i => i.categoria === currentCatFilter);
+
+    if (filtered.length === 0) {
+      list.innerHTML = `<div class="empty-state"><div class="empty-icon">🌿</div><p>No hay ingredientes en esta categoría.<br>Toca + para agregar uno.</p></div>`;
+      return;
+    }
+
+    const catIcons = { 'Tés': '🍃', 'Frutas': '🍓', 'Azúcares': '🍯', 'Otros': '🌿' };
+    list.innerHTML = filtered.map(ing => `
+      <div class="ing-item">
+        <div class="ing-info">
+          <div class="ing-name">${catIcons[ing.categoria] || '🌿'} ${ing.nombre}</div>
+          <div class="ing-cat">${ing.categoria}</div>
+        </div>
+        <div class="ing-actions">
+          <button class="btn-edit" onclick="editIngrediente('${ing.id}')">✏️</button>
+          <button class="btn-del" onclick="deleteIngrediente('${ing.id}', '${ing.nombre}')">🗑️</button>
+        </div>
+      </div>`).join('');
+  }
+
+  function filterCat(cat, btn) {
+    currentCatFilter = cat;
+    document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    renderIngredientes();
+  }
+
+  function openIngModal(id) {
+    editingIngId = id || null;
+    selectedCat = null;
+    document.getElementById('ing-modal-title').textContent = id ? 'Editar ingrediente' : 'Nuevo ingrediente';
+    document.getElementById('ing-name-input').value = '';
+    document.querySelectorAll('.cat-option').forEach(o => o.classList.remove('selected'));
+
+    if (id) {
+      const ing = allIngredientes.find(i => i.id === id);
+      if (ing) {
+        document.getElementById('ing-name-input').value = ing.nombre;
+        selectedCat = ing.categoria;
+        document.querySelectorAll('.cat-option').forEach(o => {
+          if (o.textContent.includes(ing.categoria)) o.classList.add('selected');
+        });
+      }
+    }
+
+    document.getElementById('ing-modal-overlay').classList.add('open');
+    setTimeout(() => document.getElementById('ing-name-input').focus(), 300);
+  }
+
+  function closeIngModal(e) {
+    if (e && e.target !== document.getElementById('ing-modal-overlay')) return;
+    document.getElementById('ing-modal-overlay').classList.remove('open');
+  }
+
+  function selectCatOption(cat, btn) {
+    selectedCat = cat;
+    document.querySelectorAll('.cat-option').forEach(o => o.classList.remove('selected'));
+    btn.classList.add('selected');
+  }
+
+  async function saveIngrediente() {
+    const nombre = document.getElementById('ing-name-input').value.trim();
+    if (!nombre) return showToast('⚠️ Escribe el nombre del ingrediente');
+    if (!selectedCat) return showToast('⚠️ Selecciona una categoría');
+
+    try {
+      const data = { nombre, categoria: selectedCat, creadoEn: Date.now() };
+      if (editingIngId) {
+        await window._firebase.setDoc(window._firebase.doc(window._db, 'ingredientes', editingIngId), data);
+        showToast('✅ Ingrediente actualizado');
+      } else {
+        const newDoc = window._firebase.doc(window._firebase.collection(window._db, 'ingredientes'));
+        await window._firebase.setDoc(newDoc, data);
+        showToast('✅ Ingrediente agregado');
+      }
+      document.getElementById('ing-modal-overlay').classList.remove('open');
+      await loadIngredientes();
+    } catch(e) {
+      showToast('❌ Error al guardar');
+    }
+  }
+
+  function editIngrediente(id) {
+    openIngModal(id);
+  }
+
+  async function deleteIngrediente(id, nombre) {
+    if (!confirm(`¿Eliminar "${nombre}"?`)) return;
+    try {
+      await window._firebase.deleteDoc(window._firebase.doc(window._db, 'ingredientes', id));
+      allIngredientes = allIngredientes.filter(i => i.id !== id);
+      renderIngredientes();
+      showToast('Ingrediente eliminado');
+    } catch(e) {
+      showToast('❌ Error al eliminar');
+    }
+  }
+
+  window.filterCat = filterCat;
+  window.openIngModal = openIngModal;
+  window.closeIngModal = closeIngModal;
+  window.selectCatOption = selectCatOption;
+  window.saveIngrediente = saveIngrediente;
+  window.editIngrediente = editIngrediente;
+  window.deleteIngrediente = deleteIngrediente;
+  window.loadIngredientes = loadIngredientes;
+</script>
+
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {

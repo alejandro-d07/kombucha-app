@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kombucha App</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0f0e0b;
+      --surface: #1a1915;
+      --surface2: #222118;
+      --border: #2e2c24;
+      --accent: #c8a96e;
+      --accent2: #7db88a;
+      --text: #f0ebe0;
+      --text2: #9e9880;
+      --danger: #c96e6e;
+      --radius: 12px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── AUTH SCREEN ── */
+    #auth-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px;
+      background: radial-gradient(ellipse at 60% 0%, #2a2210 0%, var(--bg) 60%);
+    }
+
+    .auth-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 48px 40px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.5);
+    }
+
+    .auth-logo {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+
+    .auth-logo img {
+      max-height: 72px;
+      max-width: 200px;
+      object-fit: contain;
+    }
+
+    .auth-logo .default-logo {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .auth-logo .logo-icon {
+      font-size: 48px;
+      line-height: 1;
+    }
+
+    .auth-logo h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 26px;
+      color: var(--accent);
+      letter-spacing: 0.5px;
+    }
+
+    .auth-logo p {
+      font-size: 12px;
+      color: var(--text2);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    .auth-tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--surface2);
+      border-radius: 10px;
+      padding: 4px;
+      margin-bottom: 28px;
+    }
+
+    .auth-tab {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--text2);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .auth-tab.active {
+      background: var(--accent);
+      color: #0f0e0b;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text2);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 12px 16px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      transition: border-color 0.2s;
+      outline: none;
+    }
+
+    .form-group input:focus {
+      border-color: var(--accent);
+    }
+
+    .btn-primary {
+      width: 100%;
+      padding: 14px;
+      background: var(--accent);
+      color: #0f0e0b;
+      border: none;
+      border-radius: var(--radius);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+
+    .btn-primary:hover { opacity: 0.9; }
+    .btn-primary:active { transform: scale(0.98); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .error-msg {
+      background: rgba(201,110,110,0.1);
+      border: 1px solid rgba(201,110,110,0.3);
+      color: var(--danger);
+      padding: 12px 16px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    /* ── MAIN APP ── */
+    #app-screen { display: none; flex-direction: column; min-height: 100vh; }
+
+    /* Top bar */
+    .topbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .topbar-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .topbar-logo img {
+      max-height: 36px;
+      max-width: 120px;
+      object-fit: contain;
+    }
+
+    .topbar-logo .default-topbar-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .topbar-logo .logo-icon-sm { font-size: 28px; }
+
+    .topbar-logo h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 18px;
+      color: var(--accent);
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .user-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--text2);
+    }
+
+    .user-avatar {
+      width: 32px;
+      height: 32px;
+      background: var(--accent);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 600;
+      color: #0f0e0b;
+    }
+
+    .btn-icon {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text2);
+      border-radius: 8px;
+      padding: 7px 12px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .btn-icon:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* Nav */
+    .nav-bottom {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      display: flex;
+      z-index: 100;
+    }
+
+    .nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 0;
+      gap: 4px;
+      font-size: 10px;
+      color: var(--text2);
+      cursor: pointer;
+      transition: color 0.2s;
+      border: none;
+      background: none;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .nav-item span:first-child { font-size: 20px; }
+    .nav-item.active { color: var(--accent); }
+
+    /* Content */
+    .content {
+      flex: 1;
+      padding: 24px;
+      padding-bottom: 80px;
+      max-width: 800px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .page { display: none; }
+    .page.active { display: block; }
+
+    .page-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 28px;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    .page-subtitle {
+      font-size: 14px;
+      color: var(--text2);
+      margin-bottom: 28px;
+    }
+
+    /* Dashboard cards */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    @media (min-width: 600px) {
+      .stats-grid { grid-template-columns: repeat(4, 1fr); }
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 16px;
+      text-align: center;
+    }
+
+    .stat-card .stat-icon { font-size: 28px; margin-bottom: 8px; }
+    .stat-card .stat-value {
+      font-family: 'Playfair Display', serif;
+      font-size: 28px;
+      color: var(--accent);
+      line-height: 1;
+    }
+    .stat-card .stat-label {
+      font-size: 11px;
+      color: var(--text2);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 4px;
+    }
+
+    /* Alerts */
+    .alerts-section { margin-bottom: 28px; }
+    .section-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text2);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 12px;
+    }
+
+    .alert-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .alert-item.urgent { border-left-color: var(--danger); }
+    .alert-item.ready { border-left-color: var(--accent2); }
+    .alert-icon { font-size: 20px; }
+    .alert-text { flex: 1; }
+    .alert-text strong { font-size: 14px; font-weight: 600; }
+    .alert-text p { font-size: 12px; color: var(--text2); margin-top: 2px; }
+
+    /* Settings page */
+    .settings-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 16px;
+    }
+
+    .settings-section h3 {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text2);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 16px;
+    }
+
+    .logo-upload-area {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s;
+      position: relative;
+    }
+
+    .logo-upload-area:hover { border-color: var(--accent); }
+    .logo-upload-area input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+    .logo-upload-area .upload-icon { font-size: 36px; margin-bottom: 8px; }
+    .logo-upload-area p { font-size: 13px; color: var(--text2); }
+    .logo-upload-area .logo-preview { max-height: 80px; max-width: 200px; object-fit: contain; }
+
+    .logo-actions { display: flex; gap: 8px; margin-top: 12px; justify-content: center; }
+
+    .btn-secondary {
+      padding: 8px 16px;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      transition: all 0.2s;
+    }
+
+    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+    .btn-danger {
+      padding: 8px 16px;
+      background: transparent;
+      border: 1px solid rgba(201,110,110,0.4);
+      color: var(--danger);
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      transition: all 0.2s;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 14px;
+    }
+
+    .info-row:last-child { border-bottom: none; }
+    .info-row span:first-child { color: var(--text2); }
+    .info-row span:last-child { font-weight: 500; }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 90px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--surface);
+      border: 1px solid var(--accent);
+      color: var(--text);
+      padding: 12px 24px;
+      border-radius: 100px;
+      font-size: 13px;
+      font-weight: 500;
+      opacity: 0;
+      transition: all 0.3s;
+      pointer-events: none;
+      white-space: nowrap;
+      z-index: 999;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* Loading */
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: var(--text2);
+      font-size: 14px;
+      padding: 48px;
+    }
+
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--text2);
+    }
+
+    .empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; }
+    .empty-state p { font-size: 14px; }
+
+    /* Notification permission banner */
+    .notif-banner {
+      background: rgba(200, 169, 110, 0.1);
+      border: 1px solid rgba(200, 169, 110, 0.3);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 20px;
+      font-size: 13px;
+    }
+
+    .notif-banner p { color: var(--text2); flex: 1; }
+    .notif-banner strong { color: var(--accent); }
+  </style>
+</head>
+<body>
+
+<!-- AUTH SCREEN -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo" id="auth-logo-area">
+      <div class="default-logo">
+        <span class="logo-icon">🍵</span>
+        <h1>Kombucha App</h1>
+        <p>Control de producción</p>
+      </div>
+    </div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchTab('login')">Iniciar sesión</button>
+      <button class="auth-tab" onclick="switchTab('register')">Registrarse</button>
+    </div>
+
+    <div id="auth-error" class="error-msg"></div>
+
+    <!-- Login form -->
+    <div id="login-form">
+      <div class="form-group">
+        <label>Correo electrónico</label>
+        <input type="email" id="login-email" placeholder="tu@correo.com" />
+      </div>
+      <div class="form-group">
+        <label>Contraseña</label>
+        <input type="password" id="login-password" placeholder="••••••••" />
+      </div>
+      <button class="btn-primary" id="login-btn" onclick="handleLogin()">Entrar</button>
+    </div>
+
+    <!-- Register form -->
+    <div id="register-form" style="display:none">
+      <div class="form-group">
+        <label>Nombre</label>
+        <input type="text" id="reg-name" placeholder="Tu nombre" />
+      </div>
+      <div class="form-group">
+        <label>Correo electrónico</label>
+        <input type="email" id="reg-email" placeholder="tu@correo.com" />
+      </div>
+      <div class="form-group">
+        <label>Contraseña</label>
+        <input type="password" id="reg-password" placeholder="Mínimo 6 caracteres" />
+      </div>
+      <button class="btn-primary" id="register-btn" onclick="handleRegister()">Crear cuenta</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app-screen">
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="topbar-logo" id="topbar-logo-area">
+      <div class="default-topbar-logo">
+        <span class="logo-icon-sm">🍵</span>
+        <h2>Kombucha App</h2>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="user-badge">
+        <div class="user-avatar" id="user-avatar">?</div>
+        <span id="user-name-display" style="display:none"></span>
+      </div>
+      <button class="btn-icon" onclick="handleLogout()">Salir</button>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="content">
+
+    <!-- Dashboard -->
+    <div class="page active" id="page-dashboard">
+      <p class="page-title">Panel principal</p>
+      <p class="page-subtitle">Resumen de tu producción</p>
+
+      <div id="notif-banner" class="notif-banner" style="display:none">
+        <p>🔔 Activa las <strong>notificaciones push</strong> para recibir alertas de tus lotes</p>
+        <button class="btn-secondary" onclick="requestNotifPermission()">Activar</button>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon">🫙</div>
+          <div class="stat-value" id="stat-f1">0</div>
+          <div class="stat-label">Lotes F1</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🍶</div>
+          <div class="stat-value" id="stat-f2">0</div>
+          <div class="stat-label">Lotes F2</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">✅</div>
+          <div class="stat-value" id="stat-ready">0</div>
+          <div class="stat-label">Listos</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">📦</div>
+          <div class="stat-value" id="stat-bottles">0</div>
+          <div class="stat-label">Botellas</div>
+        </div>
+      </div>
+
+      <div class="alerts-section">
+        <p class="section-title">🔔 Alertas activas</p>
+        <div id="alerts-list">
+          <div class="empty-state">
+            <div class="empty-icon">🌿</div>
+            <p>No hay alertas por ahora.<br>Los lotes aparecerán aquí cuando estén listos.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lotes (placeholder) -->
+    <div class="page" id="page-lotes">
+      <p class="page-title">Lotes</p>
+      <p class="page-subtitle">Módulo 3 — próximamente</p>
+      <div class="empty-state">
+        <div class="empty-icon">🫙</div>
+        <p>El registro de lotes se construirá<br>en el Módulo 3.</p>
+      </div>
+    </div>
+
+    <!-- Inventario (placeholder) -->
+    <div class="page" id="page-inventario">
+      <p class="page-title">Inventario</p>
+      <p class="page-subtitle">Módulo 5 — próximamente</p>
+      <div class="empty-state">
+        <div class="empty-icon">📦</div>
+        <p>El control de inventario se construirá<br>en el Módulo 5.</p>
+      </div>
+    </div>
+
+    <!-- Ventas (placeholder) -->
+    <div class="page" id="page-ventas">
+      <p class="page-title">Ventas</p>
+      <p class="page-subtitle">Módulo 6 — próximamente</p>
+      <div class="empty-state">
+        <div class="empty-icon">💰</div>
+        <p>El seguimiento de ventas se construirá<br>en el Módulo 6.</p>
+      </div>
+    </div>
+
+    <!-- Ajustes -->
+    <div class="page" id="page-ajustes">
+      <p class="page-title">Ajustes</p>
+      <p class="page-subtitle">Personaliza tu app</p>
+
+      <div class="settings-section">
+        <h3>Logo de marca</h3>
+        <div class="logo-upload-area" id="logo-drop-area">
+          <input type="file" id="logo-input" accept="image/*" onchange="handleLogoUpload(event)" />
+          <div id="logo-placeholder">
+            <div class="upload-icon">🖼️</div>
+            <p>Toca para subir tu logo<br><span style="font-size:11px;opacity:0.6">PNG, JPG, SVG — recomendado fondo transparente</span></p>
+          </div>
+          <img id="logo-preview-img" class="logo-preview" style="display:none" />
+        </div>
+        <div class="logo-actions" id="logo-actions" style="display:none">
+          <button class="btn-secondary" onclick="triggerLogoInput()">Cambiar logo</button>
+          <button class="btn-danger" onclick="removeLogo()">Eliminar</button>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>Mi cuenta</h3>
+        <div class="info-row">
+          <span>Nombre</span>
+          <span id="settings-name">—</span>
+        </div>
+        <div class="info-row">
+          <span>Correo</span>
+          <span id="settings-email">—</span>
+        </div>
+        <div class="info-row">
+          <span>Plan</span>
+          <span style="color: var(--accent2)">Spark (Gratuito)</span>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>Notificaciones</h3>
+        <div class="info-row">
+          <span>Estado</span>
+          <span id="notif-status">—</span>
+        </div>
+        <button class="btn-secondary" style="margin-top:12px; width:100%" onclick="requestNotifPermission()">
+          Activar notificaciones push
+        </button>
+      </div>
+
+      <button class="btn-danger" style="width:100%; padding:14px; margin-top:8px" onclick="handleLogout()">
+        Cerrar sesión
+      </button>
+    </div>
+
+  </div><!-- /content -->
+
+  <!-- Bottom Nav -->
+  <nav class="nav-bottom">
+    <button class="nav-item active" onclick="showPage('dashboard', this)">
+      <span>🏠</span><span>Inicio</span>
+    </button>
+    <button class="nav-item" onclick="showPage('lotes', this)">
+      <span>🫙</span><span>Lotes</span>
+    </button>
+    <button class="nav-item" onclick="showPage('inventario', this)">
+      <span>📦</span><span>Inventario</span>
+    </button>
+    <button class="nav-item" onclick="showPage('ventas', this)">
+      <span>💰</span><span>Ventas</span>
+    </button>
+    <button class="nav-item" onclick="showPage('ajustes', this)">
+      <span>⚙️</span><span>Ajustes</span>
+    </button>
+  </nav>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Firebase -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
+  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
+  import { getFirestore, doc, setDoc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAPml56n0khA_qxa1snpl4MTKKkZNo11Ww",
+    authDomain: "kombucha-app-b7a2d.firebaseapp.com",
+    projectId: "kombucha-app-b7a2d",
+    storageBucket: "kombucha-app-b7a2d.firebasestorage.app",
+    messagingSenderId: "291901072311",
+    appId: "1:291901072311:web:dfb864fca040de1143be32"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  // Expose to window
+  window._auth = auth;
+  window._db = db;
+  window._firebase = { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile, doc, setDoc, getDoc, collection, getDocs };
+
+  // Auth state listener
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      document.getElementById('auth-screen').style.display = 'none';
+      document.getElementById('app-screen').style.display = 'flex';
+
+      // Set user info
+      const name = user.displayName || user.email.split('@')[0];
+      document.getElementById('user-avatar').textContent = name[0].toUpperCase();
+      document.getElementById('user-name-display').textContent = name;
+      document.getElementById('settings-name').textContent = name;
+      document.getElementById('settings-email').textContent = user.email;
+
+      // Load logo
+      await loadLogo();
+
+      // Load dashboard stats
+      await loadDashboard();
+
+      // Check notifications
+      checkNotifStatus();
+
+    } else {
+      document.getElementById('auth-screen').style.display = 'flex';
+      document.getElementById('app-screen').style.display = 'none';
+    }
+  });
+
+  async function loadLogo() {
+    try {
+      const snap = await window._firebase.getDoc(window._firebase.doc(window._db, 'settings', 'branding'));
+      if (snap.exists() && snap.data().logoDataUrl) {
+        applyLogo(snap.data().logoDataUrl);
+      }
+    } catch(e) {}
+  }
+
+  async function loadDashboard() {
+    try {
+      const snap = await window._firebase.getDocs(window._firebase.collection(window._db, 'lotes'));
+      let f1 = 0, f2 = 0, ready = 0, bottles = 0;
+      const alerts = [];
+      const now = Date.now();
+
+      snap.forEach(d => {
+        const l = d.data();
+        if (l.etapa === 'F1') f1++;
+        if (l.etapa === 'F2') f2++;
+        if (l.estado === 'listo') ready++;
+        bottles += (l.botellas || 0);
+
+        // Check alerts
+        if (l.fechaListoF1 && l.estado === 'activo' && l.etapa === 'F1') {
+          const diff = Math.ceil((l.fechaListoF1 - now) / 86400000);
+          if (diff <= 0) alerts.push({ type: 'ready', icon: '✅', title: `Lote ${l.codigo} — F1 lista`, desc: 'Listo para envasar' });
+          else if (diff <= 1) alerts.push({ type: 'urgent', icon: '⏰', title: `Lote ${l.codigo} — F1 en ${diff}d`, desc: 'Pronto listo para envasar' });
+        }
+      });
+
+      document.getElementById('stat-f1').textContent = f1;
+      document.getElementById('stat-f2').textContent = f2;
+      document.getElementById('stat-ready').textContent = ready;
+      document.getElementById('stat-bottles').textContent = bottles;
+
+      const alertsList = document.getElementById('alerts-list');
+      if (alerts.length === 0) {
+        alertsList.innerHTML = `<div class="empty-state"><div class="empty-icon">🌿</div><p>No hay alertas por ahora.<br>Los lotes aparecerán aquí cuando estén listos.</p></div>`;
+      } else {
+        alertsList.innerHTML = alerts.map(a => `
+          <div class="alert-item ${a.type}">
+            <span class="alert-icon">${a.icon}</span>
+            <div class="alert-text"><strong>${a.title}</strong><p>${a.desc}</p></div>
+          </div>`).join('');
+      }
+    } catch(e) {}
+  }
+
+  window.loadDashboard = loadDashboard;
+  window.applyLogo = applyLogo;
+  window.loadLogo = loadLogo;
+
+  function applyLogo(dataUrl) {
+    // Auth screen
+    const authArea = document.getElementById('auth-logo-area');
+    authArea.innerHTML = `<img src="${dataUrl}" style="max-height:80px;max-width:200px;object-fit:contain;margin-bottom:8px" /><p style="font-size:11px;color:var(--text2);letter-spacing:2px;text-transform:uppercase">Control de producción</p>`;
+
+    // Topbar
+    const topArea = document.getElementById('topbar-logo-area');
+    topArea.innerHTML = `<img src="${dataUrl}" style="max-height:36px;max-width:120px;object-fit:contain" />`;
+
+    // Preview in settings
+    const preview = document.getElementById('logo-preview-img');
+    const placeholder = document.getElementById('logo-placeholder');
+    const actions = document.getElementById('logo-actions');
+    preview.src = dataUrl;
+    preview.style.display = 'block';
+    placeholder.style.display = 'none';
+    actions.style.display = 'flex';
+  }
+</script>
+
+<script>
+  // Tab switching
+  function switchTab(tab) {
+    document.querySelectorAll('.auth-tab').forEach((t,i) => t.classList.toggle('active', (i===0 && tab==='login') || (i===1 && tab==='register')));
+    document.getElementById('login-form').style.display = tab === 'login' ? 'block' : 'none';
+    document.getElementById('register-form').style.display = tab === 'register' ? 'block' : 'none';
+    document.getElementById('auth-error').style.display = 'none';
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('auth-error');
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+
+  async function handleLogin() {
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    if (!email || !password) return showError('Completa todos los campos');
+    const btn = document.getElementById('login-btn');
+    btn.disabled = true; btn.textContent = 'Entrando...';
+    try {
+      await window._firebase.signInWithEmailAndPassword(window._auth, email, password);
+    } catch(e) {
+      showError(firebaseErrorMsg(e.code));
+      btn.disabled = false; btn.textContent = 'Entrar';
+    }
+  }
+
+  async function handleRegister() {
+    const name = document.getElementById('reg-name').value.trim();
+    const email = document.getElementById('reg-email').value.trim();
+    const password = document.getElementById('reg-password').value;
+    if (!name || !email || !password) return showError('Completa todos los campos');
+    if (password.length < 6) return showError('La contraseña debe tener al menos 6 caracteres');
+    const btn = document.getElementById('register-btn');
+    btn.disabled = true; btn.textContent = 'Creando cuenta...';
+    try {
+      const cred = await window._firebase.createUserWithEmailAndPassword(window._auth, email, password);
+      await window._firebase.updateProfile(cred.user, { displayName: name });
+      await window._firebase.setDoc(window._firebase.doc(window._db, 'usuarios', cred.user.uid), {
+        nombre: name, email, creadoEn: Date.now(), rol: 'usuario'
+      });
+    } catch(e) {
+      showError(firebaseErrorMsg(e.code));
+      btn.disabled = false; btn.textContent = 'Crear cuenta';
+    }
+  }
+
+  async function handleLogout() {
+    await window._firebase.signOut(window._auth);
+  }
+
+  function firebaseErrorMsg(code) {
+    const msgs = {
+      'auth/user-not-found': 'No existe una cuenta con ese correo',
+      'auth/wrong-password': 'Contraseña incorrecta',
+      'auth/invalid-email': 'Correo electrónico inválido',
+      'auth/email-already-in-use': 'Ya existe una cuenta con ese correo',
+      'auth/weak-password': 'La contraseña es muy débil',
+      'auth/invalid-credential': 'Correo o contraseña incorrectos',
+      'auth/too-many-requests': 'Demasiados intentos. Intenta más tarde',
+    };
+    return msgs[code] || 'Ocurrió un error. Intenta de nuevo.';
+  }
+
+  // Navigation
+  function showPage(name, btn) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('page-' + name).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  // Logo upload
+  function triggerLogoInput() {
+    document.getElementById('logo-input').click();
+  }
+
+  async function handleLogoUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      const dataUrl = ev.target.result;
+      try {
+        await window._firebase.setDoc(window._firebase.doc(window._db, 'settings', 'branding'), { logoDataUrl: dataUrl });
+        window.applyLogo(dataUrl);
+        showToast('✅ Logo guardado');
+      } catch(err) {
+        showToast('❌ Error al guardar el logo');
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async function removeLogo() {
+    try {
+      await window._firebase.setDoc(window._firebase.doc(window._db, 'settings', 'branding'), { logoDataUrl: null });
+      document.getElementById('logo-preview-img').style.display = 'none';
+      document.getElementById('logo-placeholder').style.display = 'block';
+      document.getElementById('logo-actions').style.display = 'none';
+      // Reset logos
+      document.getElementById('auth-logo-area').innerHTML = `<div class="default-logo"><span class="logo-icon">🍵</span><h1>Kombucha App</h1><p>Control de producción</p></div>`;
+      document.getElementById('topbar-logo-area').innerHTML = `<div class="default-topbar-logo"><span class="logo-icon-sm">🍵</span><h2>Kombucha App</h2></div>`;
+      showToast('Logo eliminado');
+    } catch(e) { showToast('❌ Error'); }
+  }
+
+  // Notifications
+  function checkNotifStatus() {
+    if (!('Notification' in window)) {
+      document.getElementById('notif-status').textContent = 'No soportado en este navegador';
+      return;
+    }
+    const perm = Notification.permission;
+    document.getElementById('notif-status').textContent = perm === 'granted' ? '✅ Activas' : perm === 'denied' ? '❌ Bloqueadas' : '⚠️ Sin activar';
+    if (perm !== 'granted') {
+      document.getElementById('notif-banner').style.display = 'flex';
+    }
+  }
+
+  async function requestNotifPermission() {
+    if (!('Notification' in window)) return showToast('Tu navegador no soporta notificaciones');
+    const perm = await Notification.requestPermission();
+    if (perm === 'granted') {
+      showToast('✅ Notificaciones activadas');
+      document.getElementById('notif-banner').style.display = 'none';
+      document.getElementById('notif-status').textContent = '✅ Activas';
+    } else {
+      showToast('Notificaciones bloqueadas');
+    }
+  }
+
+  window.requestNotifPermission = requestNotifPermission;
+
+  // Toast
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2800);
+  }
+</script>
+</body>
+</html>

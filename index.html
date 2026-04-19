@@ -684,8 +684,7 @@
         else if(diff<=3) diasBadge=`<span class="dias-badge dias-warn">⏰ ${diff}d restantes</span>`;
         else diasBadge=`<span class="dias-badge dias-ok">🕐 ${diff}d restantes</span>`;
       }
-      const nextIdx=FLUJO.indexOf(l.estado)+1;
-      const nextBtn=nextIdx<FLUJO.length?`<button class="btn-status" onclick="openEstadoModal('${l.id}')">Avanzar estado</button>`:'';
+      const nextBtn=`<button class="btn-status" onclick="openEstadoModal('${l.id}')">🔄 Seleccionar estado</button>`;
       const obsHtml=l.observaciones?`<div class="lote-obs">📝 ${l.observaciones}</div>`:'';
       return `<div class="lote-card">
         <div class="lote-top">

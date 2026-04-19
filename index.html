@@ -12,7 +12,7 @@
   <meta name="theme-color" content="#0f0e0b" />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
   <style>
-    :root { --bg:#0f0e0b;--surface:#1a1915;--surface2:#222118;--border:#2e2c24;--accent:#c8a96e;--accent2:#7db88a;--text:#f0ebe0;--text2:#9e9880;--danger:#c96e6e;--radius:12px; }
+    :root{--bg:#0f0e0b;--surface:#1a1915;--surface2:#222118;--border:#2e2c24;--accent:#c8a96e;--accent2:#7db88a;--text:#f0ebe0;--text2:#9e9880;--danger:#c96e6e;--radius:12px;}
     *{box-sizing:border-box;margin:0;padding:0;}
     body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;}
     #auth-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px;background:radial-gradient(ellipse at 60% 0%,#2a2210 0%,var(--bg) 60%);}
@@ -27,9 +27,10 @@
     .auth-tab.active{background:var(--accent);color:#0f0e0b;}
     .form-group{margin-bottom:16px;}
     .form-group label{display:block;font-size:12px;font-weight:500;color:var(--text2);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;}
-    .form-group input,.form-group select{width:100%;padding:12px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;transition:border-color .2s;outline:none;}
-    .form-group input:focus,.form-group select:focus{border-color:var(--accent);}
+    .form-group input,.form-group select,.form-group textarea{width:100%;padding:12px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;transition:border-color .2s;outline:none;}
+    .form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--accent);}
     .form-group select option{background:var(--surface2);}
+    .form-group textarea{resize:vertical;min-height:80px;}
     .btn-primary{width:100%;padding:14px;background:var(--accent);color:#0f0e0b;border:none;border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;margin-top:8px;transition:opacity .2s,transform .1s;}
     .btn-primary:hover{opacity:.9;}.btn-primary:active{transform:scale(.98);}.btn-primary:disabled{opacity:.5;cursor:not-allowed;}
     .error-msg{background:rgba(201,110,110,.1);border:1px solid rgba(201,110,110,.3);color:var(--danger);padding:12px 16px;border-radius:var(--radius);font-size:13px;margin-bottom:16px;display:none;}
@@ -58,7 +59,7 @@
     .cat-tab{flex-shrink:0;padding:7px 16px;border-radius:100px;border:1px solid var(--border);background:transparent;color:var(--text2);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;transition:all .2s;}
     .cat-tab.active{background:var(--accent);color:#0f0e0b;border-color:var(--accent);font-weight:600;}
     @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-    .ing-list,.recipe-list{display:flex;flex-direction:column;gap:8px;}
+    .ing-list,.recipe-list,.lote-list{display:flex;flex-direction:column;gap:10px;}
     .ing-item,.recipe-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;animation:fadeIn .2s ease;}
     .recipe-item{flex-direction:column;align-items:flex-start;}
     .recipe-header{display:flex;align-items:center;justify-content:space-between;width:100%;}
@@ -71,6 +72,34 @@
     .btn-edit:hover{border-color:var(--accent);color:var(--accent);}
     .btn-del{background:none;border:1px solid transparent;color:var(--text2);border-radius:8px;padding:6px 10px;font-size:13px;cursor:pointer;transition:all .2s;}
     .btn-del:hover{color:var(--danger);border-color:rgba(201,110,110,.3);}
+    /* Lote card */
+    .lote-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px;animation:fadeIn .2s ease;transition:border-color .2s;}
+    .lote-card:hover{border-color:var(--accent);}
+    .lote-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:12px;}
+    .lote-codigo{font-family:'Playfair Display',serif;font-size:18px;font-weight:600;}
+    .lote-receta{font-size:12px;color:var(--text2);margin-top:2px;}
+    .status-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:100px;font-size:11px;font-weight:600;white-space:nowrap;flex-shrink:0;}
+    .status-activo{background:rgba(200,169,110,.15);color:var(--accent);}
+    .status-envasar{background:rgba(255,180,50,.15);color:#ffb432;}
+    .status-f2{background:rgba(125,184,138,.15);color:var(--accent2);}
+    .status-venta{background:rgba(100,180,255,.15);color:#64b4ff;}
+    .status-vendido{background:rgba(150,150,150,.15);color:#aaa;}
+    .lote-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px;}
+    .lote-stat{background:var(--surface2);border-radius:8px;padding:10px 12px;}
+    .lote-stat-label{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:1px;}
+    .lote-stat-value{font-size:16px;font-weight:600;margin-top:2px;}
+    .lote-dates{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;}
+    .lote-date{font-size:12px;color:var(--text2);}
+    .lote-date strong{color:var(--text);font-weight:500;}
+    .lote-actions{display:flex;gap:8px;flex-wrap:wrap;}
+    .btn-status{padding:7px 14px;border-radius:8px;border:1px solid var(--accent);color:var(--accent);background:none;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;}
+    .btn-status:hover{background:var(--accent);color:#0f0e0b;}
+    .dias-badge{display:inline-block;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:600;}
+    .dias-ok{background:rgba(125,184,138,.15);color:var(--accent2);}
+    .dias-warn{background:rgba(255,180,50,.15);color:#ffb432;}
+    .dias-late{background:rgba(201,110,110,.15);color:var(--danger);}
+    .lote-obs{font-size:12px;color:var(--text2);margin-top:8px;padding-top:8px;border-top:1px solid var(--border);line-height:1.5;}
+    /* Stats */
     .stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:28px;}
     @media(min-width:600px){.stats-grid{grid-template-columns:repeat(4,1fr);}}
     .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px 16px;text-align:center;}
@@ -127,6 +156,9 @@
     .empty-state{text-align:center;padding:48px 24px;color:var(--text2);}
     .empty-state .empty-icon{font-size:48px;margin-bottom:12px;}
     .empty-state p{font-size:14px;}
+    .prefijo-row{display:flex;gap:8px;align-items:flex-end;}
+    .prefijo-row .form-group{flex:1;margin-bottom:0;}
+    .num-display{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;color:var(--text2);font-size:15px;min-width:80px;text-align:center;}
   </style>
 </head>
 <body>
@@ -168,6 +200,7 @@
 
   <div class="content">
 
+    <!-- DASHBOARD -->
     <div class="page active" id="page-dashboard">
       <p class="page-title">Panel principal</p>
       <p class="page-subtitle">Resumen de tu producción</p>
@@ -178,12 +211,12 @@
       <div class="stats-grid">
         <div class="stat-card"><div class="stat-icon">🫙</div><div class="stat-value" id="stat-f1">0</div><div class="stat-label">Lotes F1</div></div>
         <div class="stat-card"><div class="stat-icon">🍶</div><div class="stat-value" id="stat-f2">0</div><div class="stat-label">Lotes F2</div></div>
-        <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-value" id="stat-ready">0</div><div class="stat-label">Listos</div></div>
+        <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-value" id="stat-ready">0</div><div class="stat-label">Listos venta</div></div>
         <div class="stat-card"><div class="stat-icon">📦</div><div class="stat-value" id="stat-bottles">0</div><div class="stat-label">Botellas</div></div>
       </div>
-      <div class="alerts-section" style="margin-bottom:28px">
+      <div style="margin-bottom:28px">
         <p class="section-title">🔔 Alertas activas</p>
-        <div id="alerts-list"><div class="empty-state"><div class="empty-icon">🌿</div><p>No hay alertas por ahora.</p></div></div>
+        <div id="alerts-list"><div class="empty-state" style="padding:24px 0"><div class="empty-icon" style="font-size:32px">🌿</div><p>No hay alertas por ahora.</p></div></div>
       </div>
       <div>
         <p class="section-title">🕐 Actividad reciente</p>
@@ -191,9 +224,25 @@
       </div>
     </div>
 
+    <!-- LOTES -->
+    <div class="page" id="page-lotes">
+      <p class="page-title">Lotes</p>
+      <p class="page-subtitle">Registro y seguimiento de fermentación</p>
+      <div class="cat-tabs" id="lote-filter-tabs">
+        <button class="cat-tab active" onclick="filterLotes('todos',this)">Todos</button>
+        <button class="cat-tab" onclick="filterLotes('activo',this)">🟡 Activo</button>
+        <button class="cat-tab" onclick="filterLotes('envasar',this)">📥 Para envasar</button>
+        <button class="cat-tab" onclick="filterLotes('f2',this)">🍶 En F2</button>
+        <button class="cat-tab" onclick="filterLotes('venta',this)">🏷️ Para venta</button>
+        <button class="cat-tab" onclick="filterLotes('vendido',this)">✅ Vendido</button>
+      </div>
+      <div class="lote-list" id="lote-list"><div class="loading"><div class="spinner"></div> Cargando...</div></div>
+    </div>
+
+    <!-- INGREDIENTES & RECETAS -->
     <div class="page" id="page-ingredientes">
       <p class="page-title">Ingredientes & Recetas</p>
-      <p class="page-subtitle" id="ing-page-subtitle">Gestiona tu catálogo y recetas</p>
+      <p class="page-subtitle">Gestiona tu catálogo y recetas</p>
       <div class="sub-tabs">
         <button class="sub-tab active" onclick="switchSubTab('ingredientes',this)">🌿 Ingredientes</button>
         <button class="sub-tab" onclick="switchSubTab('recetas',this)">📋 Recetas</button>
@@ -213,16 +262,19 @@
       </div>
     </div>
 
+    <!-- INVENTARIO -->
     <div class="page" id="page-inventario">
       <p class="page-title">Inventario</p><p class="page-subtitle">Módulo 5 — próximamente</p>
       <div class="empty-state"><div class="empty-icon">📦</div><p>El control de inventario se construirá en el Módulo 5.</p></div>
     </div>
 
+    <!-- VENTAS -->
     <div class="page" id="page-ventas">
       <p class="page-title">Ventas</p><p class="page-subtitle">Módulo 6 — próximamente</p>
       <div class="empty-state"><div class="empty-icon">💰</div><p>El seguimiento de ventas se construirá en el Módulo 6.</p></div>
     </div>
 
+    <!-- AJUSTES -->
     <div class="page" id="page-ajustes">
       <p class="page-title">Ajustes</p><p class="page-subtitle">Personaliza tu app</p>
       <div class="settings-section">
@@ -236,6 +288,15 @@
           <button class="btn-secondary" onclick="document.getElementById('logo-input').click()">Cambiar</button>
           <button class="btn-danger" onclick="removeLogo()">Eliminar</button>
         </div>
+      </div>
+      <div class="settings-section">
+        <h3>Prefijo de lotes</h3>
+        <div class="form-group" style="margin-bottom:0">
+          <label>Prefijo para nuevos lotes</label>
+          <input type="text" id="prefijo-input" placeholder="Ej: KMBC, LOTE, KB" maxlength="8" oninput="previewPrefijo()"/>
+        </div>
+        <p style="font-size:12px;color:var(--text2);margin-top:8px">Vista previa: <span id="prefijo-preview" style="color:var(--accent);font-weight:600">KMBC-001</span></p>
+        <button class="btn-secondary" style="margin-top:12px;width:100%" onclick="savePrefijo()">Guardar prefijo</button>
       </div>
       <div class="settings-section">
         <h3>Mi cuenta</h3>
@@ -255,8 +316,8 @@
 
   <nav class="nav-bottom">
     <button class="nav-item active" onclick="showPage('dashboard',this)"><span>🏠</span><span>Inicio</span></button>
+    <button class="nav-item" onclick="showPage('lotes',this)"><span>🫙</span><span>Lotes</span></button>
     <button class="nav-item" onclick="showPage('ingredientes',this)"><span>🌿</span><span>Recetas</span></button>
-    <button class="nav-item" onclick="showPage('inventario',this)"><span>📦</span><span>Inventario</span></button>
     <button class="nav-item" onclick="showPage('ventas',this)"><span>💰</span><span>Ventas</span></button>
     <button class="nav-item" onclick="showPage('ajustes',this)"><span>⚙️</span><span>Ajustes</span></button>
   </nav>
@@ -310,10 +371,84 @@
   </div>
 </div>
 
+<!-- Modal Lote -->
+<div class="modal-overlay" id="lote-modal" onclick="closeModal('lote-modal',event)">
+  <div class="modal">
+    <p class="modal-title" id="lote-modal-title">Nuevo lote</p>
+    <div class="form-group">
+      <label>Código del lote</label>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="text" id="lote-prefijo-display" readonly style="flex:1;opacity:.6;cursor:default"/>
+        <span style="color:var(--text2);font-size:18px">-</span>
+        <input type="text" id="lote-num-display" readonly style="width:60px;text-align:center;opacity:.6;cursor:default"/>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Etapa inicial</label>
+      <div class="cat-select">
+        <button class="cat-option" onclick="selectLoteEtapa('F1',this)">🫙 F1 — Base</button>
+        <button class="cat-option" onclick="selectLoteEtapa('F2',this)">🍶 F2 — Sabor</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Receta asignada</label>
+      <select id="lote-receta-select"><option value="">Sin receta</option></select>
+    </div>
+    <div class="form-group">
+      <label>Número de jarras</label>
+      <input type="number" id="lote-jarras" placeholder="0" min="0"/>
+    </div>
+    <div class="form-group" id="lote-botellas-group" style="display:none">
+      <label>Número de botellas (360ml)</label>
+      <input type="number" id="lote-botellas" placeholder="0" min="0"/>
+    </div>
+    <div class="form-group">
+      <label>Fecha de elaboración</label>
+      <input type="date" id="lote-fecha-inicio"/>
+    </div>
+    <div class="form-group">
+      <label>Fecha estimada de término</label>
+      <input type="date" id="lote-fecha-fin"/>
+    </div>
+    <div class="form-group">
+      <label>Observaciones</label>
+      <textarea id="lote-obs-input" placeholder="Notas, temperatura, condiciones especiales..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" style="flex:1" onclick="closeModal('lote-modal')">Cancelar</button>
+      <button class="btn-primary" style="flex:2;margin-top:0" onclick="saveLote()">Guardar lote</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal cambiar estado lote -->
+<div class="modal-overlay" id="estado-modal" onclick="closeModal('estado-modal',event)">
+  <div class="modal">
+    <p class="modal-title">Actualizar lote</p>
+    <p id="estado-lote-nombre" style="color:var(--accent);font-weight:600;margin-bottom:16px;font-size:16px"></p>
+    <div class="form-group">
+      <label>Nuevo estado</label>
+      <div id="estado-options" style="display:flex;flex-direction:column;gap:8px"></div>
+    </div>
+    <div class="form-group" id="estado-botellas-group" style="display:none">
+      <label>Número de botellas envasadas (360ml)</label>
+      <input type="number" id="estado-botellas-input" placeholder="0" min="0"/>
+    </div>
+    <div class="form-group">
+      <label>Observaciones (opcional)</label>
+      <textarea id="estado-obs-input" placeholder="Notas sobre este cambio..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" style="flex:1" onclick="closeModal('estado-modal')">Cancelar</button>
+      <button class="btn-primary" style="flex:2;margin-top:0" onclick="saveEstado()">Actualizar</button>
+    </div>
+  </div>
+</div>
+
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
   import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
-  import { getFirestore, doc, setDoc, getDoc, deleteDoc, collection, getDocs, addDoc, orderBy, query, limit } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+  import { getFirestore, doc, setDoc, getDoc, deleteDoc, collection, getDocs, addDoc, orderBy, query, limit, updateDoc } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
 
   const app = initializeApp({
     apiKey:"AIzaSyAPml56n0khA_qxa1snpl4MTKKkZNo11Ww",
@@ -323,21 +458,20 @@
     messagingSenderId:"291901072311",
     appId:"1:291901072311:web:dfb864fca040de1143be32"
   });
-  const auth = getAuth(app);
-  const db = getFirestore(app);
+  const auth=getAuth(app), db=getFirestore(app);
   window._auth=auth; window._db=db;
-  window._fb={doc,setDoc,getDoc,deleteDoc,collection,getDocs,addDoc,orderBy,query,limit,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,updateProfile};
+  window._fb={doc,setDoc,getDoc,deleteDoc,collection,getDocs,addDoc,orderBy,query,limit,updateDoc,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,updateProfile};
 
   onAuthStateChanged(auth, async user => {
-    if (user) {
+    if(user){
       document.getElementById('auth-screen').style.display='none';
       document.getElementById('app-screen').style.display='flex';
-      const name = user.displayName||user.email.split('@')[0];
+      const name=user.displayName||user.email.split('@')[0];
       document.getElementById('user-avatar').textContent=name[0].toUpperCase();
       document.getElementById('settings-name').textContent=name;
       document.getElementById('settings-email').textContent=user.email;
       window._currentUser={uid:user.uid,name};
-      await loadLogo(); await loadDashboard(); checkNotifStatus();
+      await loadSettings(); await loadLogo(); await loadDashboard(); checkNotifStatus();
     } else {
       document.getElementById('auth-screen').style.display='flex';
       document.getElementById('app-screen').style.display='none';
@@ -345,14 +479,27 @@
     }
   });
 
-  async function loadLogo() {
-    try {
-      const snap=await window._fb.getDoc(window._fb.doc(db,'settings','branding'));
-      if(snap.exists()&&snap.data().logoDataUrl) applyLogo(snap.data().logoDataUrl);
-    } catch(e){}
+  async function loadSettings(){
+    try{
+      const snap=await window._fb.getDoc(window._fb.doc(db,'settings','config'));
+      if(snap.exists()){
+        const d=snap.data();
+        window._prefijo=d.prefijo||'KMBC';
+        window._loteCount=d.loteCount||0;
+      } else { window._prefijo='KMBC'; window._loteCount=0; }
+      document.getElementById('prefijo-input').value=window._prefijo;
+      previewPrefijo();
+    }catch(e){window._prefijo='KMBC';window._loteCount=0;}
   }
 
-  function applyLogo(url) {
+  async function loadLogo(){
+    try{
+      const snap=await window._fb.getDoc(window._fb.doc(db,'settings','branding'));
+      if(snap.exists()&&snap.data().logoDataUrl) applyLogo(snap.data().logoDataUrl);
+    }catch(e){}
+  }
+
+  function applyLogo(url){
     document.getElementById('auth-logo-area').innerHTML=`<img src="${url}" style="max-height:80px;max-width:200px;object-fit:contain;margin-bottom:8px"/><p style="font-size:11px;color:var(--text2);letter-spacing:2px;text-transform:uppercase">Control de producción</p>`;
     document.getElementById('topbar-logo-area').innerHTML=`<img src="${url}" style="max-height:36px;max-width:120px;object-fit:contain"/>`;
     const p=document.getElementById('logo-preview-img');
@@ -362,41 +509,53 @@
   }
   window.applyLogo=applyLogo; window.loadLogo=loadLogo;
 
-  async function loadDashboard() {
-    try {
+  async function loadDashboard(){
+    try{
       const snap=await window._fb.getDocs(window._fb.collection(db,'lotes'));
       let f1=0,f2=0,ready=0,bottles=0; const alerts=[]; const now=Date.now();
       snap.forEach(d=>{
         const l=d.data();
         if(l.etapa==='F1')f1++;if(l.etapa==='F2')f2++;
-        if(l.estado==='listo')ready++;bottles+=(l.botellas||0);
-        if(l.fechaListoF1&&l.estado==='activo'&&l.etapa==='F1'){
-          const diff=Math.ceil((l.fechaListoF1-now)/86400000);
-          if(diff<=0)alerts.push({type:'ready',icon:'✅',title:`Lote ${l.codigo} — F1 lista`,desc:'Listo para envasar'});
-          else if(diff<=1)alerts.push({type:'urgent',icon:'⏰',title:`Lote ${l.codigo} — F1 en ${diff}d`,desc:'Pronto listo'});
+        if(l.estado==='venta')ready++;
+        bottles+=(l.botellas||0);
+        if(l.fechaFin&&(l.estado==='activo'||l.estado==='f2')){
+          const diff=Math.ceil((l.fechaFin-now)/86400000);
+          const label=l.estado==='activo'?'F1':'F2';
+          if(diff<=0) alerts.push({type:'ready',icon:'✅',title:`${l.codigo} — ${label} lista`,desc:l.estado==='activo'?'Listo para envasar':'Listo para venta'});
+          else if(diff<=1) alerts.push({type:'warn',icon:'⏰',title:`${l.codigo} — ${label} termina mañana`,desc:`Fecha: ${new Date(l.fechaFin).toLocaleDateString('es-MX')}`});
+          else if(diff<=3) alerts.push({type:'',icon:'🕐',title:`${l.codigo} — ${label} en ${diff} días`,desc:`Fecha: ${new Date(l.fechaFin).toLocaleDateString('es-MX')}`});
         }
       });
       ['stat-f1','stat-f2','stat-ready','stat-bottles'].forEach((id,i)=>document.getElementById(id).textContent=[f1,f2,ready,bottles][i]);
       const al=document.getElementById('alerts-list');
-      al.innerHTML=alerts.length?alerts.map(a=>`<div class="alert-item ${a.type}"><span class="alert-icon">${a.icon}</span><div class="alert-text"><strong>${a.title}</strong><p>${a.desc}</p></div></div>`).join(''):'<div class="empty-state"><div class="empty-icon">🌿</div><p>No hay alertas por ahora.</p></div>';
-    } catch(e){}
+      if(alerts.length){
+        al.innerHTML=alerts.map(a=>`<div class="alert-item ${a.type}"><span class="alert-icon">${a.icon}</span><div class="alert-text"><strong>${a.title}</strong><p>${a.desc}</p></div></div>`).join('');
+        // Push notification for ready lotes
+        if(Notification.permission==='granted'){
+          alerts.filter(a=>a.type==='ready').forEach(a=>{
+            new Notification(a.title,{body:a.desc,icon:'/icon-192.png'});
+          });
+        }
+      } else {
+        al.innerHTML='<div class="empty-state" style="padding:24px 0"><div class="empty-icon" style="font-size:32px">🌿</div><p>No hay alertas por ahora.</p></div>';
+      }
+    }catch(e){}
     await loadActivity();
   }
 
-  async function loadActivity() {
-    try {
+  async function loadActivity(){
+    try{
       const q=window._fb.query(window._fb.collection(db,'auditoria'),window._fb.orderBy('fecha','desc'),window._fb.limit(10));
       const snap=await window._fb.getDocs(q);
       const el=document.getElementById('activity-list');
       if(snap.empty){el.innerHTML='<div class="empty-state" style="padding:24px 0"><p>Sin actividad registrada aún.</p></div>';return;}
       el.innerHTML='';
       snap.forEach(d=>{
-        const a=d.data();
-        const f=new Date(a.fecha);
+        const a=d.data(),f=new Date(a.fecha);
         const t=f.toLocaleDateString('es-MX',{day:'2-digit',month:'short'})+' '+f.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
         el.innerHTML+=`<div class="activity-item"><div class="activity-dot"></div><div class="activity-text"><strong>${a.usuario}</strong> ${a.accion}<div class="activity-time">${t}</div></div></div>`;
       });
-    } catch(e){}
+    }catch(e){}
   }
   window.loadDashboard=loadDashboard;
 </script>
@@ -432,15 +591,18 @@
   function fbErr(c){return{'auth/invalid-credential':'Correo o contraseña incorrectos','auth/email-already-in-use':'Ya existe una cuenta con ese correo','auth/weak-password':'Contraseña muy débil','auth/too-many-requests':'Demasiados intentos'}[c]||'Ocurrió un error.';}
 
   // NAV
-  let currentSubTab='ingredientes';
+  let currentPage='dashboard', currentSubTab='ingredientes';
   function showPage(name,btn){
+    currentPage=name;
     document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
     document.getElementById('page-'+name).classList.add('active');
     btn.classList.add('active');
-    document.getElementById('fab-main').classList.toggle('visible',name==='ingredientes');
-    if(name==='ingredientes'){currentSubTab==='ingredientes'?loadIngredientes():loadRecetas();}
-    if(name==='dashboard')window.loadDashboard&&window.loadDashboard();
+    document.getElementById('fab-main').classList.toggle('visible',name==='lotes'||name==='ingredientes');
+    if(name==='lotes') loadLotes();
+    else if(name==='ingredientes'){currentSubTab==='ingredientes'?loadIngredientes():loadRecetas();}
+    else if(name==='dashboard') window.loadDashboard&&window.loadDashboard();
+    else if(name==='ajustes'){document.getElementById('prefijo-input').value=window._prefijo||'KMBC';previewPrefijo();}
   }
   function switchSubTab(tab,btn){
     currentSubTab=tab;
@@ -449,13 +611,243 @@
     document.getElementById('subtab-recetas').style.display=tab==='recetas'?'block':'none';
     tab==='ingredientes'?loadIngredientes():loadRecetas();
   }
-  function onFabClick(){currentSubTab==='ingredientes'?openIngModal():openRecipeModal();}
+  function onFabClick(){
+    if(currentPage==='lotes') openLoteModal();
+    else if(currentPage==='ingredientes') currentSubTab==='ingredientes'?openIngModal():openRecipeModal();
+  }
 
   // AUDIT
   async function logAudit(accion){
     if(!window._currentUser)return;
     try{await window._fb.addDoc(window._fb.collection(window._db,'auditoria'),{accion,usuario:window._currentUser.name,uid:window._currentUser.uid,fecha:Date.now()});}
     catch(e){}
+  }
+
+  // PREFIJO
+  function previewPrefijo(){
+    const p=(document.getElementById('prefijo-input').value||'KMBC').toUpperCase();
+    const n=String((window._loteCount||0)+1).padStart(3,'0');
+    document.getElementById('prefijo-preview').textContent=`${p}-${n}`;
+  }
+  async function savePrefijo(){
+    const p=document.getElementById('prefijo-input').value.trim().toUpperCase();
+    if(!p)return showToast('⚠️ Escribe un prefijo');
+    window._prefijo=p;
+    await window._fb.setDoc(window._fb.doc(window._db,'settings','config'),{prefijo:p,loteCount:window._loteCount||0});
+    await logAudit(`cambió el prefijo de lotes a "${p}"`);
+    showToast('✅ Prefijo guardado');previewPrefijo();
+  }
+
+  // LOTES
+  let allLotes=[],loteFilter='todos',editLoteId=null,selLoteEtapa=null,updatingLoteId=null,selNuevoEstado=null;
+
+  const ESTADOS={
+    activo:{label:'🟡 Activo',cls:'status-activo'},
+    envasar:{label:'📥 Listo para envasar',cls:'status-envasar'},
+    f2:{label:'🍶 En F2',cls:'status-f2'},
+    venta:{label:'🏷️ Listo para venta',cls:'status-venta'},
+    vendido:{label:'✅ Vendido',cls:'status-vendido'}
+  };
+  const FLUJO=['activo','envasar','f2','venta','vendido'];
+
+  async function loadLotes(){
+    document.getElementById('lote-list').innerHTML='<div class="loading"><div class="spinner"></div> Cargando...</div>';
+    try{
+      const snap=await window._fb.getDocs(window._fb.collection(window._db,'lotes'));
+      allLotes=[];snap.forEach(d=>allLotes.push({id:d.id,...d.data()}));
+      allLotes.sort((a,b)=>b.creadoEn-a.creadoEn);
+      renderLotes();
+    }catch(e){document.getElementById('lote-list').innerHTML='<div class="empty-state"><p>Error al cargar.</p></div>';}
+  }
+
+  function renderLotes(){
+    const list=document.getElementById('lote-list');
+    const f=loteFilter==='todos'?allLotes:allLotes.filter(l=>l.estado===loteFilter);
+    if(!f.length){list.innerHTML='<div class="empty-state"><div class="empty-icon">🫙</div><p>No hay lotes aquí.<br>Toca + para registrar el primero.</p></div>';return;}
+    const now=Date.now();
+    list.innerHTML=f.map(l=>{
+      const est=ESTADOS[l.estado]||ESTADOS.activo;
+      const fi=l.fechaInicio?new Date(l.fechaInicio).toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'}):'—';
+      const ff=l.fechaFin?new Date(l.fechaFin).toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'}):'—';
+      let diasBadge='';
+      if(l.fechaFin&&l.estado!=='vendido'){
+        const diff=Math.ceil((l.fechaFin-now)/86400000);
+        if(diff<0) diasBadge=`<span class="dias-badge dias-late">⚠️ Venció hace ${Math.abs(diff)}d</span>`;
+        else if(diff===0) diasBadge=`<span class="dias-badge dias-warn">⏰ Vence hoy</span>`;
+        else if(diff<=3) diasBadge=`<span class="dias-badge dias-warn">⏰ ${diff}d restantes</span>`;
+        else diasBadge=`<span class="dias-badge dias-ok">🕐 ${diff}d restantes</span>`;
+      }
+      const nextIdx=FLUJO.indexOf(l.estado)+1;
+      const nextBtn=nextIdx<FLUJO.length?`<button class="btn-status" onclick="openEstadoModal('${l.id}')">Avanzar estado</button>`:'';
+      const obsHtml=l.observaciones?`<div class="lote-obs">📝 ${l.observaciones}</div>`:'';
+      return `<div class="lote-card">
+        <div class="lote-top">
+          <div><div class="lote-codigo">${l.codigo}</div><div class="lote-receta">${l.recetaNombre||'Sin receta'} · ${l.etapa}</div></div>
+          <span class="status-badge ${est.cls}">${est.label}</span>
+        </div>
+        <div class="lote-grid">
+          <div class="lote-stat"><div class="lote-stat-label">Jarras</div><div class="lote-stat-value">🫙 ${l.jarras||0}</div></div>
+          <div class="lote-stat"><div class="lote-stat-label">Botellas</div><div class="lote-stat-value">🍶 ${l.botellas||0}</div></div>
+        </div>
+        <div class="lote-dates">
+          <div class="lote-date">📅 Inicio: <strong>${fi}</strong></div>
+          <div class="lote-date">🏁 Término: <strong>${ff}</strong></div>
+          ${diasBadge?`<div>${diasBadge}</div>`:''}
+        </div>
+        ${obsHtml}
+        <div class="lote-actions" style="margin-top:12px">
+          ${nextBtn}
+          <button class="btn-edit" onclick="openLoteModal('${l.id}')">✏️ Editar</button>
+          <button class="btn-del" onclick="deleteLote('${l.id}','${l.codigo}')">🗑️</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function filterLotes(f,btn){
+    loteFilter=f;
+    document.querySelectorAll('#lote-filter-tabs .cat-tab').forEach(t=>t.classList.remove('active'));
+    btn.classList.add('active');renderLotes();
+  }
+
+  async function openLoteModal(id){
+    editLoteId=id||null;selLoteEtapa=null;
+    document.getElementById('lote-modal-title').textContent=id?'Editar lote':'Nuevo lote';
+    // Load recetas for select
+    const sel=document.getElementById('lote-receta-select');
+    sel.innerHTML='<option value="">Sin receta</option>';
+    try{
+      const snap=await window._fb.getDocs(window._fb.collection(window._db,'recetas'));
+      snap.forEach(d=>{const r=d.data();const o=document.createElement('option');o.value=d.id;o.textContent=`${r.nombre} (${r.etapa})`;sel.appendChild(o);});
+    }catch(e){}
+    // Prefijo
+    const prefijo=window._prefijo||'KMBC';
+    const num=String((window._loteCount||0)+1).padStart(3,'0');
+    document.getElementById('lote-prefijo-display').value=prefijo;
+    document.getElementById('lote-num-display').value=num;
+    // Reset fields
+    document.getElementById('lote-jarras').value='';
+    document.getElementById('lote-botellas').value='';
+    document.getElementById('lote-obs-input').value='';
+    document.getElementById('lote-botellas-group').style.display='none';
+    document.querySelectorAll('#lote-modal .cat-option').forEach(o=>o.classList.remove('selected'));
+    // Set today as default start date
+    const today=new Date().toISOString().split('T')[0];
+    document.getElementById('lote-fecha-inicio').value=today;
+    document.getElementById('lote-fecha-fin').value='';
+    if(id){
+      const l=allLotes.find(x=>x.id===id);
+      if(l){
+        selLoteEtapa=l.etapa;
+        document.querySelectorAll('#lote-modal .cat-option').forEach(o=>{if(o.textContent.includes(l.etapa))o.classList.add('selected');});
+        sel.value=l.recetaId||'';
+        document.getElementById('lote-jarras').value=l.jarras||'';
+        document.getElementById('lote-botellas').value=l.botellas||'';
+        if(l.botellas) document.getElementById('lote-botellas-group').style.display='block';
+        document.getElementById('lote-fecha-inicio').value=l.fechaInicio?new Date(l.fechaInicio).toISOString().split('T')[0]:'';
+        document.getElementById('lote-fecha-fin').value=l.fechaFin?new Date(l.fechaFin).toISOString().split('T')[0]:'';
+        document.getElementById('lote-obs-input').value=l.observaciones||'';
+        document.getElementById('lote-prefijo-display').value=l.codigo.split('-')[0]||prefijo;
+        document.getElementById('lote-num-display').value=l.codigo.split('-')[1]||num;
+      }
+    }
+    document.getElementById('lote-modal').classList.add('open');
+  }
+
+  function selectLoteEtapa(etapa,btn){
+    selLoteEtapa=etapa;
+    document.querySelectorAll('#lote-modal .cat-option').forEach(o=>o.classList.remove('selected'));
+    btn.classList.add('selected');
+    document.getElementById('lote-botellas-group').style.display=etapa==='F2'?'block':'none';
+  }
+
+  async function saveLote(){
+    if(!selLoteEtapa)return showToast('⚠️ Selecciona la etapa');
+    const fi=document.getElementById('lote-fecha-inicio').value;
+    const ff=document.getElementById('lote-fecha-fin').value;
+    if(!fi||!ff)return showToast('⚠️ Completa las fechas');
+    const sel=document.getElementById('lote-receta-select');
+    const recetaId=sel.value;
+    const recetaNombre=sel.options[sel.selectedIndex].text.replace(/ \(F[12]\)$/,'');
+    const jarras=parseInt(document.getElementById('lote-jarras').value)||0;
+    const botellas=parseInt(document.getElementById('lote-botellas').value)||0;
+    const obs=document.getElementById('lote-obs-input').value.trim();
+    try{
+      if(editLoteId){
+        const l=allLotes.find(x=>x.id===editLoteId);
+        const data={etapa:selLoteEtapa,recetaId,recetaNombre:recetaId?recetaNombre:'',jarras,botellas,observaciones:obs,fechaInicio:new Date(fi).getTime(),fechaFin:new Date(ff).getTime()};
+        await window._fb.updateDoc(window._fb.doc(window._db,'lotes',editLoteId),data);
+        await logAudit(`editó el lote "${l?l.codigo:''}"`);
+        showToast('✅ Lote actualizado');
+      } else {
+        const newCount=(window._loteCount||0)+1;
+        const prefijo=window._prefijo||'KMBC';
+        const codigo=`${prefijo}-${String(newCount).padStart(3,'0')}`;
+        const data={codigo,etapa:selLoteEtapa,recetaId,recetaNombre:recetaId?recetaNombre:'',jarras,botellas,observaciones:obs,fechaInicio:new Date(fi).getTime(),fechaFin:new Date(ff).getTime(),estado:'activo',creadoEn:Date.now(),creadoPor:window._currentUser?.name||''};
+        await window._fb.addDoc(window._fb.collection(window._db,'lotes'),data);
+        window._loteCount=newCount;
+        await window._fb.setDoc(window._fb.doc(window._db,'settings','config'),{prefijo,loteCount:newCount});
+        await logAudit(`registró el lote "${codigo}" (${selLoteEtapa})`);
+        showToast(`✅ Lote ${codigo} registrado`);
+      }
+      closeModal('lote-modal');await loadLotes();await window.loadDashboard();
+    }catch(e){showToast('❌ Error al guardar');}
+  }
+
+  async function deleteLote(id,codigo){
+    if(!confirm(`¿Eliminar el lote "${codigo}"?`))return;
+    try{
+      await window._fb.deleteDoc(window._fb.doc(window._db,'lotes',id));
+      await logAudit(`eliminó el lote "${codigo}"`);
+      allLotes=allLotes.filter(l=>l.id!==id);renderLotes();
+      await window.loadDashboard();showToast('Lote eliminado');
+    }catch(e){showToast('❌ Error');}
+  }
+
+  function openEstadoModal(id){
+    updatingLoteId=id;selNuevoEstado=null;
+    const l=allLotes.find(x=>x.id===id);if(!l)return;
+    document.getElementById('estado-lote-nombre').textContent=`${l.codigo} — ${ESTADOS[l.estado]?.label||l.estado}`;
+    document.getElementById('estado-obs-input').value='';
+    document.getElementById('estado-botellas-group').style.display='none';
+    document.getElementById('estado-botellas-input').value='';
+    const currentIdx=FLUJO.indexOf(l.estado);
+    const opts=document.getElementById('estado-options');
+    opts.innerHTML='';
+    FLUJO.forEach((e,i)=>{
+      if(i<=currentIdx)return;
+      const btn=document.createElement('button');
+      btn.className='cat-option'+(e===FLUJO[currentIdx+1]?' selected':'');
+      btn.textContent=ESTADOS[e].label;
+      btn.onclick=()=>{
+        selNuevoEstado=e;
+        document.querySelectorAll('#estado-options .cat-option').forEach(o=>o.classList.remove('selected'));
+        btn.classList.add('selected');
+        document.getElementById('estado-botellas-group').style.display=(e==='envasar'||e==='f2')?'block':'none';
+      };
+      if(i===currentIdx+1){selNuevoEstado=e;}
+      opts.appendChild(btn);
+    });
+    if(l.estado===FLUJO[FLUJO.length-1]){
+      opts.innerHTML='<p style="color:var(--text2);font-size:14px">Este lote ya está en el estado final.</p>';
+    }
+    document.getElementById('lote-modal').classList.remove('open');
+    document.getElementById('estado-modal').classList.add('open');
+  }
+
+  async function saveEstado(){
+    if(!selNuevoEstado)return showToast('⚠️ Selecciona el nuevo estado');
+    const l=allLotes.find(x=>x.id===updatingLoteId);if(!l)return;
+    const botellas=parseInt(document.getElementById('estado-botellas-input').value)||l.botellas||0;
+    const obs=document.getElementById('estado-obs-input').value.trim();
+    try{
+      const update={estado:selNuevoEstado,botellas};
+      if(obs) update.observaciones=obs;
+      await window._fb.updateDoc(window._fb.doc(window._db,'lotes',updatingLoteId),update);
+      await logAudit(`cambió estado del lote "${l.codigo}" a ${ESTADOS[selNuevoEstado].label}`);
+      showToast(`✅ Estado actualizado`);
+      closeModal('estado-modal');await loadLotes();await window.loadDashboard();
+    }catch(e){showToast('❌ Error al actualizar');}
   }
 
   // INGREDIENTES
@@ -527,11 +919,8 @@
     document.getElementById('recipe-name-input').value='';
     document.querySelectorAll('#recipe-modal .cat-option').forEach(o=>o.classList.remove('selected'));
     document.getElementById('recipe-ings-builder').innerHTML='';
-    if(id){
-      const r=allRecetas.find(x=>x.id===id);
-      if(r){document.getElementById('recipe-name-input').value=r.nombre;selEtapa=r.etapa;document.querySelectorAll('#recipe-modal .cat-option').forEach(o=>{if(o.textContent.includes(r.etapa))o.classList.add('selected');});if(r.ingredientes)r.ingredientes.forEach(i=>addIngRow(i));}
-    }
-    if(!id||!document.getElementById('recipe-ings-builder').children.length)addIngRow();
+    if(id){const r=allRecetas.find(x=>x.id===id);if(r){document.getElementById('recipe-name-input').value=r.nombre;selEtapa=r.etapa;document.querySelectorAll('#recipe-modal .cat-option').forEach(o=>{if(o.textContent.includes(r.etapa))o.classList.add('selected');});if(r.ingredientes)r.ingredientes.forEach(i=>addIngRow(i));}}
+    if(!document.getElementById('recipe-ings-builder').children.length)addIngRow();
     document.getElementById('recipe-modal').classList.add('open');
   }
   function selectEtapaOpt(e,btn){selEtapa=e;document.querySelectorAll('#recipe-modal .cat-option').forEach(o=>o.classList.remove('selected'));btn.classList.add('selected');}
@@ -605,7 +994,10 @@
   window.showPage=showPage;window.switchSubTab=switchSubTab;window.onFabClick=onFabClick;
   window.filterCat=filterCat;window.openIngModal=openIngModal;window.selectCatOpt=selectCatOpt;window.saveIngrediente=saveIngrediente;window.deleteIng=deleteIng;
   window.openRecipeModal=openRecipeModal;window.selectEtapaOpt=selectEtapaOpt;window.addIngRow=addIngRow;window.saveReceta=saveReceta;window.deleteReceta=deleteReceta;
-  window.closeModal=closeModal;window.handleLogoUpload=handleLogoUpload;window.removeLogo=removeLogo;window.requestNotifPermission=requestNotifPermission;
+  window.filterLotes=filterLotes;window.openLoteModal=openLoteModal;window.selectLoteEtapa=selectLoteEtapa;window.saveLote=saveLote;window.deleteLote=deleteLote;
+  window.openEstadoModal=openEstadoModal;window.saveEstado=saveEstado;
+  window.closeModal=closeModal;window.handleLogoUpload=handleLogoUpload;window.removeLogo=removeLogo;
+  window.requestNotifPermission=requestNotifPermission;window.previewPrefijo=previewPrefijo;window.savePrefijo=savePrefijo;
 </script>
 
 <script>

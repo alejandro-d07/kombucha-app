@@ -48,7 +48,7 @@
     .btn-icon{background:none;border:1px solid var(--border);color:var(--text2);border-radius:8px;padding:7px 12px;font-size:13px;cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;}
     .btn-icon:hover{border-color:var(--accent);color:var(--accent);}
     .nav-bottom{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);display:flex;z-index:100;}
-    .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 0;gap:4px;font-size:10px;color:var(--text2);cursor:pointer;transition:color .2s;border:none;background:none;font-family:'DM Sans',sans-serif;}
+    .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 0;gap:3px;font-size:9px;color:var(--text2);cursor:pointer;transition:color .2s;border:none;background:none;font-family:'DM Sans',sans-serif;}
     .nav-item span:first-child{font-size:20px;}.nav-item.active{color:var(--accent);}
     .content{flex:1;padding:24px;padding-bottom:80px;max-width:800px;margin:0 auto;width:100%;}
     .page{display:none;}.page.active{display:block;}
@@ -353,6 +353,7 @@
     <button class="nav-item active" onclick="showPage('dashboard',this)"><span>🏠</span><span>Inicio</span></button>
     <button class="nav-item" onclick="showPage('lotes',this)"><span>🫙</span><span>Lotes</span></button>
     <button class="nav-item" onclick="showPage('ingredientes',this)"><span>🌿</span><span>Recetas</span></button>
+    <button class="nav-item" onclick="showPage('inventario',this)"><span>📦</span><span>Inventario</span></button>
     <button class="nav-item" onclick="showPage('ventas',this)"><span>💰</span><span>Ventas</span></button>
     <button class="nav-item" onclick="showPage('ajustes',this)"><span>⚙️</span><span>Ajustes</span></button>
   </nav>

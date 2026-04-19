@@ -822,7 +822,7 @@
     const opts=document.getElementById('estado-options');
     opts.innerHTML='';
     FLUJO.forEach((e,i)=>{
-      if(i<=currentIdx)return;
+      if(e===l.estado)return; // skip current state
       const btn=document.createElement('button');
       btn.className='cat-option'+(e===FLUJO[currentIdx+1]?' selected':'');
       btn.textContent=ESTADOS[e].label;
@@ -835,9 +835,6 @@
       if(i===currentIdx+1){selNuevoEstado=e;}
       opts.appendChild(btn);
     });
-    if(l.estado===FLUJO[FLUJO.length-1]){
-      opts.innerHTML='<p style="color:var(--text2);font-size:14px">Este lote ya está en el estado final.</p>';
-    }
     document.getElementById('lote-modal').classList.remove('open');
     document.getElementById('estado-modal').classList.add('open');
   }

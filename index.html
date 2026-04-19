@@ -159,6 +159,23 @@
     .empty-state{text-align:center;padding:48px 24px;color:var(--text2);}
     .empty-state .empty-icon{font-size:48px;margin-bottom:12px;}
     .empty-state p{font-size:14px;}
+    /* Inventory */
+    .inv-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;display:flex;align-items:center;gap:14px;animation:fadeIn .2s ease;transition:border-color .2s;}
+    .inv-card:hover{border-color:var(--accent);}
+    .inv-card.low-stock{border-left:3px solid var(--danger);}
+    .inv-icon{font-size:28px;flex-shrink:0;}
+    .inv-info{flex:1;min-width:0;}
+    .inv-name{font-size:15px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .inv-cat{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-top:1px;}
+    .inv-stock{text-align:right;flex-shrink:0;}
+    .inv-qty{font-family:'Playfair Display',serif;font-size:22px;color:var(--accent);line-height:1;}
+    .inv-qty.low{color:var(--danger);}
+    .inv-unit{font-size:11px;color:var(--text2);margin-top:1px;}
+    .inv-cost{font-size:11px;color:var(--text2);margin-top:2px;}
+    .inv-actions{display:flex;flex-direction:column;gap:6px;flex-shrink:0;}
+    .btn-adjust{background:none;border:1px solid var(--border);color:var(--text2);border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;transition:all .2s;white-space:nowrap;}
+    .btn-adjust:hover{border-color:var(--accent);color:var(--accent);}
+    .inv-list-wrap{display:flex;flex-direction:column;gap:8px;}
     .prefijo-row{display:flex;gap:8px;align-items:flex-end;}
     .prefijo-row .form-group{flex:1;margin-bottom:0;}
     .num-display{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;color:var(--text2);font-size:15px;min-width:80px;text-align:center;}
@@ -267,8 +284,21 @@
 
     <!-- INVENTARIO -->
     <div class="page" id="page-inventario">
-      <p class="page-title">Inventario</p><p class="page-subtitle">Módulo 5 — próximamente</p>
-      <div class="empty-state"><div class="empty-icon">📦</div><p>El control de inventario se construirá en el Módulo 5.</p></div>
+      <p class="page-title">Inventario</p>
+      <p class="page-subtitle">Stock actual de ingredientes</p>
+      <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
+        <div class="stat-card"><div class="stat-icon">📦</div><div class="stat-value" id="inv-stat-total">0</div><div class="stat-label">Ingredientes</div></div>
+        <div class="stat-card"><div class="stat-icon">⚠️</div><div class="stat-value" id="inv-stat-low" style="color:var(--danger)">0</div><div class="stat-label">Stock bajo</div></div>
+        <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-value" id="inv-stat-valor" style="font-size:18px">$0</div><div class="stat-label">Valor total</div></div>
+      </div>
+      <div class="cat-tabs" id="inv-cat-tabs">
+        <button class="cat-tab active" onclick="filterInv('todos',this)">Todos</button>
+        <button class="cat-tab" onclick="filterInv('Tés',this)">🍃 Tés</button>
+        <button class="cat-tab" onclick="filterInv('Frutas',this)">🍓 Frutas</button>
+        <button class="cat-tab" onclick="filterInv('Azúcares',this)">🍯 Azúcares</button>
+        <button class="cat-tab" onclick="filterInv('Otros',this)">🌿 Otros</button>
+      </div>
+      <div id="inv-list"><div class="loading"><div class="spinner"></div> Cargando...</div></div>
     </div>
 
     <!-- VENTAS -->
@@ -462,6 +492,63 @@
   </div>
 </div>
 
+<!-- Modal Inventario -->
+<div class="modal-overlay" id="inv-modal" onclick="closeModal('inv-modal',event)">
+  <div class="modal">
+    <p class="modal-title" id="inv-modal-title">Actualizar stock</p>
+    <p id="inv-modal-ing-name" style="color:var(--accent);font-weight:600;margin-bottom:16px;font-size:15px"></p>
+    <div class="form-group">
+      <label>Cantidad actual en stock</label>
+      <input type="number" id="inv-qty-input" placeholder="0" min="0" step="any"/>
+    </div>
+    <div class="form-group">
+      <label>Unidad de medida</label>
+      <input type="text" id="inv-unit-input" placeholder="Ej: g, kg, ml, L, piezas"/>
+    </div>
+    <div class="form-group">
+      <label>Costo por unidad ($)</label>
+      <input type="number" id="inv-cost-input" placeholder="0.00" min="0" step="0.01"/>
+    </div>
+    <div class="form-group">
+      <label>Stock mínimo (alerta cuando baje de aquí)</label>
+      <input type="number" id="inv-min-input" placeholder="0" min="0" step="any"/>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" style="flex:1" onclick="closeModal('inv-modal')">Cancelar</button>
+      <button class="btn-primary" style="flex:2;margin-top:0" onclick="saveInvStock()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal ajuste manual -->
+<div class="modal-overlay" id="inv-adjust-modal" onclick="closeModal('inv-adjust-modal',event)">
+  <div class="modal">
+    <p class="modal-title">Ajustar stock</p>
+    <p id="inv-adjust-name" style="color:var(--accent);font-weight:600;margin-bottom:4px;font-size:15px"></p>
+    <p id="inv-adjust-current" style="color:var(--text2);font-size:13px;margin-bottom:16px"></p>
+    <div class="form-group">
+      <label>Tipo de ajuste</label>
+      <div class="cat-select" style="grid-template-columns:repeat(3,1fr)">
+        <button class="cat-option selected" onclick="selectAjusteTipo('agregar',this)">➕ Agregar</button>
+        <button class="cat-option" onclick="selectAjusteTipo('restar',this)">➖ Restar</button>
+        <button class="cat-option" onclick="selectAjusteTipo('fijar',this)">🎯 Fijar</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label id="inv-adjust-qty-label">Cantidad a agregar</label>
+      <input type="number" id="inv-adjust-qty" placeholder="0" min="0" step="any"/>
+    </div>
+    <div class="form-group">
+      <label>Motivo (opcional)</label>
+      <input type="text" id="inv-adjust-motivo" placeholder="Ej: Compra, merma, uso en lote..."/>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" style="flex:1" onclick="closeModal('inv-adjust-modal')">Cancelar</button>
+      <button class="btn-primary" style="flex:2;margin-top:0" onclick="saveAjuste()">Aplicar</button>
+    </div>
+  </div>
+</div>
+
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
   import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
@@ -635,6 +722,7 @@
     document.getElementById('fab-main').classList.toggle('visible',name==='lotes'||name==='ingredientes');
     if(name==='lotes') loadLotes();
     else if(name==='ingredientes'){currentSubTab==='ingredientes'?loadIngredientes():loadRecetas();}
+    else if(name==='inventario') loadInventario();
     else if(name==='dashboard') window.loadDashboard&&window.loadDashboard();
     else if(name==='ajustes'){document.getElementById('prefijo-input').value=window._prefijo||'KMBC';previewPrefijo();}
   }
@@ -649,6 +737,7 @@
     if(currentPage==='lotes') openLoteModal();
     else if(currentPage==='ingredientes') currentSubTab==='ingredientes'?openIngModal():openRecipeModal();
   }
+  // Inventario has no FAB — adjustments via card buttons
 
   // AUDIT
   async function logAudit(accion){
@@ -845,6 +934,8 @@
         window._loteCount=newCount;
         await window._fb.setDoc(window._fb.doc(window._db,'settings','config'),{prefijo,loteCount:newCount});
         await logAudit(`registró el lote "${codigo}" (${selLoteEtapa})`);
+        // Auto-descuento de ingredientes
+        if(recetaId) await descontarIngredientes(recetaId, jarras);
         showToast(`✅ Lote ${codigo} registrado`);
       }
       closeModal('lote-modal');await loadLotes();await window.loadDashboard();
@@ -1064,6 +1155,190 @@
     showToast('🔔 Notificación enviada');
   }
   window.testNotification=testNotification;
+
+  // ── INVENTARIO ──
+  let allInvData = [], invFilter = 'todos', editingInvId = null, adjustingInvId = null, selAjusteTipo = 'agregar';
+
+  async function loadInventario() {
+    document.getElementById('inv-list').innerHTML='<div class="loading"><div class="spinner"></div> Cargando...</div>';
+    try {
+      // Load ingredients catalog
+      const ingSnap = await window._fb.getDocs(window._fb.collection(window._db,'ingredientes'));
+      const ingMap = {};
+      ingSnap.forEach(d => ingMap[d.id] = {...d.data(), id: d.id});
+      // Load inventory stock
+      const invSnap = await window._fb.getDocs(window._fb.collection(window._db,'inventario'));
+      const stockMap = {};
+      invSnap.forEach(d => stockMap[d.id] = {...d.data(), id: d.id});
+      // Merge: every ingredient gets an inventory entry
+      allInvData = Object.values(ingMap).map(ing => ({
+        ...ing,
+        stock: stockMap[ing.id]?.stock ?? 0,
+        unidad: stockMap[ing.id]?.unidad ?? '',
+        costo: stockMap[ing.id]?.costo ?? 0,
+        minimo: stockMap[ing.id]?.minimo ?? 0,
+        hasStock: !!stockMap[ing.id]
+      }));
+      allInvData.sort((a,b) => a.nombre.localeCompare(b.nombre));
+      renderInventario();
+    } catch(e) { document.getElementById('inv-list').innerHTML='<div class="empty-state"><p>Error al cargar.</p></div>'; }
+  }
+
+  function renderInventario() {
+    const filtered = invFilter === 'todos' ? allInvData : allInvData.filter(i => i.categoria === invFilter);
+    const icons = {'Tés':'🍃','Frutas':'🍓','Azúcares':'🍯','Otros':'🌿'};
+    // Stats
+    const lowItems = allInvData.filter(i => i.stock <= i.minimo && i.minimo > 0);
+    const totalValor = allInvData.reduce((s,i) => s + (i.stock * i.costo), 0);
+    document.getElementById('inv-stat-total').textContent = allInvData.length;
+    document.getElementById('inv-stat-low').textContent = lowItems.length;
+    document.getElementById('inv-stat-valor').textContent = '$' + totalValor.toLocaleString('es-MX', {minimumFractionDigits:0, maximumFractionDigits:0});
+    if (!filtered.length) {
+      document.getElementById('inv-list').innerHTML='<div class="empty-state"><div class="empty-icon">📦</div><p>No hay ingredientes en esta categoría.</p></div>';
+      return;
+    }
+    const html = '<div class="inv-list-wrap">' + filtered.map(i => {
+      const isLow = i.minimo > 0 && i.stock <= i.minimo;
+      const lowBadge = isLow ? `<span style="font-size:10px;background:rgba(201,110,110,.15);color:var(--danger);padding:2px 8px;border-radius:100px;margin-left:6px">⚠️ Stock bajo</span>` : '';
+      return `<div class="inv-card ${isLow?'low-stock':''}">
+        <div class="inv-icon">${icons[i.categoria]||'🌿'}</div>
+        <div class="inv-info">
+          <div class="inv-name">${i.nombre}${lowBadge}</div>
+          <div class="inv-cat">${i.categoria}</div>
+          ${i.costo>0?`<div class="inv-cost">$${i.costo.toLocaleString('es-MX',{minimumFractionDigits:2})} por ${i.unidad||'u.'}</div>`:''}
+          ${i.minimo>0?`<div class="inv-cost">Mínimo: ${i.minimo} ${i.unidad||''}</div>`:''}
+        </div>
+        <div class="inv-stock">
+          <div class="inv-qty ${isLow?'low':''}">${i.stock}</div>
+          <div class="inv-unit">${i.unidad||'sin unidad'}</div>
+        </div>
+        <div class="inv-actions">
+          <button class="btn-adjust" onclick="openInvModal('${i.id}')">⚙️ Config</button>
+          <button class="btn-adjust" style="border-color:rgba(200,169,110,.4);color:var(--accent)" onclick="openAjusteModal('${i.id}')">± Ajustar</button>
+        </div>
+      </div>`;
+    }).join('') + '</div>';
+    document.getElementById('inv-list').innerHTML = html;
+  }
+
+  function filterInv(cat, btn) {
+    invFilter = cat;
+    document.querySelectorAll('#inv-cat-tabs .cat-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    renderInventario();
+  }
+
+  function openInvModal(id) {
+    editingInvId = id;
+    const i = allInvData.find(x => x.id === id);
+    if (!i) return;
+    document.getElementById('inv-modal-title').textContent = 'Configurar stock: ' + i.nombre;
+    document.getElementById('inv-modal-ing-name').textContent = '';
+    document.getElementById('inv-qty-input').value = i.stock || 0;
+    document.getElementById('inv-unit-input').value = i.unidad || '';
+    document.getElementById('inv-cost-input').value = i.costo || '';
+    document.getElementById('inv-min-input').value = i.minimo || '';
+    document.getElementById('inv-modal').classList.add('open');
+    setTimeout(() => document.getElementById('inv-qty-input').focus(), 300);
+  }
+
+  async function saveInvStock() {
+    const stock = parseFloat(document.getElementById('inv-qty-input').value) || 0;
+    const unidad = document.getElementById('inv-unit-input').value.trim();
+    const costo = parseFloat(document.getElementById('inv-cost-input').value) || 0;
+    const minimo = parseFloat(document.getElementById('inv-min-input').value) || 0;
+    const i = allInvData.find(x => x.id === editingInvId);
+    if (!i) return;
+    try {
+      await window._fb.setDoc(window._fb.doc(window._db, 'inventario', editingInvId), {stock, unidad, costo, minimo, actualizadoEn: Date.now()});
+      await logAudit(`actualizó stock de "${i.nombre}" a ${stock} ${unidad}`);
+      showToast('✅ Stock actualizado');
+      closeModal('inv-modal');
+      await loadInventario();
+    } catch(e) { showToast('❌ Error al guardar'); }
+  }
+
+  function openAjusteModal(id) {
+    adjustingInvId = id; selAjusteTipo = 'agregar';
+    const i = allInvData.find(x => x.id === id);
+    if (!i) return;
+    document.getElementById('inv-adjust-name').textContent = i.nombre;
+    document.getElementById('inv-adjust-current').textContent = `Stock actual: ${i.stock} ${i.unidad||''}`;
+    document.getElementById('inv-adjust-qty').value = '';
+    document.getElementById('inv-adjust-motivo').value = '';
+    document.getElementById('inv-adjust-qty-label').textContent = 'Cantidad a agregar';
+    document.querySelectorAll('#inv-adjust-modal .cat-option').forEach((o,idx) => o.classList.toggle('selected', idx===0));
+    document.getElementById('inv-adjust-modal').classList.add('open');
+    setTimeout(() => document.getElementById('inv-adjust-qty').focus(), 300);
+  }
+
+  function selectAjusteTipo(tipo, btn) {
+    selAjusteTipo = tipo;
+    document.querySelectorAll('#inv-adjust-modal .cat-option').forEach(o => o.classList.remove('selected'));
+    btn.classList.add('selected');
+    const labels = {agregar:'Cantidad a agregar', restar:'Cantidad a restar', fijar:'Nueva cantidad total'};
+    document.getElementById('inv-adjust-qty-label').textContent = labels[tipo];
+  }
+
+  async function saveAjuste() {
+    const qty = parseFloat(document.getElementById('inv-adjust-qty').value);
+    if (isNaN(qty) || qty < 0) return showToast('⚠️ Ingresa una cantidad válida');
+    const motivo = document.getElementById('inv-adjust-motivo').value.trim();
+    const i = allInvData.find(x => x.id === adjustingInvId);
+    if (!i) return;
+    let newStock;
+    if (selAjusteTipo === 'agregar') newStock = (i.stock || 0) + qty;
+    else if (selAjusteTipo === 'restar') newStock = Math.max(0, (i.stock || 0) - qty);
+    else newStock = qty;
+    try {
+      await window._fb.setDoc(window._fb.doc(window._db, 'inventario', adjustingInvId), {
+        stock: newStock, unidad: i.unidad||'', costo: i.costo||0, minimo: i.minimo||0, actualizadoEn: Date.now()
+      });
+      const accionLabel = {agregar:`agregó ${qty}`, restar:`restó ${qty}`, fijar:`fijó en ${qty}`}[selAjusteTipo];
+      await logAudit(`${accionLabel} ${i.unidad||''} de "${i.nombre}"${motivo?' ('+motivo+')':''}`);
+      showToast(`✅ Stock ajustado: ${newStock} ${i.unidad||''}`);
+      closeModal('inv-adjust-modal');
+      await loadInventario();
+    } catch(e) { showToast('❌ Error al ajustar'); }
+  }
+
+  // Auto-descuento al crear lote con receta
+  async function descontarIngredientes(recetaId, jarras) {
+    if (!recetaId || !jarras) return;
+    try {
+      const snap = await window._fb.getDoc(window._fb.doc(window._db, 'recetas', recetaId));
+      if (!snap.exists()) return;
+      const receta = snap.data();
+      if (!receta.ingredientes || !receta.ingredientes.length) return;
+      // Load current inventory
+      const invSnap = await window._fb.getDocs(window._fb.collection(window._db, 'inventario'));
+      const ingSnap = await window._fb.getDocs(window._fb.collection(window._db, 'ingredientes'));
+      const ingByName = {};
+      ingSnap.forEach(d => ingByName[d.data().nombre] = d.id);
+      const stockMap = {};
+      invSnap.forEach(d => stockMap[d.id] = d.data());
+      for (const ing of receta.ingredientes) {
+        const ingId = ingByName[ing.nombre];
+        if (!ingId) continue;
+        const current = stockMap[ingId]?.stock || 0;
+        const usar = ing.cantidad * jarras;
+        const newStock = Math.max(0, current - usar);
+        const existing = stockMap[ingId] || {unidad:'',costo:0,minimo:0};
+        await window._fb.setDoc(window._fb.doc(window._db,'inventario',ingId), {
+          stock: newStock, unidad: existing.unidad||ing.unidad||'', costo: existing.costo||0, minimo: existing.minimo||0, actualizadoEn: Date.now()
+        });
+      }
+    } catch(e) { console.log('Error al descontar:', e); }
+  }
+  window.descontarIngredientes = descontarIngredientes;
+
+  window.loadInventario = loadInventario;
+  window.filterInv = filterInv;
+  window.openInvModal = openInvModal;
+  window.saveInvStock = saveInvStock;
+  window.openAjusteModal = openAjusteModal;
+  window.selectAjusteTipo = selectAjusteTipo;
+  window.saveAjuste = saveAjuste;
 
   // GLOBALS
   window.switchTab=switchTab;window.handleLogin=handleLogin;window.handleRegister=handleRegister;window.handleLogout=handleLogout;

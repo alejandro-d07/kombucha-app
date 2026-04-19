@@ -821,10 +821,14 @@
     const currentIdx=FLUJO.indexOf(l.estado);
     const opts=document.getElementById('estado-options');
     opts.innerHTML='';
+    // Pre-select: next state if exists, otherwise first available
+    const firstAvailable = FLUJO.find(e => e !== l.estado);
+    const defaultEstado = FLUJO[currentIdx+1] || firstAvailable;
+    selNuevoEstado = defaultEstado;
     FLUJO.forEach((e,i)=>{
       if(e===l.estado)return; // skip current state
       const btn=document.createElement('button');
-      btn.className='cat-option'+(e===FLUJO[currentIdx+1]?' selected':'');
+      btn.className='cat-option'+(e===defaultEstado?' selected':'');
       btn.textContent=ESTADOS[e].label;
       btn.onclick=()=>{
         selNuevoEstado=e;
@@ -832,9 +836,12 @@
         btn.classList.add('selected');
         document.getElementById('estado-botellas-group').style.display=(e==='envasar'||e==='f2')?'block':'none';
       };
-      if(i===currentIdx+1){selNuevoEstado=e;}
       opts.appendChild(btn);
     });
+    // Show botellas field if default is envasar/f2
+    if(defaultEstado==='envasar'||defaultEstado==='f2'){
+      document.getElementById('estado-botellas-group').style.display='block';
+    }
     document.getElementById('lote-modal').classList.remove('open');
     document.getElementById('estado-modal').classList.add('open');
   }

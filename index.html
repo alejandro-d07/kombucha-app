@@ -307,7 +307,9 @@
       <div class="settings-section">
         <h3>Notificaciones</h3>
         <div class="info-row"><span>Estado</span><span id="notif-status">—</span></div>
+        <div class="info-row"><span>Revisión automática</span><span style="color:var(--accent2)">Cada vez que abres la app</span></div>
         <button class="btn-secondary" style="margin-top:12px;width:100%" onclick="requestNotifPermission()">Activar notificaciones push</button>
+        <button class="btn-secondary" style="margin-top:8px;width:100%" onclick="testNotification()">🔔 Enviar notificación de prueba</button>
       </div>
       <button class="btn-danger" style="width:100%;padding:14px;margin-top:8px" onclick="handleLogout()">Cerrar sesión</button>
     </div>
@@ -461,6 +463,7 @@
   const auth=getAuth(app), db=getFirestore(app);
   window._auth=auth; window._db=db;
   window._fb={doc,setDoc,getDoc,deleteDoc,collection,getDocs,addDoc,orderBy,query,limit,updateDoc,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,updateProfile};
+  window._updateDoc=updateDoc;
 
   onAuthStateChanged(auth, async user => {
     if(user){
@@ -532,9 +535,13 @@
         al.innerHTML=alerts.map(a=>`<div class="alert-item ${a.type}"><span class="alert-icon">${a.icon}</span><div class="alert-text"><strong>${a.title}</strong><p>${a.desc}</p></div></div>`).join('');
         // Push notification for ready lotes
         if(Notification.permission==='granted'){
-          alerts.filter(a=>a.type==='ready').forEach(a=>{
-            new Notification(a.title,{body:a.desc,icon:'/icon-192.png'});
+          alerts.filter(a=>a.type==='ready'||a.type==='warn').forEach(a=>{
+            new Notification(a.title,{body:a.desc,icon:'/icon-192.png',badge:'/icon-192.png',vibrate:[200,100,200]});
           });
+        }
+        // Schedule future notifications via service worker
+        if('serviceWorker'in navigator && navigator.serviceWorker.controller){
+          navigator.serviceWorker.controller.postMessage({type:'SCHEDULE_CHECKS',alerts:alerts.map(a=>({title:a.title,desc:a.desc,type:a.type}))});
         }
       } else {
         al.innerHTML='<div class="empty-state" style="padding:24px 0"><div class="empty-icon" style="font-size:32px">🌿</div><p>No hay alertas por ahora.</p></div>';
@@ -776,7 +783,7 @@
       if(editLoteId){
         const l=allLotes.find(x=>x.id===editLoteId);
         const data={etapa:selLoteEtapa,recetaId,recetaNombre:recetaId?recetaNombre:'',jarras,botellas,observaciones:obs,fechaInicio:new Date(fi).getTime(),fechaFin:new Date(ff).getTime()};
-        await window._fb.updateDoc(window._fb.doc(window._db,'lotes',editLoteId),data);
+        await window._updateDoc(window._fb.doc(window._db,'lotes',editLoteId),data);
         await logAudit(`editó el lote "${l?l.codigo:''}"`);
         showToast('✅ Lote actualizado');
       } else {
@@ -843,7 +850,7 @@
     try{
       const update={estado:selNuevoEstado,botellas};
       if(obs) update.observaciones=obs;
-      await window._fb.updateDoc(window._fb.doc(window._db,'lotes',updatingLoteId),update);
+      await window._updateDoc(window._fb.doc(window._db,'lotes',updatingLoteId),update);
       await logAudit(`cambió estado del lote "${l.codigo}" a ${ESTADOS[selNuevoEstado].label}`);
       showToast(`✅ Estado actualizado`);
       closeModal('estado-modal');await loadLotes();await window.loadDashboard();
@@ -988,6 +995,14 @@
 
   // TOAST
   function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
+
+  // TEST NOTIFICATION
+  function testNotification(){
+    if(Notification.permission!=='granted')return showToast('⚠️ Activa las notificaciones primero');
+    new Notification('🍵 Kombuchan — Prueba',{body:'Las notificaciones están funcionando correctamente.',icon:'/icon-192.png',badge:'/icon-192.png'});
+    showToast('🔔 Notificación enviada');
+  }
+  window.testNotification=testNotification;
 
   // GLOBALS
   window.switchTab=switchTab;window.handleLogin=handleLogin;window.handleRegister=handleRegister;window.handleLogout=handleLogout;

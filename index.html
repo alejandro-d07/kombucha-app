@@ -364,6 +364,14 @@
 
         <!-- Insumos -->
         <div id="subtab-inv-insumos" style="display:none">
+          <div class="cat-tabs" id="insumo-cat-tabs">
+            <button class="insumo-cat-filter cat-tab active" onclick="filterInsumos('todos',this)">Todos</button>
+            <button class="insumo-cat-filter cat-tab" onclick="filterInsumos('Envase',this)">🍶 Envase</button>
+            <button class="insumo-cat-filter cat-tab" onclick="filterInsumos('Empaque',this)">📦 Empaque</button>
+            <button class="insumo-cat-filter cat-tab" onclick="filterInsumos('Etiqueta',this)">🏷️ Etiqueta</button>
+            <button class="insumo-cat-filter cat-tab" onclick="filterInsumos('Limpieza',this)">🧹 Limpieza</button>
+            <button class="insumo-cat-filter cat-tab" onclick="filterInsumos('Otro',this)">🔧 Otro</button>
+          </div>
           <div id="insumos-list"><div class="loading"><div class="spinner"></div> Cargando...</div></div>
         </div>
       </div>
@@ -2883,7 +2891,7 @@
   window.openClienteModal=openClienteModal;window.selectCliTipo=selectCliTipo;window.saveCliente=saveCliente;window.deleteCliente=deleteCliente;
 
   // ── INSUMOS ──
-  let allInsumos=[], invMainTab='ingredientes', editingInsumoId=null, selInsumoCat='Envase', adjustingInsumoId=null, selInsumoAjuste='agregar';
+  let allInsumos=[], invMainTab='ingredientes', insumoFilter='todos', editingInsumoId=null, selInsumoCat='Envase', adjustingInsumoId=null, selInsumoAjuste='agregar';
 
   function switchInvTab(tab, btn){
     invMainTab=tab;
@@ -2895,6 +2903,14 @@
     else loadInsumos();
   }
   window.switchInvTab=switchInvTab;
+
+  function filterInsumos(cat, btn){
+    insumoFilter=cat;
+    document.querySelectorAll('.insumo-cat-filter').forEach(t=>t.classList.remove('active'));
+    btn.classList.add('active');
+    renderInsumos();
+  }
+  window.filterInsumos=filterInsumos;
 
   async function loadInsumos(){
     document.getElementById('insumos-list').innerHTML='<div class="loading"><div class="spinner"></div> Cargando...</div>';
@@ -2915,8 +2931,9 @@
     document.getElementById('inv-stat-total').textContent=allInvData.length+allInsumos.length;
     document.getElementById('inv-stat-low').textContent=lowItems.length;
     document.getElementById('inv-stat-valor').textContent='$'+totalValor.toLocaleString('es-MX',{minimumFractionDigits:0});
-    if(!allInsumos.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">🧴</div><p>No hay insumos registrados.<br>Toca + para agregar el primero.</p></div>';return;}
-    el.innerHTML='<div class="inv-list-wrap">'+allInsumos.map(i=>{
+    const filteredInsumos=insumoFilter==='todos'?allInsumos:allInsumos.filter(i=>i.categoria===insumoFilter);
+    if(!filteredInsumos.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">🧴</div><p>No hay insumos en esta categoría.<br>Toca + para agregar.</p></div>';return;}
+    el.innerHTML='<div class="inv-list-wrap">'+filteredInsumos.map(i=>{
       const isLow=i.minimo>0&&i.stock<=i.minimo;
       const lowBadge=isLow?`<span style="font-size:10px;background:rgba(255,133,82,.15);color:var(--danger);padding:2px 8px;border-radius:100px;margin-left:6px">⚠️ Stock bajo</span>`:'';
       return `<div class="inv-card ${isLow?'low-stock':''}">

@@ -1603,17 +1603,44 @@
 
   // NOTIFS
   function checkNotifStatus(){
-    if(!('Notification'in window)){document.getElementById('notif-status').textContent='No soportado';return;}
+    if(!('Notification'in window)){
+      document.getElementById('notif-status').textContent='No soportado en este navegador';
+      return;
+    }
     const p=Notification.permission;
-    document.getElementById('notif-status').textContent=p==='granted'?'✅ Activas':p==='denied'?'❌ Bloqueadas':'⚠️ Sin activar';
-    if(p!=='granted')document.getElementById('notif-banner').style.display='flex';
+    const granted=p==='granted';
+    document.getElementById('notif-status').textContent=
+      granted?'Activas — recibirás alertas de lotes':
+      p==='denied'?'Bloqueadas — actívalas desde configuración del navegador':
+      'Inactivas — actívalas para recibir alertas';
+    // Update toggle
+    const toggle=document.getElementById('notif-toggle');
+    const knob=document.getElementById('notif-toggle-knob');
+    const testBtn=document.getElementById('notif-test-btn');
+    if(toggle){
+      toggle.style.background=granted?'var(--accent)':'var(--border)';
+      knob.style.left=granted?'25px':'3px';
+      knob.style.background=granted?'#201E1E':'var(--text2)';
+    }
+    if(testBtn) testBtn.style.display=granted?'block':'none';
+    if(!granted) document.getElementById('notif-banner').style.display='flex';
+    else document.getElementById('notif-banner').style.display='none';
   }
   async function requestNotifPermission(){
-    if(!('Notification'in window))return showToast('No soportado');
+    if(!('Notification'in window))return showToast('No soportado en este navegador');
     const p=await Notification.requestPermission();
-    if(p==='granted'){showToast('✅ Notificaciones activadas');document.getElementById('notif-banner').style.display='none';document.getElementById('notif-status').textContent='✅ Activas';}
-    else showToast('Notificaciones bloqueadas');
+    if(p==='granted'){showToast('✅ Notificaciones activadas');checkNotifStatus();}
+    else{showToast('⚠️ Notificaciones bloqueadas — revisa la configuración del navegador');checkNotifStatus();}
   }
+
+  function toggleNotificaciones(){
+    if(Notification.permission==='granted'){
+      showToast('Para desactivar, ve a Configuración del navegador → Notificaciones');
+      return;
+    }
+    requestNotifPermission();
+  }
+  window.toggleNotificaciones=toggleNotificaciones;
 
   // TOAST
   function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
@@ -1630,9 +1657,25 @@
 
   // TEST NOTIFICATION
   function testNotification(){
+    if(!('Notification'in window))return showToast('No soportado en este navegador');
     if(Notification.permission!=='granted')return showToast('⚠️ Activa las notificaciones primero');
-    new Notification('🍵 Kombuchan — Prueba',{body:'Las notificaciones están funcionando correctamente.',icon:'/icon-192.png',badge:'/icon-192.png'});
-    showToast('🔔 Notificación enviada');
+    try{
+      if('serviceWorker'in navigator&&navigator.serviceWorker.controller){
+        navigator.serviceWorker.controller.postMessage({
+          type:'SCHEDULE_CHECKS',
+          alerts:[{title:'🍵 Kombuchan — Prueba',desc:'Las notificaciones están funcionando correctamente.',type:'ready'}]
+        });
+      } else {
+        new Notification('🍵 Kombuchan — Prueba',{
+          body:'Las notificaciones están funcionando correctamente.',
+          icon:'/icon-192.png'
+        });
+      }
+      showToast('🔔 Notificación enviada');
+    }catch(e){
+      showToast('❌ Error al enviar notificación');
+      console.error(e);
+    }
   }
   window.testNotification=testNotification;
 

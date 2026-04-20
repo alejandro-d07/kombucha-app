@@ -691,6 +691,20 @@
       <label>Nombre del evento</label>
       <input type="text" id="venta-evento-nombre" placeholder="Ej: Expo Orgánica CDMX"/>
     </div>
+    <div id="venta-consig-fields" style="display:none">
+      <div class="form-group">
+        <label>Estado de pago</label>
+        <div class="cat-select">
+          <button class="cat-option consig-pago-opt selected" onclick="selectConsigPago('pendiente',this)">⏳ Pendiente</button>
+          <button class="cat-option consig-pago-opt" onclick="selectConsigPago('parcial',this)">💵 Pago parcial</button>
+          <button class="cat-option consig-pago-opt" onclick="selectConsigPago('pagado',this)">✅ Pagado</button>
+        </div>
+      </div>
+      <div class="form-group" id="venta-anticipo-group" style="display:none">
+        <label>Monto ya cobrado ($)</label>
+        <input type="number" id="venta-anticipo" placeholder="0.00" min="0" step="0.01"/>
+      </div>
+    </div>
     <div class="form-group">
       <label>Cliente</label>
       <select id="venta-cliente-select" onchange="onClienteChange()"><option value="">Sin cliente registrado</option><option value="__nuevo__">+ Nuevo cliente</option></select>
@@ -2319,12 +2333,21 @@
     renderVentas();
   }
 
+  let selConsigPago='pendiente';
   function selectVentaTipo(tipo, btn){
     selVentaTipo=tipo;
     document.querySelectorAll('.venta-tipo-opt').forEach(o=>o.classList.remove('selected'));
     btn.classList.add('selected');
     document.getElementById('venta-evento-nombre-group').style.display=tipo==='Evento'?'block':'none';
+    document.getElementById('venta-consig-fields').style.display=tipo==='Consignación'?'block':'none';
   }
+  function selectConsigPago(pago, btn){
+    selConsigPago=pago;
+    document.querySelectorAll('.consig-pago-opt').forEach(o=>o.classList.remove('selected'));
+    btn.classList.add('selected');
+    document.getElementById('venta-anticipo-group').style.display=pago==='parcial'?'block':'none';
+  }
+  window.selectConsigPago=selectConsigPago;
   window.selectVentaTipo=selectVentaTipo;
   window.switchVentasMainTab=switchVentasMainTab;
   window.filterVentasTipo=filterVentasTipo;
@@ -2738,7 +2761,11 @@
       if(v.motivo) detalle.push(v.motivo);
       // Consig extra
       const isPending=v._col==='consignaciones'&&(v.totalPendiente||0)>0;
-      const consigInfo=v._col==='consignaciones'?`<div style="margin-top:8px"><span style="font-size:12px;color:var(--danger)">💵 Pendiente: $${(v.totalPendiente||0).toLocaleString('es-MX',{minimumFractionDigits:0})}</span>${isPending?`<button class="btn-status" style="margin-left:8px;font-size:11px" onclick="openAbonoModal('${v.id}')">Abonar</button>`:' <span style="color:var(--accent2);font-size:12px">✅ Liquidada</span>'}</div>`:'';
+      // Also check ventas collection for consignacion type
+      const isVentaConsig=v._col==='ventas'&&v.tipoVenta==='Consignación';
+      const pendienteVenta=isVentaConsig?(v.totalPendiente||0):0;
+      const consigInfo=v._col==='consignaciones'?`<div style="margin-top:8px"><span style="font-size:12px;color:var(--danger)">💵 Pendiente: $${(v.totalPendiente||0).toLocaleString('es-MX',{minimumFractionDigits:0})}</span>${isPending?`<button class="btn-status" style="margin-left:8px;font-size:11px" onclick="openAbonoModal('${v.id}')">Abonar</button>`:' <span style="color:var(--accent2);font-size:12px">✅ Liquidada</span>'}</div>`:
+        isVentaConsig?`<div style="margin-top:8px">${pendienteVenta>0?`<span style="font-size:12px;color:var(--danger)">💵 Pendiente: $${pendienteVenta.toLocaleString('es-MX',{minimumFractionDigits:0})}</span>`:'<span style="color:var(--accent2);font-size:12px">✅ Pagado</span>'}</div>`:'';
       const deleteAction=`deleteVenta('${v.id}','${v._col||"ventas"}')`;
       return `<div class="venta-card">
         <div class="venta-top">
@@ -2806,9 +2833,14 @@
     document.getElementById('venta-total-display').textContent='$0';
     document.getElementById('nuevo-cliente-fields').style.display='none';
     document.getElementById('venta-evento-nombre-group').style.display='none';
+    document.getElementById('venta-consig-fields').style.display='none';
+    document.getElementById('venta-anticipo-group').style.display='none';
     if(document.getElementById('venta-evento-nombre')) document.getElementById('venta-evento-nombre').value='';
+    if(document.getElementById('venta-anticipo')) document.getElementById('venta-anticipo').value='';
     selVentaTipo='Venta directa';
+    selConsigPago='pendiente';
     document.querySelectorAll('.venta-tipo-opt').forEach((o,i)=>o.classList.toggle('selected',i===0));
+    document.querySelectorAll('.consig-pago-opt').forEach((o,i)=>o.classList.toggle('selected',i===0));
     selTipoCliente='Menudeo';
     window._editingVentaId=null;
     // Load clientes
@@ -2868,6 +2900,8 @@
     if(!cajas&&!botellas) return showToast('⚠️ Agrega al menos una caja o botella');
     const tipoVenta=selVentaTipo||'Venta directa';
     const eventoNombre=document.getElementById('venta-evento-nombre')?.value.trim()||'';
+    const anticipo=tipoVenta==='Consignación'?(parseFloat(document.getElementById('venta-anticipo')?.value)||0):0;
+    const pagadoTotal=tipoVenta==='Consignación'&&selConsigPago==='pagado';
     let clienteId='', clienteNombre='', canal='', tipoCliente='', ciudad='';
     // Handle new client
     if(cliVal==='__nuevo__'){
@@ -2883,7 +2917,9 @@
       if(cl){clienteId=cl.id;clienteNombre=cl.nombre;canal=cl.canal||'';tipoCliente=cl.tipo||'';ciudad=cl.ciudad||'';}
     }
     try{
-      const ventaData={clienteId,clienteNombre,canal,tipoCliente,ciudad,tipoVenta,eventoNombre,fecha:parseFecha(fecha),cajas,botellas,precioCaja:pCaja,precioBotella:pBotella,total,notas,loteId:loteId||'',loteCodigo:lote?.codigo||'',creadoEn:Date.now()};
+      const totalCobrado=pagadoTotal?total:anticipo;
+      const totalPendiente=Math.max(0,total-totalCobrado);
+      const ventaData={clienteId,clienteNombre,canal,tipoCliente,ciudad,tipoVenta,eventoNombre,fecha:parseFecha(fecha),cajas,botellas,precioCaja:pCaja,precioBotella:pBotella,total,totalCobrado,totalPendiente,estadoPago:selConsigPago,notas,loteId:loteId||'',loteCodigo:lote?.codigo||'',creadoEn:Date.now()};
       if(window._editingVentaId){
         await window._updateDoc(window._fb.doc(window._db,'ventas',window._editingVentaId),ventaData);
         await logAudit(`editó una venta de $${total.toLocaleString('es-MX')} a "${clienteNombre||'cliente directo'}"`);

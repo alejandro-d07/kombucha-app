@@ -326,11 +326,14 @@
     <div class="page" id="page-ventas">
       <p class="page-title">Ventas</p>
       <p class="page-subtitle">Registro de ventas y clientes</p>
-      <div class="sub-tabs">
-        <button class="sub-tab active" onclick="switchVentasTab('ventas',this)">💰 Ventas</button>
-        <button class="sub-tab" onclick="switchVentasTab('clientes',this)">👤 Clientes</button>
+      <div style="display:flex;gap:4px;overflow-x:auto;padding-bottom:4px;margin-bottom:20px;scrollbar-width:none">
+        <button class="cat-tab active" style="border-radius:100px" onclick="switchVentasTab('ventas',this)">💰 Ventas</button>
+        <button class="cat-tab" style="border-radius:100px" onclick="switchVentasTab('consignacion',this)">🤝 Consignación</button>
+        <button class="cat-tab" style="border-radius:100px" onclick="switchVentasTab('eventos',this)">🎪 Eventos</button>
+        <button class="cat-tab" style="border-radius:100px" onclick="switchVentasTab('muestras',this)">🎁 Muestras</button>
+        <button class="cat-tab" style="border-radius:100px" onclick="switchVentasTab('clientes',this)">👤 Clientes</button>
       </div>
-      <!-- Ventas sub -->
+      <!-- Ventas -->
       <div id="subtab-ventas">
         <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
           <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-value" id="venta-stat-total" style="font-size:18px">$0</div><div class="stat-label">Ingresos</div></div>
@@ -339,7 +342,24 @@
         </div>
         <div id="ventas-list"><div class="loading"><div class="spinner"></div> Cargando...</div></div>
       </div>
-      <!-- Clientes sub -->
+      <!-- Consignación -->
+      <div id="subtab-consignacion" style="display:none">
+        <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
+          <div class="stat-card"><div class="stat-icon">🤝</div><div class="stat-value" id="cons-stat-pendiente" style="font-size:18px;color:var(--danger)">$0</div><div class="stat-label">Por cobrar</div></div>
+          <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-value" id="cons-stat-cobrado" style="font-size:18px">$0</div><div class="stat-label">Cobrado</div></div>
+          <div class="stat-card"><div class="stat-icon">⚠️</div><div class="stat-value" id="cons-stat-vencidas" style="color:var(--danger)">0</div><div class="stat-label">Vencidas</div></div>
+        </div>
+        <div id="consignacion-list"><div class="loading"><div class="spinner"></div> Cargando...</div></div>
+      </div>
+      <!-- Eventos -->
+      <div id="subtab-eventos" style="display:none">
+        <div id="eventos-list"><div class="loading"><div class="spinner"></div> Cargando...</div></div>
+      </div>
+      <!-- Muestras -->
+      <div id="subtab-muestras" style="display:none">
+        <div id="muestras-list"><div class="loading"><div class="spinner"></div> Cargando...</div></div>
+      </div>
+      <!-- Clientes -->
       <div id="subtab-clientes" style="display:none">
         <div id="clientes-list"><div class="loading"><div class="spinner"></div> Cargando...</div></div>
       </div>
@@ -660,6 +680,98 @@
   </div>
 </div>
 
+<!-- Modal Consignación -->
+<div class="modal-overlay" id="cons-modal" onclick="closeModal('cons-modal',event)">
+  <div class="modal">
+    <p class="modal-title" id="cons-modal-title">Nueva consignación</p>
+    <div class="form-group">
+      <label>Cliente (distribuidor)</label>
+      <select id="cons-cliente-select"><option value="">Seleccionar cliente</option></select>
+    </div>
+    <div class="form-group">
+      <label>Lote</label>
+      <select id="cons-lote-select"><option value="">Sin lote específico</option></select>
+    </div>
+    <div class="form-group"><label>Fecha de entrega</label><input type="date" id="cons-fecha"/></div>
+    <div class="form-group"><label>Cajas entregadas</label><input type="number" id="cons-cajas" placeholder="0" min="0" oninput="calcConsTotal()"/></div>
+    <div class="form-group"><label>Botellas sueltas</label><input type="number" id="cons-botellas" placeholder="0" min="0" oninput="calcConsTotal()"/></div>
+    <div class="form-group"><label>Precio por caja ($)</label><input type="number" id="cons-precio-caja" placeholder="0.00" min="0" step="0.01" oninput="calcConsTotal()"/></div>
+    <div class="form-group"><label>Precio por botella ($)</label><input type="number" id="cons-precio-botella" placeholder="0.00" min="0" step="0.01" oninput="calcConsTotal()"/></div>
+    <div style="background:var(--surface2);border-radius:var(--radius);padding:14px 16px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center">
+      <span style="color:var(--text2);font-size:13px">Total a cobrar</span>
+      <span id="cons-total-display" style="font-family:'Playfair Display',serif;font-size:22px;color:var(--danger)">$0</span>
+    </div>
+    <div class="form-group"><label>Notas</label><input type="text" id="cons-notas" placeholder="Observaciones..."/></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" style="flex:1" onclick="closeModal('cons-modal')">Cancelar</button>
+      <button class="btn-primary" style="flex:2;margin-top:0" onclick="saveConsignacion()">Registrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Abono Consignación -->
+<div class="modal-overlay" id="abono-modal" onclick="closeModal('abono-modal',event)">
+  <div class="modal">
+    <p class="modal-title">Registrar abono</p>
+    <p id="abono-cons-info" style="color:var(--text2);font-size:13px;margin-bottom:16px"></p>
+    <div class="form-group"><label>Monto del abono ($)</label><input type="number" id="abono-monto" placeholder="0.00" min="0" step="0.01"/></div>
+    <div class="form-group"><label>Fecha del abono</label><input type="date" id="abono-fecha"/></div>
+    <div class="form-group"><label>Notas</label><input type="text" id="abono-notas" placeholder="Referencia de pago..."/></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" style="flex:1" onclick="closeModal('abono-modal')">Cancelar</button>
+      <button class="btn-primary" style="flex:2;margin-top:0" onclick="saveAbono()">Registrar abono</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Evento -->
+<div class="modal-overlay" id="evento-modal" onclick="closeModal('evento-modal',event)">
+  <div class="modal">
+    <p class="modal-title" id="evento-modal-title">Nueva venta en evento</p>
+    <div class="form-group"><label>Nombre del evento</label><input type="text" id="evento-nombre" placeholder="Ej: Expo Orgánica CDMX 2026"/></div>
+    <div class="form-group"><label>Fecha</label><input type="date" id="evento-fecha"/></div>
+    <div class="form-group"><label>Lote</label><select id="evento-lote-select"><option value="">Sin lote específico</option></select></div>
+    <div class="form-group"><label>Cajas vendidas</label><input type="number" id="evento-cajas" placeholder="0" min="0" oninput="calcEventoTotal()"/></div>
+    <div class="form-group"><label>Botellas sueltas</label><input type="number" id="evento-botellas" placeholder="0" min="0" oninput="calcEventoTotal()"/></div>
+    <div class="form-group"><label>Precio por caja ($)</label><input type="number" id="evento-precio-caja" placeholder="0.00" min="0" step="0.01" oninput="calcEventoTotal()"/></div>
+    <div class="form-group"><label>Precio por botella ($)</label><input type="number" id="evento-precio-botella" placeholder="0.00" min="0" step="0.01" oninput="calcEventoTotal()"/></div>
+    <div style="background:var(--surface2);border-radius:var(--radius);padding:14px 16px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center">
+      <span style="color:var(--text2);font-size:13px">Total del evento</span>
+      <span id="evento-total-display" style="font-family:'Playfair Display',serif;font-size:22px;color:var(--accent2)">$0</span>
+    </div>
+    <div class="form-group"><label>Notas</label><input type="text" id="evento-notas" placeholder="Observaciones..."/></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" style="flex:1" onclick="closeModal('evento-modal')">Cancelar</button>
+      <button class="btn-primary" style="flex:2;margin-top:0" onclick="saveEvento()">Registrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Muestra -->
+<div class="modal-overlay" id="muestra-modal" onclick="closeModal('muestra-modal',event)">
+  <div class="modal">
+    <p class="modal-title">Registrar muestra / regalo</p>
+    <div class="form-group"><label>Destinatario</label><input type="text" id="muestra-dest" placeholder="Nombre de la persona o empresa"/></div>
+    <div class="form-group"><label>Fecha</label><input type="date" id="muestra-fecha"/></div>
+    <div class="form-group"><label>Botellas regaladas</label><input type="number" id="muestra-botellas" placeholder="0" min="0"/></div>
+    <div class="form-group"><label>Lote</label><select id="muestra-lote-select"><option value="">Sin lote específico</option></select></div>
+    <div class="form-group">
+      <label>Motivo</label>
+      <div class="cat-select" style="grid-template-columns:repeat(2,1fr)">
+        <button class="cat-option selected" onclick="selectMuestraMotivo('Degustación',this)">🍵 Degustación</button>
+        <button class="cat-option" onclick="selectMuestraMotivo('Influencer',this)">📱 Influencer</button>
+        <button class="cat-option" onclick="selectMuestraMotivo('Prensa',this)">📰 Prensa</button>
+        <button class="cat-option" onclick="selectMuestraMotivo('Otro',this)">🎁 Otro</button>
+      </div>
+    </div>
+    <div class="form-group"><label>Notas</label><input type="text" id="muestra-notas" placeholder="Observaciones..."/></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" style="flex:1" onclick="closeModal('muestra-modal')">Cancelar</button>
+      <button class="btn-primary" style="flex:2;margin-top:0" onclick="saveMuestra()">Registrar</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal Inventario -->
 <div class="modal-overlay" id="inv-modal" onclick="closeModal('inv-modal',event)">
   <div class="modal">
@@ -811,6 +923,18 @@
           else if(diffCad<0) alerts.push({type:'urgent',icon:'🚨',title:`${l.codigo} — CADUCADO`,desc:`Venció el ${new Date(l.fechaCaducidad).toLocaleDateString('es-MX')}`});
         }
       });
+      // Consignaciones vencidas
+      try{
+        const consSnap=await window._fb.getDocs(window._fb.collection(db,'consignaciones'));
+        consSnap.forEach(d=>{
+          const cons=d.data();
+          if((cons.totalPendiente||0)>0){
+            const dias=Math.floor((now-cons.fecha)/86400000);
+            if(dias>=30) alerts.push({type:'urgent',icon:'💵',title:`Consignación vencida — ${cons.clienteNombre}`,desc:`$${(cons.totalPendiente||0).toLocaleString('es-MX',{minimumFractionDigits:0})} pendiente · ${dias}d sin liquidar`});
+          }
+        });
+      }catch(e){}
+      });
       ['stat-f1','stat-f2','stat-ready','stat-bottles'].forEach((id,i)=>document.getElementById(id).textContent=[f1,f2,ready,bottles][i]);
       const al=document.getElementById('alerts-list');
       if(alerts.length){
@@ -906,7 +1030,7 @@
   function onFabClick(){
     if(currentPage==='lotes') openLoteModal();
     else if(currentPage==='ingredientes') currentSubTab==='ingredientes'?openIngModal():openRecipeModal();
-    else if(currentPage==='ventas') ventasSubTab==='ventas'?openVentaModal():openClienteModal();
+    else if(currentPage==='ventas') getVentasFabAction()();
   }
   // Inventario has no FAB — adjustments via card buttons
 
@@ -1541,6 +1665,374 @@
   window.setReportePeriodo = setReportePeriodo;
   window.loadReportes = loadReportes;
   window.downloadReportePDF = downloadReportePDF;
+
+  // ── CONSIGNACIÓN, EVENTOS, MUESTRAS ──
+  let allConsignaciones=[], allEventos=[], allMuestras=[];
+  let aboningConsId=null, selMuestraMotivo='Degustación';
+
+  function switchVentasTab(tab, btn){
+    ventasSubTab=tab;
+    const tabs=['ventas','consignacion','eventos','muestras','clientes'];
+    tabs.forEach(t=>{
+      const el=document.getElementById('subtab-'+t);
+      if(el) el.style.display=t===tab?'block':'none';
+    });
+    document.querySelectorAll('#page-ventas .cat-tab').forEach(t=>t.classList.remove('active'));
+    btn.classList.add('active');
+    if(tab==='ventas') loadVentas();
+    else if(tab==='consignacion') loadConsignaciones();
+    else if(tab==='eventos') loadEventos();
+    else if(tab==='muestras') loadMuestras();
+    else if(tab==='clientes') loadClientes();
+  }
+
+  // FAB action per tab
+  function getVentasFabAction(){
+    if(ventasSubTab==='ventas') return openVentaModal;
+    if(ventasSubTab==='consignacion') return openConsModal;
+    if(ventasSubTab==='eventos') return openEventoModal;
+    if(ventasSubTab==='muestras') return openMuestraModal;
+    if(ventasSubTab==='clientes') return ()=>openClienteModal();
+    return openVentaModal;
+  }
+
+  // ── CONSIGNACIÓN ──
+  async function loadConsignaciones(){
+    document.getElementById('consignacion-list').innerHTML='<div class="loading"><div class="spinner"></div> Cargando...</div>';
+    try{
+      const snap=await window._fb.getDocs(window._fb.collection(window._db,'consignaciones'));
+      allConsignaciones=[];snap.forEach(d=>allConsignaciones.push({id:d.id,...d.data()}));
+      allConsignaciones.sort((a,b)=>b.fecha-a.fecha);
+      renderConsignaciones();
+    }catch(e){document.getElementById('consignacion-list').innerHTML='<div class="empty-state"><p>Error al cargar.</p></div>';}
+  }
+
+  function renderConsignaciones(){
+    const el=document.getElementById('consignacion-list');
+    const now=Date.now();
+    const pendiente=allConsignaciones.reduce((s,c)=>s+(c.totalPendiente||0),0);
+    const cobrado=allConsignaciones.reduce((s,c)=>s+(c.totalCobrado||0),0);
+    const vencidas=allConsignaciones.filter(c=>(c.totalPendiente||0)>0&&(now-c.fecha)>30*86400000).length;
+    document.getElementById('cons-stat-pendiente').textContent='$'+pendiente.toLocaleString('es-MX',{minimumFractionDigits:0});
+    document.getElementById('cons-stat-cobrado').textContent='$'+cobrado.toLocaleString('es-MX',{minimumFractionDigits:0});
+    document.getElementById('cons-stat-vencidas').textContent=vencidas;
+    if(!allConsignaciones.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">🤝</div><p>No hay consignaciones.<br>Toca + para registrar la primera.</p></div>';return;}
+    el.innerHTML='<div class="ventas-list-wrap">'+allConsignaciones.map(c=>{
+      const dias=Math.floor((now-c.fecha)/86400000);
+      const isVencida=(c.totalPendiente||0)>0&&dias>30;
+      const isPagada=(c.totalPendiente||0)<=0;
+      const fecha=new Date(c.fecha).toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'});
+      const pct=c.total>0?Math.min(100,Math.round((c.totalCobrado||0)/c.total*100)):0;
+      return `<div class="venta-card" style="${isVencida?'border-left:3px solid var(--danger)':''}${isPagada?'border-left:3px solid var(--accent2)':''}">
+        <div class="venta-top">
+          <div>
+            <div class="venta-cliente">${c.clienteNombre||'Sin cliente'}</div>
+            <div class="venta-fecha">${fecha} · ${dias}d${isVencida?' <span style="color:var(--danger);font-weight:600">⚠️ VENCIDA</span>':''}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-family:'Playfair Display',serif;font-size:16px;color:var(--danger)">$${(c.totalPendiente||0).toLocaleString('es-MX',{minimumFractionDigits:0})} pendiente</div>
+            <div style="font-size:11px;color:var(--text2)">de $${(c.total||0).toLocaleString('es-MX',{minimumFractionDigits:0})} total</div>
+          </div>
+        </div>
+        <div style="background:var(--surface2);border-radius:100px;height:6px;margin-bottom:10px">
+          <div style="background:var(--accent2);border-radius:100px;height:6px;width:${pct}%;transition:width .3s"></div>
+        </div>
+        <div class="venta-detail">
+          ${c.cajas?`<span class="venta-tag">📦 ${c.cajas} cajas</span>`:''}
+          ${c.botellas?`<span class="venta-tag">🍶 ${c.botellas} botellas</span>`:''}
+          ${c.loteCodigo?`<span class="venta-tag">🫙 ${c.loteCodigo}</span>`:''}
+          <span class="venta-tag">${pct}% pagado</span>
+        </div>
+        ${c.notas?`<p style="font-size:12px;color:var(--text2);margin-top:8px">📝 ${c.notas}</p>`:''}
+        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+          ${!isPagada?`<button class="btn-status" onclick="openAbonoModal('${c.id}')">💵 Registrar abono</button>`:'<span style="color:var(--accent2);font-size:13px;font-weight:600">✅ Liquidada</span>'}
+          <button class="btn-del" onclick="deleteCons('${c.id}')">🗑️</button>
+        </div>
+      </div>`;
+    }).join('')+'</div>';
+  }
+
+  async function openConsModal(){
+    document.getElementById('cons-fecha').value=new Date().toISOString().split('T')[0];
+    document.getElementById('cons-cajas').value='';
+    document.getElementById('cons-botellas').value='';
+    document.getElementById('cons-precio-caja').value='';
+    document.getElementById('cons-precio-botella').value='';
+    document.getElementById('cons-notas').value='';
+    document.getElementById('cons-total-display').textContent='$0';
+    const cliSel=document.getElementById('cons-cliente-select');
+    cliSel.innerHTML='<option value="">Seleccionar cliente</option>';
+    if(!allClientes.length) await loadClientes();
+    allClientes.forEach(cl=>{const o=document.createElement('option');o.value=cl.id;o.textContent=`${cl.nombre} (${cl.tipo||''})`;cliSel.appendChild(o);});
+    const loteSel=document.getElementById('cons-lote-select');
+    loteSel.innerHTML='<option value="">Sin lote específico</option>';
+    if(!allLotes.length) await loadLotes();
+    allLotes.filter(l=>l.botellas>0).forEach(l=>{const o=document.createElement('option');o.value=l.id;o.textContent=`${l.codigo} (${l.botellas} botellas)`;loteSel.appendChild(o);});
+    document.getElementById('cons-modal').classList.add('open');
+  }
+
+  function calcConsTotal(){
+    const cajas=parseFloat(document.getElementById('cons-cajas').value)||0;
+    const botellas=parseFloat(document.getElementById('cons-botellas').value)||0;
+    const pCaja=parseFloat(document.getElementById('cons-precio-caja').value)||0;
+    const pBotella=parseFloat(document.getElementById('cons-precio-botella').value)||0;
+    const total=cajas*pCaja+botellas*pBotella;
+    document.getElementById('cons-total-display').textContent='$'+total.toLocaleString('es-MX',{minimumFractionDigits:2});
+  }
+
+  async function saveConsignacion(){
+    const cliId=document.getElementById('cons-cliente-select').value;
+    const fecha=document.getElementById('cons-fecha').value;
+    const cajas=parseInt(document.getElementById('cons-cajas').value)||0;
+    const botellas=parseInt(document.getElementById('cons-botellas').value)||0;
+    const pCaja=parseFloat(document.getElementById('cons-precio-caja').value)||0;
+    const pBotella=parseFloat(document.getElementById('cons-precio-botella').value)||0;
+    const total=cajas*pCaja+botellas*pBotella;
+    const notas=document.getElementById('cons-notas').value.trim();
+    const loteId=document.getElementById('cons-lote-select').value;
+    const lote=allLotes.find(l=>l.id===loteId);
+    if(!fecha) return showToast('⚠️ Selecciona la fecha');
+    if(!cajas&&!botellas) return showToast('⚠️ Agrega cajas o botellas');
+    const cl=allClientes.find(x=>x.id===cliId);
+    try{
+      const data={clienteId:cliId,clienteNombre:cl?.nombre||'',fecha:new Date(fecha).getTime(),cajas,botellas,precioCaja:pCaja,precioBotella:pBotella,total,totalPendiente:total,totalCobrado:0,abonos:[],notas,loteId:loteId||'',loteCodigo:lote?.codigo||'',creadoEn:Date.now()};
+      await window._fb.addDoc(window._fb.collection(window._db,'consignaciones'),data);
+      if(loteId&&lote){
+        const totalBotellas=botellas+(cajas*12);
+        const newBotellas=Math.max(0,(lote.botellas||0)-totalBotellas);
+        await window._updateDoc(window._fb.doc(window._db,'lotes',loteId),{botellas:newBotellas});
+        const idx=allLotes.findIndex(l=>l.id===loteId);
+        if(idx>=0) allLotes[idx].botellas=newBotellas;
+      }
+      await logAudit(`registró consignación de $${total.toLocaleString('es-MX')} con "${cl?.nombre||'distribuidor'}"`);
+      showToast('✅ Consignación registrada');
+      closeModal('cons-modal');await loadConsignaciones();
+    }catch(e){showToast('❌ Error al guardar');}
+  }
+
+  function openAbonoModal(id){
+    aboningConsId=id;
+    const c=allConsignaciones.find(x=>x.id===id);
+    if(!c)return;
+    document.getElementById('abono-cons-info').textContent=`${c.clienteNombre} · Pendiente: $${(c.totalPendiente||0).toLocaleString('es-MX',{minimumFractionDigits:2})}`;
+    document.getElementById('abono-monto').value='';
+    document.getElementById('abono-fecha').value=new Date().toISOString().split('T')[0];
+    document.getElementById('abono-notas').value='';
+    document.getElementById('abono-modal').classList.add('open');
+  }
+
+  async function saveAbono(){
+    const monto=parseFloat(document.getElementById('abono-monto').value)||0;
+    if(!monto) return showToast('⚠️ Ingresa el monto del abono');
+    const c=allConsignaciones.find(x=>x.id===aboningConsId);
+    if(!c)return;
+    const fecha=document.getElementById('abono-fecha').value;
+    const notas=document.getElementById('abono-notas').value.trim();
+    const abonos=[...(c.abonos||[]),{monto,fecha:new Date(fecha).getTime(),notas}];
+    const totalCobrado=(c.totalCobrado||0)+monto;
+    const totalPendiente=Math.max(0,(c.total||0)-totalCobrado);
+    try{
+      await window._updateDoc(window._fb.doc(window._db,'consignaciones',aboningConsId),{abonos,totalCobrado,totalPendiente});
+      await logAudit(`registró abono de $${monto.toLocaleString('es-MX')} a consignación de "${c.clienteNombre}"`);
+      showToast('✅ Abono registrado');
+      closeModal('abono-modal');await loadConsignaciones();
+    }catch(e){showToast('❌ Error al guardar');}
+  }
+
+  async function deleteCons(id){
+    if(!confirm('¿Eliminar esta consignación?'))return;
+    try{
+      await window._fb.deleteDoc(window._fb.doc(window._db,'consignaciones',id));
+      await logAudit('eliminó una consignación');
+      allConsignaciones=allConsignaciones.filter(c=>c.id!==id);renderConsignaciones();showToast('Consignación eliminada');
+    }catch(e){showToast('❌ Error');}
+  }
+
+  // ── EVENTOS ──
+  async function loadEventos(){
+    document.getElementById('eventos-list').innerHTML='<div class="loading"><div class="spinner"></div> Cargando...</div>';
+    try{
+      const snap=await window._fb.getDocs(window._fb.collection(window._db,'eventos'));
+      allEventos=[];snap.forEach(d=>allEventos.push({id:d.id,...d.data()}));
+      allEventos.sort((a,b)=>b.fecha-a.fecha);renderEventos();
+    }catch(e){document.getElementById('eventos-list').innerHTML='<div class="empty-state"><p>Error al cargar.</p></div>';}
+  }
+
+  function renderEventos(){
+    const el=document.getElementById('eventos-list');
+    if(!allEventos.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">🎪</div><p>No hay ventas en eventos.<br>Toca + para registrar la primera.</p></div>';return;}
+    const total=allEventos.reduce((s,e)=>s+(e.total||0),0);
+    el.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center"><span style="color:var(--text2);font-size:13px">Total en eventos</span><span style="font-family:'Playfair Display',serif;font-size:20px;color:var(--accent2)">$${total.toLocaleString('es-MX',{minimumFractionDigits:0})}</span></div>`+
+    '<div class="ventas-list-wrap">'+allEventos.map(e=>{
+      const fecha=new Date(e.fecha).toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'});
+      return `<div class="venta-card">
+        <div class="venta-top">
+          <div><div class="venta-cliente">🎪 ${e.nombre}</div><div class="venta-fecha">${fecha}</div></div>
+          <div class="venta-monto">$${(e.total||0).toLocaleString('es-MX',{minimumFractionDigits:0})}</div>
+        </div>
+        <div class="venta-detail">
+          ${e.cajas?`<span class="venta-tag">📦 ${e.cajas} cajas</span>`:''}
+          ${e.botellas?`<span class="venta-tag">🍶 ${e.botellas} botellas</span>`:''}
+          ${e.loteCodigo?`<span class="venta-tag">🫙 ${e.loteCodigo}</span>`:''}
+        </div>
+        ${e.notas?`<p style="font-size:12px;color:var(--text2);margin-top:8px">📝 ${e.notas}</p>`:''}
+        <button class="btn-del" style="margin-top:10px" onclick="deleteEvento('${e.id}')">🗑️ Eliminar</button>
+      </div>`;
+    }).join('')+'</div>';
+  }
+
+  async function openEventoModal(){
+    document.getElementById('evento-nombre').value='';
+    document.getElementById('evento-fecha').value=new Date().toISOString().split('T')[0];
+    document.getElementById('evento-cajas').value='';
+    document.getElementById('evento-botellas').value='';
+    document.getElementById('evento-precio-caja').value='';
+    document.getElementById('evento-precio-botella').value='';
+    document.getElementById('evento-notas').value='';
+    document.getElementById('evento-total-display').textContent='$0';
+    const loteSel=document.getElementById('evento-lote-select');
+    loteSel.innerHTML='<option value="">Sin lote específico</option>';
+    if(!allLotes.length) await loadLotes();
+    allLotes.filter(l=>l.botellas>0).forEach(l=>{const o=document.createElement('option');o.value=l.id;o.textContent=`${l.codigo} (${l.botellas} botellas)`;loteSel.appendChild(o);});
+    document.getElementById('evento-modal').classList.add('open');
+  }
+
+  function calcEventoTotal(){
+    const cajas=parseFloat(document.getElementById('evento-cajas').value)||0;
+    const botellas=parseFloat(document.getElementById('evento-botellas').value)||0;
+    const pCaja=parseFloat(document.getElementById('evento-precio-caja').value)||0;
+    const pBotella=parseFloat(document.getElementById('evento-precio-botella').value)||0;
+    const total=cajas*pCaja+botellas*pBotella;
+    document.getElementById('evento-total-display').textContent='$'+total.toLocaleString('es-MX',{minimumFractionDigits:2});
+  }
+
+  async function saveEvento(){
+    const nombre=document.getElementById('evento-nombre').value.trim();
+    const fecha=document.getElementById('evento-fecha').value;
+    const cajas=parseInt(document.getElementById('evento-cajas').value)||0;
+    const botellas=parseInt(document.getElementById('evento-botellas').value)||0;
+    const pCaja=parseFloat(document.getElementById('evento-precio-caja').value)||0;
+    const pBotella=parseFloat(document.getElementById('evento-precio-botella').value)||0;
+    const total=cajas*pCaja+botellas*pBotella;
+    const notas=document.getElementById('evento-notas').value.trim();
+    const loteId=document.getElementById('evento-lote-select').value;
+    const lote=allLotes.find(l=>l.id===loteId);
+    if(!nombre) return showToast('⚠️ Escribe el nombre del evento');
+    if(!fecha) return showToast('⚠️ Selecciona la fecha');
+    if(!cajas&&!botellas) return showToast('⚠️ Agrega cajas o botellas');
+    try{
+      await window._fb.addDoc(window._fb.collection(window._db,'eventos'),{nombre,fecha:new Date(fecha).getTime(),cajas,botellas,precioCaja:pCaja,precioBotella:pBotella,total,notas,loteId:loteId||'',loteCodigo:lote?.codigo||'',creadoEn:Date.now()});
+      if(loteId&&lote){
+        const totalBotellas=botellas+(cajas*12);
+        const newBotellas=Math.max(0,(lote.botellas||0)-totalBotellas);
+        await window._updateDoc(window._fb.doc(window._db,'lotes',loteId),{botellas:newBotellas});
+        const idx=allLotes.findIndex(l=>l.id===loteId);
+        if(idx>=0) allLotes[idx].botellas=newBotellas;
+      }
+      await logAudit(`registró venta en evento "${nombre}" por $${total.toLocaleString('es-MX')}`);
+      showToast('✅ Venta en evento registrada');
+      closeModal('evento-modal');await loadEventos();
+    }catch(e){showToast('❌ Error al guardar');}
+  }
+
+  async function deleteEvento(id){
+    if(!confirm('¿Eliminar esta venta?'))return;
+    try{
+      await window._fb.deleteDoc(window._fb.doc(window._db,'eventos',id));
+      allEventos=allEventos.filter(e=>e.id!==id);renderEventos();showToast('Eliminado');
+    }catch(e){showToast('❌ Error');}
+  }
+
+  // ── MUESTRAS ──
+  async function loadMuestras(){
+    document.getElementById('muestras-list').innerHTML='<div class="loading"><div class="spinner"></div> Cargando...</div>';
+    try{
+      const snap=await window._fb.getDocs(window._fb.collection(window._db,'muestras'));
+      allMuestras=[];snap.forEach(d=>allMuestras.push({id:d.id,...d.data()}));
+      allMuestras.sort((a,b)=>b.fecha-a.fecha);renderMuestras();
+    }catch(e){document.getElementById('muestras-list').innerHTML='<div class="empty-state"><p>Error al cargar.</p></div>';}
+  }
+
+  function renderMuestras(){
+    const el=document.getElementById('muestras-list');
+    const totalBot=allMuestras.reduce((s,m)=>s+(m.botellas||0),0);
+    if(!allMuestras.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">🎁</div><p>No hay muestras registradas.<br>Toca + para agregar.</p></div>';return;}
+    el.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center"><span style="color:var(--text2);font-size:13px">Total botellas regaladas</span><span style="font-family:'Playfair Display',serif;font-size:20px;color:var(--accent)">🎁 ${totalBot}</span></div>`+
+    '<div class="ventas-list-wrap">'+allMuestras.map(m=>{
+      const fecha=new Date(m.fecha).toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'});
+      const motivoColors={'Degustación':'var(--accent)','Influencer':'#a78bfa','Prensa':'#64b4ff','Otro':'var(--text2)'};
+      return `<div class="venta-card">
+        <div class="venta-top">
+          <div><div class="venta-cliente">🎁 ${m.destinatario}</div><div class="venta-fecha">${fecha}</div></div>
+          <div style="text-align:right"><div style="font-size:22px;font-family:'Playfair Display',serif;color:var(--accent)">${m.botellas||0}</div><div style="font-size:11px;color:var(--text2)">botellas</div></div>
+        </div>
+        <div class="venta-detail">
+          <span class="venta-tag" style="color:${motivoColors[m.motivo]||'var(--text2)'}">${m.motivo||'—'}</span>
+          ${m.loteCodigo?`<span class="venta-tag">🫙 ${m.loteCodigo}</span>`:''}
+        </div>
+        ${m.notas?`<p style="font-size:12px;color:var(--text2);margin-top:8px">📝 ${m.notas}</p>`:''}
+        <button class="btn-del" style="margin-top:10px" onclick="deleteMuestra('${m.id}')">🗑️ Eliminar</button>
+      </div>`;
+    }).join('')+'</div>';
+  }
+
+  function selectMuestraMotivo(motivo,btn){
+    selMuestraMotivo=motivo;
+    document.querySelectorAll('#muestra-modal .cat-option').forEach(o=>o.classList.remove('selected'));
+    btn.classList.add('selected');
+  }
+
+  async function openMuestraModal(){
+    document.getElementById('muestra-dest').value='';
+    document.getElementById('muestra-fecha').value=new Date().toISOString().split('T')[0];
+    document.getElementById('muestra-botellas').value='';
+    document.getElementById('muestra-notas').value='';
+    selMuestraMotivo='Degustación';
+    document.querySelectorAll('#muestra-modal .cat-option').forEach((o,i)=>o.classList.toggle('selected',i===0));
+    const loteSel=document.getElementById('muestra-lote-select');
+    loteSel.innerHTML='<option value="">Sin lote específico</option>';
+    if(!allLotes.length) await loadLotes();
+    allLotes.filter(l=>l.botellas>0).forEach(l=>{const o=document.createElement('option');o.value=l.id;o.textContent=`${l.codigo} (${l.botellas} botellas)`;loteSel.appendChild(o);});
+    document.getElementById('muestra-modal').classList.add('open');
+  }
+
+  async function saveMuestra(){
+    const dest=document.getElementById('muestra-dest').value.trim();
+    const fecha=document.getElementById('muestra-fecha').value;
+    const botellas=parseInt(document.getElementById('muestra-botellas').value)||0;
+    const notas=document.getElementById('muestra-notas').value.trim();
+    const loteId=document.getElementById('muestra-lote-select').value;
+    const lote=allLotes.find(l=>l.id===loteId);
+    if(!dest) return showToast('⚠️ Escribe el destinatario');
+    if(!botellas) return showToast('⚠️ Agrega el número de botellas');
+    try{
+      await window._fb.addDoc(window._fb.collection(window._db,'muestras'),{destinatario:dest,fecha:new Date(fecha).getTime(),botellas,motivo:selMuestraMotivo,notas,loteId:loteId||'',loteCodigo:lote?.codigo||'',creadoEn:Date.now()});
+      if(loteId&&lote){
+        const newBotellas=Math.max(0,(lote.botellas||0)-botellas);
+        await window._updateDoc(window._fb.doc(window._db,'lotes',loteId),{botellas:newBotellas});
+        const idx=allLotes.findIndex(l=>l.id===loteId);
+        if(idx>=0) allLotes[idx].botellas=newBotellas;
+      }
+      await logAudit(`registró muestra de ${botellas} botellas para "${dest}" (${selMuestraMotivo})`);
+      showToast('✅ Muestra registrada');
+      closeModal('muestra-modal');await loadMuestras();
+    }catch(e){showToast('❌ Error al guardar');}
+  }
+
+  async function deleteMuestra(id){
+    if(!confirm('¿Eliminar esta muestra?'))return;
+    try{
+      await window._fb.deleteDoc(window._fb.doc(window._db,'muestras',id));
+      allMuestras=allMuestras.filter(m=>m.id!==id);renderMuestras();showToast('Eliminado');
+    }catch(e){showToast('❌ Error');}
+  }
+
+  // Expose
+  window.switchVentasTab=switchVentasTab;
+  window.openConsModal=openConsModal;window.calcConsTotal=calcConsTotal;window.saveConsignacion=saveConsignacion;
+  window.openAbonoModal=openAbonoModal;window.saveAbono=saveAbono;window.deleteCons=deleteCons;
+  window.openEventoModal=openEventoModal;window.calcEventoTotal=calcEventoTotal;window.saveEvento=saveEvento;window.deleteEvento=deleteEvento;
+  window.openMuestraModal=openMuestraModal;window.selectMuestraMotivo=selectMuestraMotivo;window.saveMuestra=saveMuestra;window.deleteMuestra=deleteMuestra;
 
   // ── VENTAS & CLIENTES ──
   let allVentas=[], allClientes=[], ventasSubTab='ventas', editingClienteId=null, selTipoCliente='Menudeo', selCliTipo='Menudeo';

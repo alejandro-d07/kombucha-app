@@ -340,18 +340,32 @@
       <!-- Inventario -->
       <div id="subtab-rec-inventario">
         <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
-          <div class="stat-card"><div class="stat-icon">📦</div><div class="stat-value" id="inv-stat-total">0</div><div class="stat-label">Ingredientes</div></div>
+          <div class="stat-card"><div class="stat-icon">📦</div><div class="stat-value" id="inv-stat-total">0</div><div class="stat-label">Items</div></div>
           <div class="stat-card"><div class="stat-icon">⚠️</div><div class="stat-value" id="inv-stat-low" style="color:var(--danger)">0</div><div class="stat-label">Stock bajo</div></div>
           <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-value" id="inv-stat-valor" style="font-size:18px">$0</div><div class="stat-label">Valor total</div></div>
         </div>
-        <div class="cat-tabs" id="inv-cat-tabs">
-          <button class="inv-cat-tab cat-tab active" onclick="filterInv('todos',this)">Todos</button>
-          <button class="inv-cat-tab cat-tab" onclick="filterInv('Tés',this)">🍃 Tés</button>
-          <button class="inv-cat-tab cat-tab" onclick="filterInv('Frutas',this)">🍓 Frutas</button>
-          <button class="inv-cat-tab cat-tab" onclick="filterInv('Azúcares',this)">🍯 Azúcares</button>
-          <button class="inv-cat-tab cat-tab" onclick="filterInv('Otros',this)">🌿 Otros</button>
+        <!-- Sub-tabs: Ingredientes vs Insumos -->
+        <div class="sub-tabs" style="margin-bottom:16px">
+          <button class="inv-main-tab sub-tab active" onclick="switchInvTab('ingredientes',this)">🌿 Ingredientes</button>
+          <button class="inv-main-tab sub-tab" onclick="switchInvTab('insumos',this)">🧴 Insumos</button>
         </div>
-        <div id="inv-list"><div class="loading"><div class="spinner"></div> Cargando...</div></div>
+
+        <!-- Ingredientes -->
+        <div id="subtab-inv-ingredientes">
+          <div class="cat-tabs" id="inv-cat-tabs">
+            <button class="inv-cat-tab cat-tab active" onclick="filterInv('todos',this)">Todos</button>
+            <button class="inv-cat-tab cat-tab" onclick="filterInv('Tés',this)">🍃 Tés</button>
+            <button class="inv-cat-tab cat-tab" onclick="filterInv('Frutas',this)">🍓 Frutas</button>
+            <button class="inv-cat-tab cat-tab" onclick="filterInv('Azúcares',this)">🍯 Azúcares</button>
+            <button class="inv-cat-tab cat-tab" onclick="filterInv('Otros',this)">🌿 Otros</button>
+          </div>
+          <div id="inv-list"><div class="loading"><div class="spinner"></div> Cargando...</div></div>
+        </div>
+
+        <!-- Insumos -->
+        <div id="subtab-inv-insumos" style="display:none">
+          <div id="insumos-list"><div class="loading"><div class="spinner"></div> Cargando...</div></div>
+        </div>
       </div>
 
       <!-- Gastos -->
@@ -878,6 +892,55 @@
   </div>
 </div>
 
+<!-- Modal Insumo (nuevo/editar) -->
+<div class="modal-overlay" id="insumo-modal" onclick="closeModal('insumo-modal',event)">
+  <div class="modal">
+    <p class="modal-title" id="insumo-modal-title">Nuevo insumo</p>
+    <div class="form-group"><label>Nombre del insumo</label><input type="text" id="insumo-nombre" placeholder="Ej: Botellas 360ml, Corcholatas, Etiquetas..."/></div>
+    <div class="form-group">
+      <label>Categoría</label>
+      <div class="cat-select">
+        <button class="cat-option insumo-cat-opt selected" onclick="selectInsumoCat('Envase',this)">🍶 Envase</button>
+        <button class="cat-option insumo-cat-opt" onclick="selectInsumoCat('Empaque',this)">📦 Empaque</button>
+        <button class="cat-option insumo-cat-opt" onclick="selectInsumoCat('Etiqueta',this)">🏷️ Etiqueta</button>
+        <button class="cat-option insumo-cat-opt" onclick="selectInsumoCat('Limpieza',this)">🧹 Limpieza</button>
+        <button class="cat-option insumo-cat-opt" onclick="selectInsumoCat('Otro',this)">🔧 Otro</button>
+      </div>
+    </div>
+    <div class="form-group"><label>Cantidad en stock</label><input type="number" id="insumo-qty" placeholder="0" min="0" step="any"/></div>
+    <div class="form-group"><label>Unidad</label><input type="text" id="insumo-unit" placeholder="Ej: piezas, cajas, rollos..."/></div>
+    <div class="form-group"><label>Costo por unidad ($)</label><input type="number" id="insumo-costo" placeholder="0.00" min="0" step="0.01"/></div>
+    <div class="form-group"><label>Stock mínimo (alerta)</label><input type="number" id="insumo-minimo" placeholder="0" min="0" step="any"/></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" style="flex:1" onclick="closeModal('insumo-modal')">Cancelar</button>
+      <button class="btn-primary" style="flex:2;margin-top:0" onclick="saveInsumo()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal ajuste insumo -->
+<div class="modal-overlay" id="insumo-adjust-modal" onclick="closeModal('insumo-adjust-modal',event)">
+  <div class="modal">
+    <p class="modal-title">Ajustar stock</p>
+    <p id="insumo-adjust-name" style="color:var(--accent);font-weight:600;margin-bottom:4px;font-size:15px"></p>
+    <p id="insumo-adjust-current" style="color:var(--text2);font-size:13px;margin-bottom:16px"></p>
+    <div class="form-group">
+      <label>Tipo de ajuste</label>
+      <div class="cat-select" style="grid-template-columns:repeat(3,1fr)">
+        <button class="cat-option selected" onclick="selectInsumoAjuste('agregar',this)">➕ Agregar</button>
+        <button class="cat-option" onclick="selectInsumoAjuste('restar',this)">➖ Restar</button>
+        <button class="cat-option" onclick="selectInsumoAjuste('fijar',this)">🎯 Fijar</button>
+      </div>
+    </div>
+    <div class="form-group"><label id="insumo-adjust-qty-label">Cantidad a agregar</label><input type="number" id="insumo-adjust-qty" placeholder="0" min="0" step="any"/></div>
+    <div class="form-group"><label>Motivo (opcional)</label><input type="text" id="insumo-adjust-motivo" placeholder="Ej: Compra, uso, merma..."/></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" style="flex:1" onclick="closeModal('insumo-adjust-modal')">Cancelar</button>
+      <button class="btn-primary" style="flex:2;margin-top:0" onclick="saveInsumoAjuste()">Aplicar</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal Inventario -->
 <div class="modal-overlay" id="inv-modal" onclick="closeModal('inv-modal',event)">
   <div class="modal">
@@ -1144,7 +1207,7 @@
     if(currentPage==='lotes'){if(lotesSubTab==='lotes')openLoteModal();else if(ingSubTab==='ingredientes')openIngModal();else openRecipeModal();}
     else if(currentPage==='ingredientes') currentSubTab==='ingredientes'?openIngModal():openRecipeModal();
     else if(currentPage==='ventas'){ventasMainTab==='ventas'?openVentaModal():openClienteModal();}
-    else if(currentPage==='recursos'){if(recursosSubTab==='inventario')openInvModal(null);else if(recursosSubTab==='gastos')openGastoModal();else openConceptoModal();}
+    else if(currentPage==='recursos'){if(recursosSubTab==='inventario'){invMainTab==='ingredientes'?openInvModal(null):openInsumoModal();}else if(recursosSubTab==='gastos')openGastoModal();else openConceptoModal();}
   }
   // Inventario has no FAB — adjustments via card buttons
 
@@ -2106,7 +2169,7 @@
     document.getElementById('subtab-rec-inventario').style.display=tab==='inventario'?'block':'none';
     document.getElementById('subtab-rec-gastos').style.display=tab==='gastos'?'block':'none';
     document.getElementById('subtab-rec-conceptos').style.display=tab==='conceptos'?'block':'none';
-    if(tab==='inventario') loadInventario();
+    if(tab==='inventario'){invMainTab==='ingredientes'?loadInventario():loadInsumos();}
     else if(tab==='gastos') loadGastos();
     else loadConceptos();
   }
@@ -2819,6 +2882,162 @@
   window.calcVentaTotal=calcVentaTotal;window.saveVenta=saveVenta;window.deleteVenta=deleteVenta;
   window.openClienteModal=openClienteModal;window.selectCliTipo=selectCliTipo;window.saveCliente=saveCliente;window.deleteCliente=deleteCliente;
 
+  // ── INSUMOS ──
+  let allInsumos=[], invMainTab='ingredientes', editingInsumoId=null, selInsumoCat='Envase', adjustingInsumoId=null, selInsumoAjuste='agregar';
+
+  function switchInvTab(tab, btn){
+    invMainTab=tab;
+    document.querySelectorAll('.inv-main-tab').forEach(t=>t.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('subtab-inv-ingredientes').style.display=tab==='ingredientes'?'block':'none';
+    document.getElementById('subtab-inv-insumos').style.display=tab==='insumos'?'block':'none';
+    if(tab==='ingredientes') loadIngredientesInv();
+    else loadInsumos();
+  }
+  window.switchInvTab=switchInvTab;
+
+  async function loadInsumos(){
+    document.getElementById('insumos-list').innerHTML='<div class="loading"><div class="spinner"></div> Cargando...</div>';
+    try{
+      const snap=await window._fb.getDocs(window._fb.collection(window._db,'insumos'));
+      allInsumos=[];snap.forEach(d=>allInsumos.push({id:d.id,...d.data()}));
+      allInsumos.sort((a,b)=>a.nombre.localeCompare(b.nombre));
+      renderInsumos();
+    }catch(e){document.getElementById('insumos-list').innerHTML='<div class="empty-state"><p>Error al cargar.</p></div>';}
+  }
+
+  function renderInsumos(){
+    const el=document.getElementById('insumos-list');
+    const catIcons={'Envase':'🍶','Empaque':'📦','Etiqueta':'🏷️','Limpieza':'🧹','Otro':'🔧'};
+    // Update stats to include insumos
+    const lowItems=[...allInvData.filter(i=>i.stock<=i.minimo&&i.minimo>0),...allInsumos.filter(i=>i.stock<=i.minimo&&i.minimo>0)];
+    const totalValor=[...allInvData,...allInsumos].reduce((s,i)=>s+(i.stock||0)*(i.costo||0),0);
+    document.getElementById('inv-stat-total').textContent=allInvData.length+allInsumos.length;
+    document.getElementById('inv-stat-low').textContent=lowItems.length;
+    document.getElementById('inv-stat-valor').textContent='$'+totalValor.toLocaleString('es-MX',{minimumFractionDigits:0});
+    if(!allInsumos.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">🧴</div><p>No hay insumos registrados.<br>Toca + para agregar el primero.</p></div>';return;}
+    el.innerHTML='<div class="inv-list-wrap">'+allInsumos.map(i=>{
+      const isLow=i.minimo>0&&i.stock<=i.minimo;
+      const lowBadge=isLow?`<span style="font-size:10px;background:rgba(255,133,82,.15);color:var(--danger);padding:2px 8px;border-radius:100px;margin-left:6px">⚠️ Stock bajo</span>`:'';
+      return `<div class="inv-card ${isLow?'low-stock':''}">
+        <div class="inv-icon">${catIcons[i.categoria]||'🔧'}</div>
+        <div class="inv-info">
+          <div class="inv-name">${i.nombre}${lowBadge}</div>
+          <div class="inv-cat">${i.categoria||'Insumo'}</div>
+          ${i.costo>0?`<div class="inv-cost">$${i.costo.toLocaleString('es-MX',{minimumFractionDigits:2})} por ${i.unidad||'u.'}</div>`:''}
+          ${i.minimo>0?`<div class="inv-cost">Mínimo: ${i.minimo} ${i.unidad||''}</div>`:''}
+        </div>
+        <div class="inv-stock">
+          <div class="inv-qty ${isLow?'low':''}">${i.stock||0}</div>
+          <div class="inv-unit">${i.unidad||'sin unidad'}</div>
+        </div>
+        <div class="inv-actions">
+          <button class="btn-adjust" onclick="openInsumoModal('${i.id}')">⚙️ Config</button>
+          <button class="btn-adjust" style="border-color:rgba(184,255,102,.4);color:var(--accent)" onclick="openInsumoAjusteModal('${i.id}')">± Ajustar</button>
+        </div>
+      </div>`;
+    }).join('')+'</div>';
+  }
+
+  function openInsumoModal(id){
+    editingInsumoId=id||null; selInsumoCat='Envase';
+    document.getElementById('insumo-modal-title').textContent=id?'Editar insumo':'Nuevo insumo';
+    document.getElementById('insumo-nombre').value='';
+    document.getElementById('insumo-qty').value='';
+    document.getElementById('insumo-unit').value='';
+    document.getElementById('insumo-costo').value='';
+    document.getElementById('insumo-minimo').value='';
+    document.querySelectorAll('.insumo-cat-opt').forEach((o,i)=>o.classList.toggle('selected',i===0));
+    if(id){
+      const ins=allInsumos.find(x=>x.id===id);
+      if(ins){
+        document.getElementById('insumo-nombre').value=ins.nombre||'';
+        document.getElementById('insumo-qty').value=ins.stock||0;
+        document.getElementById('insumo-unit').value=ins.unidad||'';
+        document.getElementById('insumo-costo').value=ins.costo||'';
+        document.getElementById('insumo-minimo').value=ins.minimo||'';
+        selInsumoCat=ins.categoria||'Envase';
+        document.querySelectorAll('.insumo-cat-opt').forEach(o=>o.classList.toggle('selected',o.textContent.includes(selInsumoCat)));
+      }
+    }
+    document.getElementById('insumo-modal').classList.add('open');
+    setTimeout(()=>document.getElementById('insumo-nombre').focus(),300);
+  }
+
+  function selectInsumoCat(cat,btn){
+    selInsumoCat=cat;
+    document.querySelectorAll('.insumo-cat-opt').forEach(o=>o.classList.remove('selected'));
+    btn.classList.add('selected');
+  }
+
+  async function saveInsumo(){
+    const nombre=document.getElementById('insumo-nombre').value.trim();
+    if(!nombre) return showToast('⚠️ Escribe el nombre del insumo');
+    const stock=parseFloat(document.getElementById('insumo-qty').value)||0;
+    const unidad=document.getElementById('insumo-unit').value.trim();
+    const costo=parseFloat(document.getElementById('insumo-costo').value)||0;
+    const minimo=parseFloat(document.getElementById('insumo-minimo').value)||0;
+    const data={nombre,categoria:selInsumoCat,stock,unidad,costo,minimo,actualizadoEn:Date.now()};
+    try{
+      if(editingInsumoId){
+        await window._fb.setDoc(window._fb.doc(window._db,'insumos',editingInsumoId),data);
+        await logAudit(`editó el insumo "${nombre}"`);
+        showToast('✅ Insumo actualizado');
+      } else {
+        data.creadoEn=Date.now();
+        await window._fb.addDoc(window._fb.collection(window._db,'insumos'),data);
+        await logAudit(`agregó el insumo "${nombre}"`);
+        showToast('✅ Insumo agregado');
+      }
+      closeModal('insumo-modal');await loadInsumos();
+    }catch(e){showToast('❌ Error al guardar');}
+  }
+
+  function openInsumoAjusteModal(id){
+    adjustingInsumoId=id; selInsumoAjuste='agregar';
+    const ins=allInsumos.find(x=>x.id===id);
+    if(!ins)return;
+    document.getElementById('insumo-adjust-name').textContent=ins.nombre;
+    document.getElementById('insumo-adjust-current').textContent=`Stock actual: ${ins.stock||0} ${ins.unidad||''}`;
+    document.getElementById('insumo-adjust-qty').value='';
+    document.getElementById('insumo-adjust-motivo').value='';
+    document.getElementById('insumo-adjust-qty-label').textContent='Cantidad a agregar';
+    document.querySelectorAll('#insumo-adjust-modal .cat-option').forEach((o,i)=>o.classList.toggle('selected',i===0));
+    document.getElementById('insumo-adjust-modal').classList.add('open');
+    setTimeout(()=>document.getElementById('insumo-adjust-qty').focus(),300);
+  }
+
+  function selectInsumoAjuste(tipo,btn){
+    selInsumoAjuste=tipo;
+    document.querySelectorAll('#insumo-adjust-modal .cat-option').forEach(o=>o.classList.remove('selected'));
+    btn.classList.add('selected');
+    const labels={agregar:'Cantidad a agregar',restar:'Cantidad a restar',fijar:'Nueva cantidad total'};
+    document.getElementById('insumo-adjust-qty-label').textContent=labels[tipo];
+  }
+
+  async function saveInsumoAjuste(){
+    const qty=parseFloat(document.getElementById('insumo-adjust-qty').value);
+    if(isNaN(qty)||qty<0) return showToast('⚠️ Ingresa una cantidad válida');
+    const motivo=document.getElementById('insumo-adjust-motivo').value.trim();
+    const ins=allInsumos.find(x=>x.id===adjustingInsumoId);
+    if(!ins)return;
+    let newStock;
+    if(selInsumoAjuste==='agregar') newStock=(ins.stock||0)+qty;
+    else if(selInsumoAjuste==='restar') newStock=Math.max(0,(ins.stock||0)-qty);
+    else newStock=qty;
+    try{
+      await window._fb.setDoc(window._fb.doc(window._db,'insumos',adjustingInsumoId),{...ins,stock:newStock,actualizadoEn:Date.now()});
+      const accionLabel={agregar:`agregó ${qty}`,restar:`restó ${qty}`,fijar:`fijó en ${qty}`}[selInsumoAjuste];
+      await logAudit(`${accionLabel} ${ins.unidad||''} de insumo "${ins.nombre}"${motivo?' ('+motivo+')':''}`);
+      showToast(`✅ Stock ajustado: ${newStock} ${ins.unidad||''}`);
+      closeModal('insumo-adjust-modal');await loadInsumos();
+    }catch(e){showToast('❌ Error al ajustar');}
+  }
+
+  window.openInsumoModal=openInsumoModal;window.selectInsumoCat=selectInsumoCat;window.saveInsumo=saveInsumo;
+  window.openInsumoAjusteModal=openInsumoAjusteModal;window.selectInsumoAjuste=selectInsumoAjuste;window.saveInsumoAjuste=saveInsumoAjuste;
+  window.loadInsumos=loadInsumos;
+
   // ── INVENTARIO ──
   let allInvData = [], invFilter = 'todos', editingInvId = null, adjustingInvId = null, selAjusteTipo = 'agregar';
 
@@ -2996,6 +3215,7 @@
   window.descontarIngredientes = descontarIngredientes;
 
   window.loadInventario = loadInventario;
+  window.loadIngredientesInv = loadInventario; // alias
   window.filterInv = filterInv;
   window.openInvModal = openInvModal;
   window.saveInvStock = saveInvStock;

@@ -201,6 +201,7 @@
     .num-display{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;color:var(--text2);font-size:15px;min-width:80px;text-align:center;}
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <link rel="icon" href="/icon-192.png" type="image/png" />
 </head>
 <body>
 
@@ -935,7 +936,6 @@
           }
         });
       }catch(e){}
-      });
       ['stat-f1','stat-f2','stat-ready','stat-bottles'].forEach((id,i)=>document.getElementById(id).textContent=[f1,f2,ready,bottles][i]);
       const al=document.getElementById('alerts-list');
       if(alerts.length){
@@ -1632,7 +1632,8 @@
         td{padding:10px;border-bottom:1px solid #eee;font-size:13px}
         .total-row{font-weight:700;background:#fffbf0}
         .footer{margin-top:32px;font-size:11px;color:#aaa;text-align:center}
-      </style></head><body>
+      </style>  <link rel="icon" href="/icon-192.png" type="image/png" />
+</head><body>
       <h1>Reporte Mensual — Kombuchan</h1>
       <h2>${mes.charAt(0).toUpperCase()+mes.slice(1)}</h2>
       <div class="kpis">

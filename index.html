@@ -200,6 +200,7 @@
     .prefijo-row .form-group{flex:1;margin-bottom:0;}
     .num-display{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;color:var(--text2);font-size:15px;min-width:80px;text-align:center;}
   </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 </head>
 <body>
 
@@ -344,6 +345,42 @@
       </div>
     </div>
 
+    <!-- REPORTES -->
+    <div class="page" id="page-reportes">
+      <p class="page-title">Reportes</p>
+      <p class="page-subtitle">Estadísticas de producción y ventas</p>
+      <!-- Period selector -->
+      <div class="sub-tabs" style="margin-bottom:20px">
+        <button class="sub-tab active" onclick="setReportePeriodo('semana',this)">Semana</button>
+        <button class="sub-tab" onclick="setReportePeriodo('mes',this)">Mes</button>
+        <button class="sub-tab" onclick="setReportePeriodo('anio',this)">Año</button>
+      </div>
+      <!-- KPI cards -->
+      <div class="stats-grid" style="margin-bottom:20px">
+        <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-value" id="rep-ingresos" style="font-size:18px">$0</div><div class="stat-label">Ingresos</div></div>
+        <div class="stat-card"><div class="stat-icon">🍶</div><div class="stat-value" id="rep-botellas">0</div><div class="stat-label">Botellas</div></div>
+        <div class="stat-card"><div class="stat-icon">📦</div><div class="stat-value" id="rep-cajas">0</div><div class="stat-label">Cajas</div></div>
+        <div class="stat-card"><div class="stat-icon">🫙</div><div class="stat-value" id="rep-lotes">0</div><div class="stat-label">Lotes</div></div>
+      </div>
+      <!-- Charts -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px">
+        <p class="section-title" style="margin-bottom:16px">📈 Ingresos</p>
+        <canvas id="chart-ingresos" height="200"></canvas>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px">
+        <p class="section-title" style="margin-bottom:16px">🍶 Botellas & Cajas vendidas</p>
+        <canvas id="chart-ventas" height="200"></canvas>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:20px">
+        <p class="section-title" style="margin-bottom:16px">🫙 Lotes producidos</p>
+        <canvas id="chart-lotes" height="200"></canvas>
+      </div>
+      <!-- Download -->
+      <button class="btn-primary" onclick="downloadReportePDF()" style="margin-top:0">
+        📄 Descargar reporte PDF
+      </button>
+    </div>
+
     <!-- AJUSTES -->
     <div class="page" id="page-ajustes">
       <p class="page-title">Ajustes</p><p class="page-subtitle">Personaliza tu app</p>
@@ -389,9 +426,9 @@
   <nav class="nav-bottom">
     <button class="nav-item active" onclick="showPage('dashboard',this)"><span>🏠</span><span>Inicio</span></button>
     <button class="nav-item" onclick="showPage('lotes',this)"><span>🫙</span><span>Lotes</span></button>
-    <button class="nav-item" onclick="showPage('ingredientes',this)"><span>🌿</span><span>Recetas</span></button>
-    <button class="nav-item" onclick="showPage('inventario',this)"><span>📦</span><span>Inventario</span></button>
     <button class="nav-item" onclick="showPage('ventas',this)"><span>💰</span><span>Ventas</span></button>
+    <button class="nav-item" onclick="showPage('reportes',this)"><span>📊</span><span>Reportes</span></button>
+    <button class="nav-item" onclick="showPage('inventario',this)"><span>📦</span><span>Inventario</span></button>
     <button class="nav-item" onclick="showPage('ajustes',this)"><span>⚙️</span><span>Ajustes</span></button>
   </nav>
 </div>
@@ -855,6 +892,7 @@
     else if(name==='ingredientes'){currentSubTab==='ingredientes'?loadIngredientes():loadRecetas();}
     else if(name==='inventario') loadInventario();
     else if(name==='ventas'){ventasSubTab==='ventas'?loadVentas():loadClientes();}
+    else if(name==='reportes') loadReportes();
     else if(name==='dashboard') window.loadDashboard&&window.loadDashboard();
     else if(name==='ajustes'){document.getElementById('prefijo-input').value=window._prefijo||'KMBC';previewPrefijo();}
   }
@@ -1288,6 +1326,221 @@
     showToast('🔔 Notificación enviada');
   }
   window.testNotification=testNotification;
+
+  // ── REPORTES ──
+  let reportePeriodo = 'mes';
+  let chartIngresos = null, chartVentas = null, chartLotes = null;
+
+  function setReportePeriodo(periodo, btn) {
+    reportePeriodo = periodo;
+    document.querySelectorAll('#page-reportes .sub-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    loadReportes();
+  }
+
+  function getPeriodoRange(periodo) {
+    const now = new Date();
+    let labels = [], starts = [];
+    if (periodo === 'semana') {
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(now); d.setDate(d.getDate() - i);
+        labels.push(d.toLocaleDateString('es-MX', {weekday:'short', day:'2-digit'}));
+        starts.push(new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime());
+      }
+    } else if (periodo === 'mes') {
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        labels.push(d.toLocaleDateString('es-MX', {month:'short', year:'2-digit'}));
+        starts.push(d.getTime());
+      }
+    } else {
+      for (let i = 4; i >= 0; i--) {
+        const d = new Date(now.getFullYear() - i, 0, 1);
+        labels.push(d.getFullYear().toString());
+        starts.push(d.getTime());
+      }
+    }
+    return { labels, starts };
+  }
+
+  function getBucketEnd(periodo, start) {
+    const d = new Date(start);
+    if (periodo === 'semana') return new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1).getTime();
+    if (periodo === 'mes') return new Date(d.getFullYear(), d.getMonth() + 1, 1).getTime();
+    return new Date(d.getFullYear() + 1, 0, 1).getTime();
+  }
+
+  async function loadReportes() {
+    try {
+      // Load all data
+      const [ventasSnap, lotesSnap] = await Promise.all([
+        window._fb.getDocs(window._fb.collection(window._db, 'ventas')),
+        window._fb.getDocs(window._fb.collection(window._db, 'lotes'))
+      ]);
+      const ventas = []; ventasSnap.forEach(d => ventas.push(d.data()));
+      const lotes = []; lotesSnap.forEach(d => lotes.push(d.data()));
+
+      const { labels, starts } = getPeriodoRange(reportePeriodo);
+
+      // Bucket data
+      const ingresosData = starts.map(s => {
+        const end = getBucketEnd(reportePeriodo, s);
+        return ventas.filter(v => v.fecha >= s && v.fecha < end).reduce((sum, v) => sum + (v.total || 0), 0);
+      });
+      const botellasData = starts.map(s => {
+        const end = getBucketEnd(reportePeriodo, s);
+        return ventas.filter(v => v.fecha >= s && v.fecha < end).reduce((sum, v) => sum + (v.botellas || 0) + (v.cajas || 0) * 12, 0);
+      });
+      const cajasData = starts.map(s => {
+        const end = getBucketEnd(reportePeriodo, s);
+        return ventas.filter(v => v.fecha >= s && v.fecha < end).reduce((sum, v) => sum + (v.cajas || 0), 0);
+      });
+      const lotesData = starts.map(s => {
+        const end = getBucketEnd(reportePeriodo, s);
+        return lotes.filter(l => l.creadoEn >= s && l.creadoEn < end).length;
+      });
+
+      // KPIs (total period)
+      const pStart = starts[0];
+      const pEnd = getBucketEnd(reportePeriodo, starts[starts.length - 1]);
+      const periodVentas = ventas.filter(v => v.fecha >= pStart && v.fecha < pEnd);
+      document.getElementById('rep-ingresos').textContent = '$' + periodVentas.reduce((s,v)=>s+(v.total||0),0).toLocaleString('es-MX',{minimumFractionDigits:0});
+      document.getElementById('rep-botellas').textContent = periodVentas.reduce((s,v)=>s+(v.botellas||0)+(v.cajas||0)*12,0);
+      document.getElementById('rep-cajas').textContent = periodVentas.reduce((s,v)=>s+(v.cajas||0),0);
+      document.getElementById('rep-lotes').textContent = lotes.filter(l=>l.creadoEn>=pStart&&l.creadoEn<pEnd).length;
+
+      const chartDefaults = {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { color: '#9e9880', font: { size: 11 } }, grid: { color: '#2e2c24' } },
+          y: { ticks: { color: '#9e9880', font: { size: 11 } }, grid: { color: '#2e2c24' } }
+        }
+      };
+
+      // Chart: Ingresos
+      if (chartIngresos) chartIngresos.destroy();
+      chartIngresos = new Chart(document.getElementById('chart-ingresos'), {
+        type: 'bar',
+        data: { labels, datasets: [{ data: ingresosData, backgroundColor: 'rgba(200,169,110,0.7)', borderColor: '#c8a96e', borderWidth: 1, borderRadius: 6 }] },
+        options: { ...chartDefaults, plugins: { ...chartDefaults.plugins, tooltip: { callbacks: { label: ctx => '$' + ctx.raw.toLocaleString('es-MX') } } } }
+      });
+
+      // Chart: Botellas & Cajas
+      if (chartVentas) chartVentas.destroy();
+      chartVentas = new Chart(document.getElementById('chart-ventas'), {
+        type: 'bar',
+        data: { labels, datasets: [
+          { label: 'Botellas', data: botellasData, backgroundColor: 'rgba(125,184,138,0.7)', borderColor: '#7db88a', borderWidth: 1, borderRadius: 6 },
+          { label: 'Cajas', data: cajasData, backgroundColor: 'rgba(100,180,255,0.5)', borderColor: '#64b4ff', borderWidth: 1, borderRadius: 6 }
+        ]},
+        options: { ...chartDefaults, plugins: { legend: { display: true, labels: { color: '#9e9880', font: { size: 11 } } } } }
+      });
+
+      // Chart: Lotes
+      if (chartLotes) chartLotes.destroy();
+      chartLotes = new Chart(document.getElementById('chart-lotes'), {
+        type: 'line',
+        data: { labels, datasets: [{ data: lotesData, borderColor: '#c8a96e', backgroundColor: 'rgba(200,169,110,0.1)', borderWidth: 2, pointBackgroundColor: '#c8a96e', fill: true, tension: 0.3 }] },
+        options: chartDefaults
+      });
+
+    } catch(e) { console.log('Error reportes:', e); }
+  }
+
+  async function downloadReportePDF() {
+    showToast('⏳ Generando PDF...');
+    try {
+      const [ventasSnap, lotesSnap, clientesSnap] = await Promise.all([
+        window._fb.getDocs(window._fb.collection(window._db, 'ventas')),
+        window._fb.getDocs(window._fb.collection(window._db, 'lotes')),
+        window._fb.getDocs(window._fb.collection(window._db, 'clientes'))
+      ]);
+      const ventas = []; ventasSnap.forEach(d => ventas.push(d.data()));
+      const lotes = []; lotesSnap.forEach(d => lotes.push(d.data()));
+      const clientes = []; clientesSnap.forEach(d => clientes.push(d.data()));
+
+      const now = new Date();
+      const mes = now.toLocaleDateString('es-MX', {month:'long', year:'numeric'});
+      const mStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+      const mEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1).getTime();
+      const ventasMes = ventas.filter(v => v.fecha >= mStart && v.fecha < mEnd);
+      const lotesMes = lotes.filter(l => l.creadoEn >= mStart && l.creadoEn < mEnd);
+      const totalIngresos = ventasMes.reduce((s,v) => s + (v.total||0), 0);
+      const totalBotellas = ventasMes.reduce((s,v) => s + (v.botellas||0) + (v.cajas||0)*12, 0);
+      const totalCajas = ventasMes.reduce((s,v) => s + (v.cajas||0), 0);
+
+      // Top clientes
+      const clienteStats = {};
+      ventasMes.forEach(v => {
+        if (!v.clienteNombre) return;
+        if (!clienteStats[v.clienteNombre]) clienteStats[v.clienteNombre] = 0;
+        clienteStats[v.clienteNombre] += v.total || 0;
+      });
+      const topClientes = Object.entries(clienteStats).sort((a,b)=>b[1]-a[1]).slice(0,5);
+
+      const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+      <style>
+        body{font-family:Arial,sans-serif;color:#222;padding:32px;max-width:800px;margin:0 auto}
+        h1{font-size:24px;margin-bottom:4px}
+        h2{font-size:16px;color:#666;font-weight:normal;margin-bottom:32px}
+        h3{font-size:14px;text-transform:uppercase;letter-spacing:1px;color:#888;margin:24px 0 12px}
+        .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px}
+        .kpi{background:#f5f5f0;border-radius:8px;padding:16px;text-align:center}
+        .kpi-val{font-size:28px;font-weight:700;color:#c8a96e}
+        .kpi-label{font-size:11px;color:#888;text-transform:uppercase;margin-top:4px}
+        table{width:100%;border-collapse:collapse;margin-bottom:24px}
+        th{background:#f5f5f0;padding:10px;text-align:left;font-size:12px;text-transform:uppercase;color:#888}
+        td{padding:10px;border-bottom:1px solid #eee;font-size:13px}
+        .total-row{font-weight:700;background:#fffbf0}
+        .footer{margin-top:32px;font-size:11px;color:#aaa;text-align:center}
+      </style></head><body>
+      <h1>Reporte Mensual — Kombuchan</h1>
+      <h2>${mes.charAt(0).toUpperCase()+mes.slice(1)}</h2>
+      <div class="kpis">
+        <div class="kpi"><div class="kpi-val">$${totalIngresos.toLocaleString('es-MX',{minimumFractionDigits:0})}</div><div class="kpi-label">Ingresos</div></div>
+        <div class="kpi"><div class="kpi-val">${totalBotellas}</div><div class="kpi-label">Botellas</div></div>
+        <div class="kpi"><div class="kpi-val">${totalCajas}</div><div class="kpi-label">Cajas</div></div>
+        <div class="kpi"><div class="kpi-val">${lotesMes.length}</div><div class="kpi-label">Lotes</div></div>
+      </div>
+      <h3>Ventas del mes</h3>
+      <table><tr><th>Fecha</th><th>Cliente</th><th>Canal</th><th>Cajas</th><th>Botellas</th><th>Total</th></tr>
+      ${ventasMes.sort((a,b)=>a.fecha-b.fecha).map(v=>`<tr>
+        <td>${v.fecha?new Date(v.fecha).toLocaleDateString('es-MX'):'—'}</td>
+        <td>${v.clienteNombre||'Directo'}</td>
+        <td>${v.canal||'—'}</td>
+        <td>${v.cajas||0}</td>
+        <td>${v.botellas||0}</td>
+        <td>$${(v.total||0).toLocaleString('es-MX',{minimumFractionDigits:2})}</td>
+      </tr>`).join('')}
+      <tr class="total-row"><td colspan="5">TOTAL</td><td>$${totalIngresos.toLocaleString('es-MX',{minimumFractionDigits:2})}</td></tr>
+      </table>
+      ${topClientes.length?`<h3>Top clientes</h3><table><tr><th>Cliente</th><th>Total comprado</th></tr>
+      ${topClientes.map(([n,t])=>`<tr><td>${n}</td><td>$${t.toLocaleString('es-MX',{minimumFractionDigits:2})}</td></tr>`).join('')}
+      </table>`:''}
+      <h3>Lotes del mes</h3>
+      <table><tr><th>Código</th><th>Etapa</th><th>Receta</th><th>Jarras</th><th>Botellas</th><th>Estado</th></tr>
+      ${lotesMes.map(l=>`<tr>
+        <td>${l.codigo||'—'}</td><td>${l.etapa||'—'}</td><td>${l.recetaNombre||'—'}</td>
+        <td>${l.jarras||0}</td><td>${l.botellas||0}</td><td>${l.estado||'—'}</td>
+      </tr>`).join('')}
+      </table>
+      <div class="footer">Generado el ${now.toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'})} — Kombuchan App</div>
+      </body></html>`;
+
+      const blob = new Blob([html], {type:'text/html'});
+      const url = URL.createObjectURL(blob);
+      const win = window.open(url, '_blank');
+      if (win) {
+        win.onload = () => { win.print(); URL.revokeObjectURL(url); };
+      }
+      showToast('✅ Reporte listo — usa "Guardar como PDF" al imprimir');
+    } catch(e) { showToast('❌ Error al generar reporte'); }
+  }
+
+  window.setReportePeriodo = setReportePeriodo;
+  window.loadReportes = loadReportes;
+  window.downloadReportePDF = downloadReportePDF;
 
   // ── VENTAS & CLIENTES ──
   let allVentas=[], allClientes=[], ventasSubTab='ventas', editingClienteId=null, selTipoCliente='Menudeo', selCliTipo='Menudeo';

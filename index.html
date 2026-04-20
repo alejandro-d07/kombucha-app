@@ -505,10 +505,16 @@
       </div>
       <div class="settings-section">
         <h3>Notificaciones</h3>
-        <div class="info-row"><span>Estado</span><span id="notif-status">—</span></div>
-        <div class="info-row"><span>Revisión automática</span><span style="color:var(--accent2)">Cada vez que abres la app</span></div>
-        <button class="btn-secondary" style="margin-top:12px;width:100%" onclick="requestNotifPermission()">Activar notificaciones push</button>
-        <button class="btn-secondary" style="margin-top:8px;width:100%" onclick="testNotification()">🔔 Enviar notificación de prueba</button>
+        <div class="info-row" style="align-items:center">
+          <div>
+            <div style="font-size:14px">Notificaciones push</div>
+            <div id="notif-status" style="font-size:12px;color:var(--text2);margin-top:2px">—</div>
+          </div>
+          <div id="notif-toggle" onclick="toggleNotificaciones()" style="width:48px;height:26px;border-radius:100px;background:var(--border);cursor:pointer;position:relative;transition:background .3s;flex-shrink:0">
+            <div id="notif-toggle-knob" style="width:20px;height:20px;border-radius:50%;background:var(--text2);position:absolute;top:3px;left:3px;transition:all .3s"></div>
+          </div>
+        </div>
+        <button class="btn-secondary" id="notif-test-btn" style="margin-top:16px;width:100%;display:none" onclick="testNotification()">🔔 Enviar notificación de prueba</button>
       </div>
       <button class="btn-danger" style="width:100%;padding:14px;margin-top:8px" onclick="handleLogout()">Cerrar sesión</button>
     </div>

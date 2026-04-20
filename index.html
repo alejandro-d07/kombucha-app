@@ -2844,7 +2844,7 @@
     document.getElementById('nuevo-cliente-fields').style.display='none';
     document.getElementById('venta-evento-nombre-group').style.display='none';
     document.getElementById('venta-consig-fields').style.display='none';
-    document.getElementById('venta-anticipo-group').style.display='none';
+    if(document.getElementById('venta-anticipo-group')) document.getElementById('venta-anticipo-group').style.display='none';
     if(document.getElementById('venta-evento-nombre')) document.getElementById('venta-evento-nombre').value='';
     if(document.getElementById('venta-anticipo')){document.getElementById('venta-anticipo').value='';}
     const pendEl=document.getElementById('venta-pendiente-display');if(pendEl)pendEl.textContent='$0';

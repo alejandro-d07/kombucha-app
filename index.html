@@ -176,6 +176,26 @@
     .btn-adjust{background:none;border:1px solid var(--border);color:var(--text2);border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;transition:all .2s;white-space:nowrap;}
     .btn-adjust:hover{border-color:var(--accent);color:var(--accent);}
     .inv-list-wrap{display:flex;flex-direction:column;gap:8px;}
+    /* Ventas & Clientes */
+    .venta-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;animation:fadeIn .2s ease;}
+    .venta-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:10px;}
+    .venta-cliente{font-size:15px;font-weight:600;}
+    .venta-fecha{font-size:11px;color:var(--text2);margin-top:2px;}
+    .venta-monto{font-family:'Playfair Display',serif;font-size:22px;color:var(--accent2);line-height:1;text-align:right;}
+    .venta-detail{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
+    .venta-tag{display:inline-block;padding:3px 10px;border-radius:100px;font-size:11px;background:var(--surface2);color:var(--text2);}
+    .cliente-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;display:flex;align-items:center;gap:14px;animation:fadeIn .2s ease;transition:border-color .2s;}
+    .cliente-card:hover{border-color:var(--accent);}
+    .cliente-avatar{width:44px;height:44px;background:var(--surface2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:var(--accent);flex-shrink:0;}
+    .cliente-info{flex:1;min-width:0;}
+    .cliente-nombre{font-size:15px;font-weight:600;}
+    .cliente-meta{font-size:12px;color:var(--text2);margin-top:2px;}
+    .cliente-stats{text-align:right;flex-shrink:0;}
+    .cliente-total{font-family:'Playfair Display',serif;font-size:18px;color:var(--accent2);}
+    .cliente-compras{font-size:11px;color:var(--text2);margin-top:2px;}
+    .ventas-list-wrap{display:flex;flex-direction:column;gap:8px;}
+    .clientes-list-wrap{display:flex;flex-direction:column;gap:8px;}
+    .precio-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
     .prefijo-row{display:flex;gap:8px;align-items:flex-end;}
     .prefijo-row .form-group{flex:1;margin-bottom:0;}
     .num-display{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;color:var(--text2);font-size:15px;min-width:80px;text-align:center;}
@@ -303,8 +323,25 @@
 
     <!-- VENTAS -->
     <div class="page" id="page-ventas">
-      <p class="page-title">Ventas</p><p class="page-subtitle">Módulo 6 — próximamente</p>
-      <div class="empty-state"><div class="empty-icon">💰</div><p>El seguimiento de ventas se construirá en el Módulo 6.</p></div>
+      <p class="page-title">Ventas</p>
+      <p class="page-subtitle">Registro de ventas y clientes</p>
+      <div class="sub-tabs">
+        <button class="sub-tab active" onclick="switchVentasTab('ventas',this)">💰 Ventas</button>
+        <button class="sub-tab" onclick="switchVentasTab('clientes',this)">👤 Clientes</button>
+      </div>
+      <!-- Ventas sub -->
+      <div id="subtab-ventas">
+        <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
+          <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-value" id="venta-stat-total" style="font-size:18px">$0</div><div class="stat-label">Ingresos</div></div>
+          <div class="stat-card"><div class="stat-icon">🍶</div><div class="stat-value" id="venta-stat-botellas">0</div><div class="stat-label">Botellas</div></div>
+          <div class="stat-card"><div class="stat-icon">📦</div><div class="stat-value" id="venta-stat-cajas">0</div><div class="stat-label">Cajas</div></div>
+        </div>
+        <div id="ventas-list"><div class="loading"><div class="spinner"></div> Cargando...</div></div>
+      </div>
+      <!-- Clientes sub -->
+      <div id="subtab-clientes" style="display:none">
+        <div id="clientes-list"><div class="loading"><div class="spinner"></div> Cargando...</div></div>
+      </div>
     </div>
 
     <!-- AJUSTES -->
@@ -489,6 +526,99 @@
     <div class="modal-actions">
       <button class="btn-secondary" style="flex:1" onclick="closeModal('estado-modal')">Cancelar</button>
       <button class="btn-primary" style="flex:2;margin-top:0" onclick="saveEstado()">Actualizar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Nueva Venta -->
+<div class="modal-overlay" id="venta-modal" onclick="closeModal('venta-modal',event)">
+  <div class="modal">
+    <p class="modal-title" id="venta-modal-title">Nueva venta</p>
+    <div class="form-group">
+      <label>Cliente</label>
+      <select id="venta-cliente-select" onchange="onClienteChange()"><option value="">Seleccionar cliente</option><option value="__nuevo__">+ Nuevo cliente</option></select>
+    </div>
+    <div id="nuevo-cliente-fields" style="display:none">
+      <div class="form-group"><label>Nombre del cliente</label><input type="text" id="venta-nuevo-nombre" placeholder="Nombre completo"/></div>
+      <div class="form-group"><label>Teléfono</label><input type="tel" id="venta-nuevo-tel" placeholder="+52 555 000 0000"/></div>
+      <div class="form-group">
+        <label>Canal de venta</label>
+        <select id="venta-nuevo-canal"><option value="Directa">Directa</option><option value="Online">Online</option><option value="Mercado">Mercado</option><option value="Restaurante">Restaurante</option><option value="Otro">Otro</option></select>
+      </div>
+      <div class="form-group"><label>Ciudad</label><input type="text" id="venta-nuevo-ciudad" placeholder="Ciudad"/></div>
+      <div class="form-group">
+        <label>Tipo de cliente</label>
+        <div class="cat-select">
+          <button class="cat-option selected" onclick="selectTipoCliente('Menudeo',this)">🛒 Menudeo</button>
+          <button class="cat-option" onclick="selectTipoCliente('Distribuidor',this)">🚚 Distribuidor</button>
+        </div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Lote</label>
+      <select id="venta-lote-select"><option value="">Seleccionar lote</option></select>
+    </div>
+    <div class="form-group">
+      <label>Fecha de venta</label>
+      <input type="date" id="venta-fecha"/>
+    </div>
+    <div class="form-group">
+      <label>Cajas (12 botellas c/u)</label>
+      <input type="number" id="venta-cajas" placeholder="0" min="0" oninput="calcVentaTotal()"/>
+    </div>
+    <div class="form-group">
+      <label>Botellas sueltas (360ml)</label>
+      <input type="number" id="venta-botellas" placeholder="0" min="0" oninput="calcVentaTotal()"/>
+    </div>
+    <div class="form-group">
+      <label>Precio por caja ($)</label>
+      <input type="number" id="venta-precio-caja" placeholder="0.00" min="0" step="0.01" oninput="calcVentaTotal()"/>
+    </div>
+    <div class="form-group">
+      <label>Precio por botella ($)</label>
+      <input type="number" id="venta-precio-botella" placeholder="0.00" min="0" step="0.01" oninput="calcVentaTotal()"/>
+    </div>
+    <div style="background:var(--surface2);border-radius:var(--radius);padding:14px 16px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center">
+      <span style="color:var(--text2);font-size:13px">Total de la venta</span>
+      <span id="venta-total-display" style="font-family:'Playfair Display',serif;font-size:22px;color:var(--accent2)">$0</span>
+    </div>
+    <div class="form-group"><label>Notas</label><input type="text" id="venta-notas" placeholder="Observaciones opcionales..."/></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" style="flex:1" onclick="closeModal('venta-modal')">Cancelar</button>
+      <button class="btn-primary" style="flex:2;margin-top:0" onclick="saveVenta()">Registrar venta</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Cliente -->
+<div class="modal-overlay" id="cliente-modal" onclick="closeModal('cliente-modal',event)">
+  <div class="modal">
+    <p class="modal-title" id="cliente-modal-title">Nuevo cliente</p>
+    <div class="form-group"><label>Nombre</label><input type="text" id="cli-nombre" placeholder="Nombre completo"/></div>
+    <div class="form-group"><label>Teléfono</label><input type="tel" id="cli-tel" placeholder="+52 555 000 0000"/></div>
+    <div class="form-group">
+      <label>Canal de venta</label>
+      <select id="cli-canal"><option value="Directa">Directa</option><option value="Online">Online</option><option value="Mercado">Mercado</option><option value="Restaurante">Restaurante</option><option value="Otro">Otro</option></select>
+    </div>
+    <div class="form-group"><label>Ciudad</label><input type="text" id="cli-ciudad" placeholder="Ciudad"/></div>
+    <div class="form-group">
+      <label>Tipo de cliente</label>
+      <div class="cat-select">
+        <button class="cat-option selected" onclick="selectCliTipo('Menudeo',this)">🛒 Menudeo</button>
+        <button class="cat-option" onclick="selectCliTipo('Distribuidor',this)">🚚 Distribuidor</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Precio preferencial por caja ($) <span style="color:var(--text2);font-weight:400">opcional</span></label>
+      <input type="number" id="cli-precio-caja" placeholder="0.00" min="0" step="0.01"/>
+    </div>
+    <div class="form-group">
+      <label>Precio preferencial por botella ($) <span style="color:var(--text2);font-weight:400">opcional</span></label>
+      <input type="number" id="cli-precio-botella" placeholder="0.00" min="0" step="0.01"/>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" style="flex:1" onclick="closeModal('cliente-modal')">Cancelar</button>
+      <button class="btn-primary" style="flex:2;margin-top:0" onclick="saveCliente()">Guardar</button>
     </div>
   </div>
 </div>
@@ -720,10 +850,11 @@
     document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
     document.getElementById('page-'+name).classList.add('active');
     btn.classList.add('active');
-    document.getElementById('fab-main').classList.toggle('visible',name==='lotes'||name==='ingredientes');
+    document.getElementById('fab-main').classList.toggle('visible',name==='lotes'||name==='ingredientes'||name==='ventas');
     if(name==='lotes') loadLotes();
     else if(name==='ingredientes'){currentSubTab==='ingredientes'?loadIngredientes():loadRecetas();}
     else if(name==='inventario') loadInventario();
+    else if(name==='ventas'){ventasSubTab==='ventas'?loadVentas():loadClientes();}
     else if(name==='dashboard') window.loadDashboard&&window.loadDashboard();
     else if(name==='ajustes'){document.getElementById('prefijo-input').value=window._prefijo||'KMBC';previewPrefijo();}
   }
@@ -737,6 +868,7 @@
   function onFabClick(){
     if(currentPage==='lotes') openLoteModal();
     else if(currentPage==='ingredientes') currentSubTab==='ingredientes'?openIngModal():openRecipeModal();
+    else if(currentPage==='ventas') ventasSubTab==='ventas'?openVentaModal():openClienteModal();
   }
   // Inventario has no FAB — adjustments via card buttons
 
@@ -1156,6 +1288,273 @@
     showToast('🔔 Notificación enviada');
   }
   window.testNotification=testNotification;
+
+  // ── VENTAS & CLIENTES ──
+  let allVentas=[], allClientes=[], ventasSubTab='ventas', editingClienteId=null, selTipoCliente='Menudeo', selCliTipo='Menudeo';
+
+  function switchVentasTab(tab, btn){
+    ventasSubTab=tab;
+    document.querySelectorAll('#page-ventas .sub-tab').forEach(t=>t.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('subtab-ventas').style.display=tab==='ventas'?'block':'none';
+    document.getElementById('subtab-clientes').style.display=tab==='clientes'?'block':'none';
+    tab==='ventas'?loadVentas():loadClientes();
+  }
+
+  async function loadVentas(){
+    document.getElementById('ventas-list').innerHTML='<div class="loading"><div class="spinner"></div> Cargando...</div>';
+    try{
+      const snap=await window._fb.getDocs(window._fb.collection(window._db,'ventas'));
+      allVentas=[];snap.forEach(d=>allVentas.push({id:d.id,...d.data()}));
+      allVentas.sort((a,b)=>b.fecha-a.fecha);
+      renderVentas();
+    }catch(e){document.getElementById('ventas-list').innerHTML='<div class="empty-state"><p>Error al cargar.</p></div>';}
+  }
+
+  function renderVentas(){
+    const el=document.getElementById('ventas-list');
+    const totalIngresos=allVentas.reduce((s,v)=>s+(v.total||0),0);
+    const totalBotellas=allVentas.reduce((s,v)=>s+(v.botellas||0)+(v.cajas||0)*12,0);
+    const totalCajas=allVentas.reduce((s,v)=>s+(v.cajas||0),0);
+    document.getElementById('venta-stat-total').textContent='$'+totalIngresos.toLocaleString('es-MX',{minimumFractionDigits:0});
+    document.getElementById('venta-stat-botellas').textContent=totalBotellas;
+    document.getElementById('venta-stat-cajas').textContent=totalCajas;
+    if(!allVentas.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">💰</div><p>No hay ventas registradas.<br>Toca + para registrar la primera.</p></div>';return;}
+    el.innerHTML='<div class="ventas-list-wrap">'+allVentas.map(v=>{
+      const fecha=v.fecha?new Date(v.fecha).toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'}):'—';
+      const detalle=[];
+      if(v.cajas) detalle.push(`📦 ${v.cajas} caja${v.cajas>1?'s':''}`);
+      if(v.botellas) detalle.push(`🍶 ${v.botellas} botella${v.botellas>1?'s':''}`);
+      if(v.loteCodigo) detalle.push(`🫙 ${v.loteCodigo}`);
+      if(v.canal) detalle.push(v.canal);
+      if(v.tipoCliente) detalle.push(v.tipoCliente);
+      return `<div class="venta-card">
+        <div class="venta-top">
+          <div><div class="venta-cliente">${v.clienteNombre||'Cliente directo'}</div><div class="venta-fecha">${fecha}</div></div>
+          <div class="venta-monto">$${(v.total||0).toLocaleString('es-MX',{minimumFractionDigits:0})}</div>
+        </div>
+        <div class="venta-detail">${detalle.map(d=>`<span class="venta-tag">${d}</span>`).join('')}</div>
+        ${v.notas?`<p style="font-size:12px;color:var(--text2);margin-top:8px">📝 ${v.notas}</p>`:''}
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn-del" onclick="deleteVenta('${v.id}')">🗑️ Eliminar</button>
+        </div>
+      </div>`;
+    }).join('')+'</div>';
+  }
+
+  async function loadClientes(){
+    document.getElementById('clientes-list').innerHTML='<div class="loading"><div class="spinner"></div> Cargando...</div>';
+    try{
+      const snap=await window._fb.getDocs(window._fb.collection(window._db,'clientes'));
+      allClientes=[];snap.forEach(d=>allClientes.push({id:d.id,...d.data()}));
+      allClientes.sort((a,b)=>a.nombre.localeCompare(b.nombre));
+      renderClientes();
+    }catch(e){document.getElementById('clientes-list').innerHTML='<div class="empty-state"><p>Error al cargar.</p></div>';}
+  }
+
+  function renderClientes(){
+    const el=document.getElementById('clientes-list');
+    if(!allClientes.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">👤</div><p>No hay clientes registrados.<br>Toca + para agregar el primero.</p></div>';return;}
+    el.innerHTML='<div class="clientes-list-wrap">'+allClientes.map(cl=>{
+      const compras=allVentas.filter(v=>v.clienteId===cl.id);
+      const totalCli=compras.reduce((s,v)=>s+(v.total||0),0);
+      return `<div class="cliente-card">
+        <div class="cliente-avatar">${cl.nombre[0].toUpperCase()}</div>
+        <div class="cliente-info">
+          <div class="cliente-nombre">${cl.nombre}</div>
+          <div class="cliente-meta">${[cl.tipo,cl.canal,cl.ciudad].filter(Boolean).join(' · ')}</div>
+          ${cl.telefono?`<div class="cliente-meta" style="margin-top:2px">📱 ${cl.telefono}</div>`:''}
+        </div>
+        <div class="cliente-stats">
+          <div class="cliente-total">$${totalCli.toLocaleString('es-MX',{minimumFractionDigits:0})}</div>
+          <div class="cliente-compras">${compras.length} compra${compras.length!==1?'s':''}</div>
+        </div>
+        <div class="ing-actions">
+          <button class="btn-edit" onclick="openClienteModal('${cl.id}')">✏️</button>
+          <button class="btn-del" onclick="deleteCliente('${cl.id}','${cl.nombre}')">🗑️</button>
+        </div>
+      </div>`;
+    }).join('')+'</div>';
+  }
+
+  // Nueva venta modal
+  async function openVentaModal(){
+    document.getElementById('venta-modal-title').textContent='Nueva venta';
+    document.getElementById('venta-fecha').value=new Date().toISOString().split('T')[0];
+    document.getElementById('venta-cajas').value='';
+    document.getElementById('venta-botellas').value='';
+    document.getElementById('venta-precio-caja').value='';
+    document.getElementById('venta-precio-botella').value='';
+    document.getElementById('venta-notas').value='';
+    document.getElementById('venta-total-display').textContent='$0';
+    document.getElementById('nuevo-cliente-fields').style.display='none';
+    selTipoCliente='Menudeo';
+    // Load clientes
+    const cliSel=document.getElementById('venta-cliente-select');
+    cliSel.innerHTML='<option value="">Seleccionar cliente</option><option value="__nuevo__">+ Nuevo cliente</option>';
+    if(!allClientes.length) await loadClientes();
+    allClientes.forEach(cl=>{const o=document.createElement('option');o.value=cl.id;o.textContent=`${cl.nombre} (${cl.tipo||''})`;cliSel.appendChild(o);});
+    // Load lotes
+    const loteSel=document.getElementById('venta-lote-select');
+    loteSel.innerHTML='<option value="">Sin lote específico</option>';
+    if(!allLotes.length) await loadLotes();
+    allLotes.filter(l=>l.botellas>0).forEach(l=>{const o=document.createElement('option');o.value=l.id;o.textContent=`${l.codigo} (${l.botellas} botellas)`;loteSel.appendChild(o);});
+    document.getElementById('venta-modal').classList.add('open');
+  }
+
+  function onClienteChange(){
+    const val=document.getElementById('venta-cliente-select').value;
+    document.getElementById('nuevo-cliente-fields').style.display=val==='__nuevo__'?'block':'none';
+    if(val && val!=='__nuevo__'){
+      // Pre-fill precios del cliente
+      const cl=allClientes.find(x=>x.id===val);
+      if(cl){
+        if(cl.precioCaja) document.getElementById('venta-precio-caja').value=cl.precioCaja;
+        if(cl.precioBotella) document.getElementById('venta-precio-botella').value=cl.precioBotella;
+        calcVentaTotal();
+      }
+    }
+  }
+
+  function selectTipoCliente(tipo,btn){
+    selTipoCliente=tipo;
+    document.querySelectorAll('#nuevo-cliente-fields .cat-option').forEach(o=>o.classList.remove('selected'));
+    btn.classList.add('selected');
+  }
+
+  function calcVentaTotal(){
+    const cajas=parseFloat(document.getElementById('venta-cajas').value)||0;
+    const botellas=parseFloat(document.getElementById('venta-botellas').value)||0;
+    const pCaja=parseFloat(document.getElementById('venta-precio-caja').value)||0;
+    const pBotella=parseFloat(document.getElementById('venta-precio-botella').value)||0;
+    const total=cajas*pCaja+botellas*pBotella;
+    document.getElementById('venta-total-display').textContent='$'+total.toLocaleString('es-MX',{minimumFractionDigits:2});
+  }
+
+  async function saveVenta(){
+    const cliVal=document.getElementById('venta-cliente-select').value;
+    const fecha=document.getElementById('venta-fecha').value;
+    const cajas=parseInt(document.getElementById('venta-cajas').value)||0;
+    const botellas=parseInt(document.getElementById('venta-botellas').value)||0;
+    const pCaja=parseFloat(document.getElementById('venta-precio-caja').value)||0;
+    const pBotella=parseFloat(document.getElementById('venta-precio-botella').value)||0;
+    const total=cajas*pCaja+botellas*pBotella;
+    const notas=document.getElementById('venta-notas').value.trim();
+    const loteId=document.getElementById('venta-lote-select').value;
+    const lote=allLotes.find(l=>l.id===loteId);
+    if(!fecha) return showToast('⚠️ Selecciona la fecha');
+    if(!cajas&&!botellas) return showToast('⚠️ Agrega al menos una caja o botella');
+    let clienteId='', clienteNombre='', canal='', tipoCliente='', ciudad='';
+    // Handle new client
+    if(cliVal==='__nuevo__'){
+      const nombre=document.getElementById('venta-nuevo-nombre').value.trim();
+      if(!nombre) return showToast('⚠️ Escribe el nombre del cliente');
+      const newCli={nombre,telefono:document.getElementById('venta-nuevo-tel').value.trim(),canal:document.getElementById('venta-nuevo-canal').value,ciudad:document.getElementById('venta-nuevo-ciudad').value.trim(),tipo:selTipoCliente,creadoEn:Date.now()};
+      const ref=await window._fb.addDoc(window._fb.collection(window._db,'clientes'),newCli);
+      clienteId=ref.id;clienteNombre=nombre;canal=newCli.canal;tipoCliente=newCli.tipo;ciudad=newCli.ciudad;
+      allClientes.push({id:ref.id,...newCli});
+      await logAudit(`registró al cliente "${nombre}"`);
+    } else if(cliVal){
+      const cl=allClientes.find(x=>x.id===cliVal);
+      if(cl){clienteId=cl.id;clienteNombre=cl.nombre;canal=cl.canal||'';tipoCliente=cl.tipo||'';ciudad=cl.ciudad||'';}
+    }
+    try{
+      const ventaData={clienteId,clienteNombre,canal,tipoCliente,ciudad,fecha:new Date(fecha).getTime(),cajas,botellas,precioCaja:pCaja,precioBotella:pBotella,total,notas,loteId:loteId||'',loteCodigo:lote?.codigo||'',creadoEn:Date.now()};
+      await window._fb.addDoc(window._fb.collection(window._db,'ventas'),ventaData);
+      // Descontar botellas del lote
+      if(loteId&&lote){
+        const totalBotellas=botellas+(cajas*12);
+        const newBotellas=Math.max(0,(lote.botellas||0)-totalBotellas);
+        await window._updateDoc(window._fb.doc(window._db,'lotes',loteId),{botellas:newBotellas});
+        // Update local
+        const idx=allLotes.findIndex(l=>l.id===loteId);
+        if(idx>=0) allLotes[idx].botellas=newBotellas;
+      }
+      await logAudit(`registró una venta de $${total.toLocaleString('es-MX')} a "${clienteNombre||'cliente directo'}"`);
+      showToast('✅ Venta registrada');
+      closeModal('venta-modal');
+      await loadVentas();
+      await window.loadDashboard();
+    }catch(e){showToast('❌ Error al guardar');}
+  }
+
+  async function deleteVenta(id){
+    if(!confirm('¿Eliminar esta venta?')) return;
+    try{
+      await window._fb.deleteDoc(window._fb.doc(window._db,'ventas',id));
+      await logAudit('eliminó una venta');
+      allVentas=allVentas.filter(v=>v.id!==id);
+      renderVentas();
+      showToast('Venta eliminada');
+    }catch(e){showToast('❌ Error');}
+  }
+
+  // Cliente modal
+  function openClienteModal(id){
+    editingClienteId=id||null;selCliTipo='Menudeo';
+    document.getElementById('cliente-modal-title').textContent=id?'Editar cliente':'Nuevo cliente';
+    document.getElementById('cli-nombre').value='';
+    document.getElementById('cli-tel').value='';
+    document.getElementById('cli-canal').value='Directa';
+    document.getElementById('cli-ciudad').value='';
+    document.getElementById('cli-precio-caja').value='';
+    document.getElementById('cli-precio-botella').value='';
+    document.querySelectorAll('#cliente-modal .cat-option').forEach((o,i)=>o.classList.toggle('selected',i===0));
+    if(id){
+      const cl=allClientes.find(x=>x.id===id);
+      if(cl){
+        document.getElementById('cli-nombre').value=cl.nombre||'';
+        document.getElementById('cli-tel').value=cl.telefono||'';
+        document.getElementById('cli-canal').value=cl.canal||'Directa';
+        document.getElementById('cli-ciudad').value=cl.ciudad||'';
+        document.getElementById('cli-precio-caja').value=cl.precioCaja||'';
+        document.getElementById('cli-precio-botella').value=cl.precioBotella||'';
+        selCliTipo=cl.tipo||'Menudeo';
+        document.querySelectorAll('#cliente-modal .cat-option').forEach(o=>{o.classList.toggle('selected',o.textContent.includes(selCliTipo));});
+      }
+    }
+    document.getElementById('cliente-modal').classList.add('open');
+    setTimeout(()=>document.getElementById('cli-nombre').focus(),300);
+  }
+
+  function selectCliTipo(tipo,btn){
+    selCliTipo=tipo;
+    document.querySelectorAll('#cliente-modal .cat-option').forEach(o=>o.classList.remove('selected'));
+    btn.classList.add('selected');
+  }
+
+  async function saveCliente(){
+    const nombre=document.getElementById('cli-nombre').value.trim();
+    if(!nombre) return showToast('⚠️ Escribe el nombre del cliente');
+    const data={nombre,telefono:document.getElementById('cli-tel').value.trim(),canal:document.getElementById('cli-canal').value,ciudad:document.getElementById('cli-ciudad').value.trim(),tipo:selCliTipo,precioCaja:parseFloat(document.getElementById('cli-precio-caja').value)||0,precioBotella:parseFloat(document.getElementById('cli-precio-botella').value)||0,actualizadoEn:Date.now()};
+    try{
+      if(editingClienteId){
+        await window._fb.setDoc(window._fb.doc(window._db,'clientes',editingClienteId),data);
+        await logAudit(`editó al cliente "${nombre}"`);
+        showToast('✅ Cliente actualizado');
+      } else {
+        data.creadoEn=Date.now();
+        await window._fb.addDoc(window._fb.collection(window._db,'clientes'),data);
+        await logAudit(`registró al cliente "${nombre}"`);
+        showToast('✅ Cliente agregado');
+      }
+      closeModal('cliente-modal');await loadClientes();
+    }catch(e){showToast('❌ Error al guardar');}
+  }
+
+  async function deleteCliente(id,nombre){
+    if(!confirm(`¿Eliminar a "${nombre}"?`)) return;
+    try{
+      await window._fb.deleteDoc(window._fb.doc(window._db,'clientes',id));
+      await logAudit(`eliminó al cliente "${nombre}"`);
+      allClientes=allClientes.filter(c=>c.id!==id);renderClientes();showToast('Cliente eliminado');
+    }catch(e){showToast('❌ Error');}
+  }
+
+  window.switchVentasTab=switchVentasTab;window.loadVentas=loadVentas;window.loadClientes=loadClientes;
+  window.openVentaModal=openVentaModal;window.onClienteChange=onClienteChange;window.selectTipoCliente=selectTipoCliente;
+  window.calcVentaTotal=calcVentaTotal;window.saveVenta=saveVenta;window.deleteVenta=deleteVenta;
+  window.openClienteModal=openClienteModal;window.selectCliTipo=selectCliTipo;window.saveCliente=saveCliente;window.deleteCliente=deleteCliente;
 
   // ── INVENTARIO ──
   let allInvData = [], invFilter = 'todos', editingInvId = null, adjustingInvId = null, selAjusteTipo = 'agregar';

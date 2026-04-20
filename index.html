@@ -2938,20 +2938,19 @@
         showToast('✅ Venta actualizada');
       } else {
         await window._fb.addDoc(window._fb.collection(window._db,'ventas'),ventaData);
-      // Descontar botellas del lote
-      if(loteId&&lote){
-        const totalBotellas=botellas+(cajas*12);
-        const newBotellas=Math.max(0,(lote.botellas||0)-totalBotellas);
-        await window._updateDoc(window._fb.doc(window._db,'lotes',loteId),{botellas:newBotellas});
-        // Update local
-        const idx=allLotes.findIndex(l=>l.id===loteId);
-        if(idx>=0) allLotes[idx].botellas=newBotellas;
+        if(loteId&&lote){
+          const totalBotellas=botellas+(cajas*12);
+          const newBotellas=Math.max(0,(lote.botellas||0)-totalBotellas);
+          await window._updateDoc(window._fb.doc(window._db,'lotes',loteId),{botellas:newBotellas});
+          const idx=allLotes.findIndex(l=>l.id===loteId);
+          if(idx>=0) allLotes[idx].botellas=newBotellas;
+        }
+        await logAudit(`registró una venta de $${total.toLocaleString('es-MX')} a "${clienteNombre||'cliente directo'}"`);
+        showToast('✅ Venta registrada');
       }
-        await logAudit(`registró una venta de $${total.toLocaleString('es-MX')} a "${clienteNombre||'cliente directo'}"`);  
-      }
-      showToast('✅ Venta registrada');
       closeModal('venta-modal');
       await loadVentas();
+      await window.loadDashboard();
       await window.loadDashboard();
     }catch(e){showToast('❌ Error al guardar');}
   }

@@ -315,11 +315,11 @@
         <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-value" id="inv-stat-valor" style="font-size:18px">$0</div><div class="stat-label">Valor total</div></div>
       </div>
       <div class="cat-tabs" id="inv-cat-tabs">
-        <button class="cat-tab active" onclick="filterInv('todos',this)">Todos</button>
-        <button class="cat-tab" onclick="filterInv('Tés',this)">🍃 Tés</button>
-        <button class="cat-tab" onclick="filterInv('Frutas',this)">🍓 Frutas</button>
-        <button class="cat-tab" onclick="filterInv('Azúcares',this)">🍯 Azúcares</button>
-        <button class="cat-tab" onclick="filterInv('Otros',this)">🌿 Otros</button>
+        <button class="inv-cat-tab cat-tab active" onclick="filterInv('todos',this)">Todos</button>
+        <button class="inv-cat-tab cat-tab" onclick="filterInv('Tés',this)">🍃 Tés</button>
+        <button class="inv-cat-tab cat-tab" onclick="filterInv('Frutas',this)">🍓 Frutas</button>
+        <button class="inv-cat-tab cat-tab" onclick="filterInv('Azúcares',this)">🍯 Azúcares</button>
+        <button class="inv-cat-tab cat-tab" onclick="filterInv('Otros',this)">🌿 Otros</button>
       </div>
       <div id="inv-list"><div class="loading"><div class="spinner"></div> Cargando...</div></div>
     </div>
@@ -403,6 +403,30 @@
       </button>
     </div>
 
+    <!-- GASTOS -->
+    <div class="page" id="page-gastos">
+      <p class="page-title">Gastos</p>
+      <p class="page-subtitle">Control de egresos</p>
+      <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
+        <div class="stat-card"><div class="stat-icon">💸</div><div class="stat-value" id="gasto-stat-mes" style="font-size:18px;color:var(--danger)">$0</div><div class="stat-label">Este mes</div></div>
+        <div class="stat-card"><div class="stat-icon">📋</div><div class="stat-value" id="gasto-stat-conceptos">0</div><div class="stat-label">Conceptos</div></div>
+        <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-value" id="gasto-stat-total" style="font-size:18px;color:var(--danger)">$0</div><div class="stat-label">Total</div></div>
+      </div>
+      <div class="sub-tabs">
+        <button class="sub-tab active" onclick="switchGastosTab('gastos',this)">💸 Gastos</button>
+        <button class="sub-tab" onclick="switchGastosTab('conceptos',this)">📋 Conceptos</button>
+      </div>
+      <div id="subtab-gastos-list">
+        <div class="cat-tabs" id="gasto-cat-tabs">
+          <button class="gasto-cat-tab cat-tab active" onclick="filterGastos('todos',this)">Todos</button>
+        </div>
+        <div id="gastos-list"><div class="loading"><div class="spinner"></div> Cargando...</div></div>
+      </div>
+      <div id="subtab-conceptos-list" style="display:none">
+        <div id="conceptos-list"><div class="loading"><div class="spinner"></div> Cargando...</div></div>
+      </div>
+    </div>
+
     <!-- AJUSTES -->
     <div class="page" id="page-ajustes">
       <p class="page-title">Ajustes</p><p class="page-subtitle">Personaliza tu app</p>
@@ -449,8 +473,8 @@
     <button class="nav-item active" onclick="showPage('dashboard',this)"><span>🏠</span><span>Inicio</span></button>
     <button class="nav-item" onclick="showPage('lotes',this)"><span>🫙</span><span>Lotes</span></button>
     <button class="nav-item" onclick="showPage('ventas',this)"><span>💰</span><span>Ventas</span></button>
+    <button class="nav-item" onclick="showPage('gastos',this)"><span>💸</span><span>Gastos</span></button>
     <button class="nav-item" onclick="showPage('reportes',this)"><span>📊</span><span>Reportes</span></button>
-    <button class="nav-item" onclick="showPage('inventario',this)"><span>📦</span><span>Inventario</span></button>
     <button class="nav-item" onclick="showPage('ajustes',this)"><span>⚙️</span><span>Ajustes</span></button>
   </nav>
 </div>
@@ -774,6 +798,48 @@
   </div>
 </div>
 
+<!-- Modal Gasto -->
+<div class="modal-overlay" id="gasto-modal" onclick="closeModal('gasto-modal',event)">
+  <div class="modal">
+    <p class="modal-title" id="gasto-modal-title">Nuevo gasto</p>
+    <div class="form-group">
+      <label>Concepto</label>
+      <select id="gasto-concepto-select"><option value="">Seleccionar concepto</option></select>
+    </div>
+    <div class="form-group"><label>Fecha</label><input type="date" id="gasto-fecha"/></div>
+    <div class="form-group"><label>Monto ($)</label><input type="number" id="gasto-monto" placeholder="0.00" min="0" step="0.01"/></div>
+    <div class="form-group"><label>Descripción <span style="color:var(--text2);font-weight:400">(opcional)</span></label><input type="text" id="gasto-desc" placeholder="Detalle del gasto..."/></div>
+    <div class="form-group"><label>Proveedor / Pagado a <span style="color:var(--text2);font-weight:400">(opcional)</span></label><input type="text" id="gasto-proveedor" placeholder="Nombre del proveedor..."/></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" style="flex:1" onclick="closeModal('gasto-modal')">Cancelar</button>
+      <button class="btn-primary" style="flex:2;margin-top:0" onclick="saveGasto()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Concepto de Gasto -->
+<div class="modal-overlay" id="concepto-modal" onclick="closeModal('concepto-modal',event)">
+  <div class="modal">
+    <p class="modal-title" id="concepto-modal-title">Nuevo concepto</p>
+    <div class="form-group"><label>Nombre del concepto</label><input type="text" id="concepto-nombre" placeholder="Ej: Viáticos, Insumos, Renta..."/></div>
+    <div class="form-group">
+      <label>Categoría</label>
+      <div class="cat-select">
+        <button class="cat-option selected" onclick="selectConceptoCat('Operación',this)">⚙️ Operación</button>
+        <button class="cat-option" onclick="selectConceptoCat('Insumos',this)">📦 Insumos</button>
+        <button class="cat-option" onclick="selectConceptoCat('Logística',this)">🚚 Logística</button>
+        <button class="cat-option" onclick="selectConceptoCat('Marketing',this)">📣 Marketing</button>
+        <button class="cat-option" onclick="selectConceptoCat('Administrativo',this)">📋 Administrativo</button>
+        <button class="cat-option" onclick="selectConceptoCat('Otro',this)">🔖 Otro</button>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" style="flex:1" onclick="closeModal('concepto-modal')">Cancelar</button>
+      <button class="btn-primary" style="flex:2;margin-top:0" onclick="saveConcepto()">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal Inventario -->
 <div class="modal-overlay" id="inv-modal" onclick="closeModal('inv-modal',event)">
   <div class="modal">
@@ -1025,12 +1091,13 @@
     document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
     document.getElementById('page-'+name).classList.add('active');
     btn.classList.add('active');
-    document.getElementById('fab-main').classList.toggle('visible',name==='lotes'||name==='ingredientes'||name==='ventas');
+    document.getElementById('fab-main').classList.toggle('visible',name==='lotes'||name==='ingredientes'||name==='ventas'||name==='gastos');
     if(name==='lotes') loadLotes();
     else if(name==='ingredientes'){currentSubTab==='ingredientes'?loadIngredientes():loadRecetas();}
     else if(name==='inventario') loadInventario();
     else if(name==='ventas'){ventasSubTab==='ventas'?loadVentas():loadClientes();}
     else if(name==='reportes') loadReportes();
+    else if(name==='gastos') loadGastos();
     else if(name==='dashboard') window.loadDashboard&&window.loadDashboard();
     else if(name==='ajustes'){document.getElementById('prefijo-input').value=window._prefijo||'KMBC';previewPrefijo();}
   }
@@ -1045,6 +1112,7 @@
     if(currentPage==='lotes') openLoteModal();
     else if(currentPage==='ingredientes') currentSubTab==='ingredientes'?openIngModal():openRecipeModal();
     else if(currentPage==='ventas') getVentasFabAction()();
+    else if(currentPage==='gastos') gastosSubTab==='gastos'?openGastoModal():openConceptoModal();
   }
   // Inventario has no FAB — adjustments via card buttons
 
@@ -1680,6 +1748,205 @@
   window.setReportePeriodo = setReportePeriodo;
   window.loadReportes = loadReportes;
   window.downloadReportePDF = downloadReportePDF;
+
+  // ── GASTOS ──
+  let allGastos=[], allConceptos=[], gastosSubTab='gastos', gastoFilter='todos', editingConceptoId=null, selConceptoCat='Operación';
+
+  function switchGastosTab(tab, btn){
+    gastosSubTab=tab;
+    document.querySelectorAll('#page-gastos .sub-tab').forEach(t=>t.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('subtab-gastos-list').style.display=tab==='gastos'?'block':'none';
+    document.getElementById('subtab-conceptos-list').style.display=tab==='conceptos'?'block':'none';
+    tab==='gastos'?loadGastos():loadConceptos();
+  }
+
+  async function loadGastos(){
+    document.getElementById('gastos-list').innerHTML='<div class="loading"><div class="spinner"></div> Cargando...</div>';
+    try{
+      const [gastosSnap, conceptosSnap] = await Promise.all([
+        window._fb.getDocs(window._fb.collection(window._db,'gastos')),
+        window._fb.getDocs(window._fb.collection(window._db,'conceptos_gasto'))
+      ]);
+      allGastos=[];gastosSnap.forEach(d=>allGastos.push({id:d.id,...d.data()}));
+      allGastos.sort((a,b)=>b.fecha-a.fecha);
+      allConceptos=[];conceptosSnap.forEach(d=>allConceptos.push({id:d.id,...d.data()}));
+      // Update cat tabs dynamically
+      updateGastoCatTabs();
+      renderGastos();
+    }catch(e){document.getElementById('gastos-list').innerHTML='<div class="empty-state"><p>Error al cargar.</p></div>';}
+  }
+
+  function updateGastoCatTabs(){
+    const cats=['todos',...new Set(allConceptos.map(c=>c.categoria).filter(Boolean))];
+    const tabs=document.getElementById('gasto-cat-tabs');
+    tabs.innerHTML=cats.map((cat,i)=>`<button class="gasto-cat-tab cat-tab ${i===0&&gastoFilter==='todos'?'active':cat===gastoFilter?'active':''}" onclick="filterGastos('${cat}',this)">${cat==='todos'?'Todos':cat}</button>`).join('');
+  }
+
+  function filterGastos(cat, btn){
+    gastoFilter=cat;
+    document.querySelectorAll('.gasto-cat-tab').forEach(t=>t.classList.remove('active'));
+    btn.classList.add('active');
+    renderGastos();
+  }
+
+  function renderGastos(){
+    const now=Date.now();
+    const mStart=new Date(new Date().getFullYear(),new Date().getMonth(),1).getTime();
+    const filtered=gastoFilter==='todos'?allGastos:allGastos.filter(g=>{
+      const conc=allConceptos.find(c=>c.id===g.conceptoId);
+      return conc?.categoria===gastoFilter;
+    });
+    const totalMes=allGastos.filter(g=>g.fecha>=mStart).reduce((s,g)=>s+(g.monto||0),0);
+    const totalAll=allGastos.reduce((s,g)=>s+(g.monto||0),0);
+    document.getElementById('gasto-stat-mes').textContent='$'+totalMes.toLocaleString('es-MX',{minimumFractionDigits:0});
+    document.getElementById('gasto-stat-conceptos').textContent=allConceptos.length;
+    document.getElementById('gasto-stat-total').textContent='$'+totalAll.toLocaleString('es-MX',{minimumFractionDigits:0});
+    const el=document.getElementById('gastos-list');
+    if(!filtered.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">💸</div><p>No hay gastos registrados.<br>Toca + para agregar.</p></div>';return;}
+    const catIcons={'Operación':'⚙️','Insumos':'📦','Logística':'🚚','Marketing':'📣','Administrativo':'📋','Otro':'🔖'};
+    el.innerHTML='<div class="ventas-list-wrap">'+filtered.map(g=>{
+      const conc=allConceptos.find(c=>c.id===g.conceptoId);
+      const fecha=new Date(g.fecha).toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'});
+      return `<div class="venta-card">
+        <div class="venta-top">
+          <div>
+            <div class="venta-cliente">${catIcons[conc?.categoria]||'💸'} ${conc?.nombre||'Sin concepto'}</div>
+            <div class="venta-fecha">${fecha}${g.proveedor?` · ${g.proveedor}`:''}</div>
+            ${g.descripcion?`<div style="font-size:12px;color:var(--text2);margin-top:4px">📝 ${g.descripcion}</div>`:''}
+          </div>
+          <div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--danger)">$${(g.monto||0).toLocaleString('es-MX',{minimumFractionDigits:0})}</div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button class="btn-del" onclick="deleteGasto('${g.id}')">🗑️ Eliminar</button>
+        </div>
+      </div>`;
+    }).join('')+'</div>';
+  }
+
+  async function openGastoModal(){
+    document.getElementById('gasto-fecha').value=new Date().toISOString().split('T')[0];
+    document.getElementById('gasto-monto').value='';
+    document.getElementById('gasto-desc').value='';
+    document.getElementById('gasto-proveedor').value='';
+    // Load conceptos
+    if(!allConceptos.length) await loadConceptos();
+    const sel=document.getElementById('gasto-concepto-select');
+    sel.innerHTML='<option value="">Seleccionar concepto</option>';
+    allConceptos.forEach(c=>{const o=document.createElement('option');o.value=c.id;o.textContent=`${c.nombre} (${c.categoria})`;sel.appendChild(o);});
+    document.getElementById('gasto-modal').classList.add('open');
+    setTimeout(()=>document.getElementById('gasto-monto').focus(),300);
+  }
+
+  async function saveGasto(){
+    const conceptoId=document.getElementById('gasto-concepto-select').value;
+    const fecha=document.getElementById('gasto-fecha').value;
+    const monto=parseFloat(document.getElementById('gasto-monto').value)||0;
+    const desc=document.getElementById('gasto-desc').value.trim();
+    const proveedor=document.getElementById('gasto-proveedor').value.trim();
+    if(!conceptoId) return showToast('⚠️ Selecciona un concepto');
+    if(!monto) return showToast('⚠️ Ingresa el monto');
+    if(!fecha) return showToast('⚠️ Selecciona la fecha');
+    const conc=allConceptos.find(c=>c.id===conceptoId);
+    try{
+      await window._fb.addDoc(window._fb.collection(window._db,'gastos'),{conceptoId,conceptoNombre:conc?.nombre||'',categoria:conc?.categoria||'',fecha:new Date(fecha).getTime(),monto,descripcion:desc,proveedor,creadoEn:Date.now()});
+      await logAudit(`registró gasto de $${monto.toLocaleString('es-MX')} en "${conc?.nombre||''}"`);
+      showToast('✅ Gasto registrado');
+      closeModal('gasto-modal');await loadGastos();
+    }catch(e){showToast('❌ Error al guardar');}
+  }
+
+  async function deleteGasto(id){
+    if(!confirm('¿Eliminar este gasto?'))return;
+    try{
+      await window._fb.deleteDoc(window._fb.doc(window._db,'gastos',id));
+      await logAudit('eliminó un gasto');
+      allGastos=allGastos.filter(g=>g.id!==id);renderGastos();showToast('Gasto eliminado');
+    }catch(e){showToast('❌ Error');}
+  }
+
+  // Conceptos
+  async function loadConceptos(){
+    document.getElementById('conceptos-list').innerHTML='<div class="loading"><div class="spinner"></div> Cargando...</div>';
+    try{
+      const snap=await window._fb.getDocs(window._fb.collection(window._db,'conceptos_gasto'));
+      allConceptos=[];snap.forEach(d=>allConceptos.push({id:d.id,...d.data()}));
+      allConceptos.sort((a,b)=>a.nombre.localeCompare(b.nombre));
+      renderConceptos();
+    }catch(e){document.getElementById('conceptos-list').innerHTML='<div class="empty-state"><p>Error al cargar.</p></div>';}
+  }
+
+  function renderConceptos(){
+    const el=document.getElementById('conceptos-list');
+    if(!allConceptos.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">📋</div><p>No hay conceptos.<br>Toca + para crear el primero.</p></div>';return;}
+    const catIcons={'Operación':'⚙️','Insumos':'📦','Logística':'🚚','Marketing':'📣','Administrativo':'📋','Otro':'🔖'};
+    el.innerHTML='<div class="ventas-list-wrap">'+allConceptos.map(c=>`
+      <div class="ing-item">
+        <div class="ing-info">
+          <div class="ing-name">${catIcons[c.categoria]||'🔖'} ${c.nombre}</div>
+          <div class="ing-cat">${c.categoria}</div>
+        </div>
+        <div class="ing-actions">
+          <button class="btn-edit" onclick="openConceptoModal('${c.id}')">✏️</button>
+          <button class="btn-del" onclick="deleteConcepto('${c.id}','${c.nombre}')">🗑️</button>
+        </div>
+      </div>`).join('')+'</div>';
+  }
+
+  function openConceptoModal(id){
+    editingConceptoId=id||null; selConceptoCat='Operación';
+    document.getElementById('concepto-modal-title').textContent=id?'Editar concepto':'Nuevo concepto';
+    document.getElementById('concepto-nombre').value='';
+    document.querySelectorAll('#concepto-modal .cat-option').forEach((o,i)=>o.classList.toggle('selected',i===0));
+    if(id){
+      const c=allConceptos.find(x=>x.id===id);
+      if(c){
+        document.getElementById('concepto-nombre').value=c.nombre;
+        selConceptoCat=c.categoria;
+        document.querySelectorAll('#concepto-modal .cat-option').forEach(o=>o.classList.toggle('selected',o.textContent.includes(c.categoria)));
+      }
+    }
+    document.getElementById('concepto-modal').classList.add('open');
+    setTimeout(()=>document.getElementById('concepto-nombre').focus(),300);
+  }
+
+  function selectConceptoCat(cat,btn){
+    selConceptoCat=cat;
+    document.querySelectorAll('#concepto-modal .cat-option').forEach(o=>o.classList.remove('selected'));
+    btn.classList.add('selected');
+  }
+
+  async function saveConcepto(){
+    const nombre=document.getElementById('concepto-nombre').value.trim();
+    if(!nombre) return showToast('⚠️ Escribe el nombre del concepto');
+    try{
+      const data={nombre,categoria:selConceptoCat,creadoEn:Date.now()};
+      if(editingConceptoId){
+        await window._fb.setDoc(window._fb.doc(window._db,'conceptos_gasto',editingConceptoId),data);
+        await logAudit(`editó el concepto de gasto "${nombre}"`);
+        showToast('✅ Concepto actualizado');
+      } else {
+        await window._fb.addDoc(window._fb.collection(window._db,'conceptos_gasto'),data);
+        await logAudit(`creó el concepto de gasto "${nombre}"`);
+        showToast('✅ Concepto creado');
+      }
+      closeModal('concepto-modal');await loadConceptos();
+    }catch(e){showToast('❌ Error al guardar');}
+  }
+
+  async function deleteConcepto(id,nombre){
+    if(!confirm(`¿Eliminar el concepto "${nombre}"?`))return;
+    try{
+      await window._fb.deleteDoc(window._fb.doc(window._db,'conceptos_gasto',id));
+      await logAudit(`eliminó el concepto de gasto "${nombre}"`);
+      allConceptos=allConceptos.filter(c=>c.id!==id);renderConceptos();showToast('Concepto eliminado');
+    }catch(e){showToast('❌ Error');}
+  }
+
+  window.switchGastosTab=switchGastosTab;window.filterGastos=filterGastos;
+  window.openGastoModal=openGastoModal;window.saveGasto=saveGasto;window.deleteGasto=deleteGasto;
+  window.openConceptoModal=openConceptoModal;window.selectConceptoCat=selectConceptoCat;window.saveConcepto=saveConcepto;window.deleteConcepto=deleteConcepto;
+  window.loadGastos=loadGastos;
 
   // ── CONSIGNACIÓN, EVENTOS, MUESTRAS ──
   let allConsignaciones=[], allEventos=[], allMuestras=[];
@@ -2383,7 +2650,7 @@
 
   function filterInv(cat, btn) {
     invFilter = cat;
-    document.querySelectorAll('#inv-cat-tabs .cat-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.inv-cat-tab').forEach(t => t.classList.remove('active'));
     btn.classList.add('active');
     renderInventario();
   }

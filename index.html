@@ -305,23 +305,50 @@
       </div>
     </div>
 
-    <!-- INVENTARIO -->
-    <div class="page" id="page-inventario">
-      <p class="page-title">Inventario</p>
-      <p class="page-subtitle">Stock actual de ingredientes</p>
-      <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
-        <div class="stat-card"><div class="stat-icon">📦</div><div class="stat-value" id="inv-stat-total">0</div><div class="stat-label">Ingredientes</div></div>
-        <div class="stat-card"><div class="stat-icon">⚠️</div><div class="stat-value" id="inv-stat-low" style="color:var(--danger)">0</div><div class="stat-label">Stock bajo</div></div>
-        <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-value" id="inv-stat-valor" style="font-size:18px">$0</div><div class="stat-label">Valor total</div></div>
+    <!-- RECURSOS -->
+    <div class="page" id="page-recursos">
+      <p class="page-title">Recursos</p>
+      <p class="page-subtitle">Inventario y gastos</p>
+      <div class="sub-tabs">
+        <button class="sub-tab active" onclick="switchRecursosTab('inventario',this)">📦 Inventario</button>
+        <button class="sub-tab" onclick="switchRecursosTab('gastos',this)">💸 Gastos</button>
+        <button class="sub-tab" onclick="switchRecursosTab('conceptos',this)">📋 Conceptos</button>
       </div>
-      <div class="cat-tabs" id="inv-cat-tabs">
-        <button class="inv-cat-tab cat-tab active" onclick="filterInv('todos',this)">Todos</button>
-        <button class="inv-cat-tab cat-tab" onclick="filterInv('Tés',this)">🍃 Tés</button>
-        <button class="inv-cat-tab cat-tab" onclick="filterInv('Frutas',this)">🍓 Frutas</button>
-        <button class="inv-cat-tab cat-tab" onclick="filterInv('Azúcares',this)">🍯 Azúcares</button>
-        <button class="inv-cat-tab cat-tab" onclick="filterInv('Otros',this)">🌿 Otros</button>
+
+      <!-- Inventario -->
+      <div id="subtab-rec-inventario">
+        <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
+          <div class="stat-card"><div class="stat-icon">📦</div><div class="stat-value" id="inv-stat-total">0</div><div class="stat-label">Ingredientes</div></div>
+          <div class="stat-card"><div class="stat-icon">⚠️</div><div class="stat-value" id="inv-stat-low" style="color:var(--danger)">0</div><div class="stat-label">Stock bajo</div></div>
+          <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-value" id="inv-stat-valor" style="font-size:18px">$0</div><div class="stat-label">Valor total</div></div>
+        </div>
+        <div class="cat-tabs" id="inv-cat-tabs">
+          <button class="inv-cat-tab cat-tab active" onclick="filterInv('todos',this)">Todos</button>
+          <button class="inv-cat-tab cat-tab" onclick="filterInv('Tés',this)">🍃 Tés</button>
+          <button class="inv-cat-tab cat-tab" onclick="filterInv('Frutas',this)">🍓 Frutas</button>
+          <button class="inv-cat-tab cat-tab" onclick="filterInv('Azúcares',this)">🍯 Azúcares</button>
+          <button class="inv-cat-tab cat-tab" onclick="filterInv('Otros',this)">🌿 Otros</button>
+        </div>
+        <div id="inv-list"><div class="loading"><div class="spinner"></div> Cargando...</div></div>
       </div>
-      <div id="inv-list"><div class="loading"><div class="spinner"></div> Cargando...</div></div>
+
+      <!-- Gastos -->
+      <div id="subtab-rec-gastos" style="display:none">
+        <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
+          <div class="stat-card"><div class="stat-icon">💸</div><div class="stat-value" id="gasto-stat-mes" style="font-size:18px;color:var(--danger)">$0</div><div class="stat-label">Este mes</div></div>
+          <div class="stat-card"><div class="stat-icon">📋</div><div class="stat-value" id="gasto-stat-conceptos">0</div><div class="stat-label">Conceptos</div></div>
+          <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-value" id="gasto-stat-total" style="font-size:18px;color:var(--danger)">$0</div><div class="stat-label">Total</div></div>
+        </div>
+        <div class="cat-tabs" id="gasto-cat-tabs">
+          <button class="gasto-cat-tab cat-tab active" onclick="filterGastos('todos',this)">Todos</button>
+        </div>
+        <div id="gastos-list"><div class="loading"><div class="spinner"></div> Cargando...</div></div>
+      </div>
+
+      <!-- Conceptos -->
+      <div id="subtab-rec-conceptos" style="display:none">
+        <div id="conceptos-list"><div class="loading"><div class="spinner"></div> Cargando...</div></div>
+      </div>
     </div>
 
     <!-- VENTAS -->
@@ -403,29 +430,7 @@
       </button>
     </div>
 
-    <!-- GASTOS -->
-    <div class="page" id="page-gastos">
-      <p class="page-title">Gastos</p>
-      <p class="page-subtitle">Control de egresos</p>
-      <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
-        <div class="stat-card"><div class="stat-icon">💸</div><div class="stat-value" id="gasto-stat-mes" style="font-size:18px;color:var(--danger)">$0</div><div class="stat-label">Este mes</div></div>
-        <div class="stat-card"><div class="stat-icon">📋</div><div class="stat-value" id="gasto-stat-conceptos">0</div><div class="stat-label">Conceptos</div></div>
-        <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-value" id="gasto-stat-total" style="font-size:18px;color:var(--danger)">$0</div><div class="stat-label">Total</div></div>
-      </div>
-      <div class="sub-tabs">
-        <button class="sub-tab active" onclick="switchGastosTab('gastos',this)">💸 Gastos</button>
-        <button class="sub-tab" onclick="switchGastosTab('conceptos',this)">📋 Conceptos</button>
-      </div>
-      <div id="subtab-gastos-list">
-        <div class="cat-tabs" id="gasto-cat-tabs">
-          <button class="gasto-cat-tab cat-tab active" onclick="filterGastos('todos',this)">Todos</button>
-        </div>
-        <div id="gastos-list"><div class="loading"><div class="spinner"></div> Cargando...</div></div>
-      </div>
-      <div id="subtab-conceptos-list" style="display:none">
-        <div id="conceptos-list"><div class="loading"><div class="spinner"></div> Cargando...</div></div>
-      </div>
-    </div>
+
 
     <!-- AJUSTES -->
     <div class="page" id="page-ajustes">
@@ -473,7 +478,7 @@
     <button class="nav-item active" onclick="showPage('dashboard',this)"><span>🏠</span><span>Inicio</span></button>
     <button class="nav-item" onclick="showPage('lotes',this)"><span>🫙</span><span>Lotes</span></button>
     <button class="nav-item" onclick="showPage('ventas',this)"><span>💰</span><span>Ventas</span></button>
-    <button class="nav-item" onclick="showPage('gastos',this)"><span>💸</span><span>Gastos</span></button>
+    <button class="nav-item" onclick="showPage('recursos',this)"><span>📦</span><span>Recursos</span></button>
     <button class="nav-item" onclick="showPage('reportes',this)"><span>📊</span><span>Reportes</span></button>
     <button class="nav-item" onclick="showPage('ajustes',this)"><span>⚙️</span><span>Ajustes</span></button>
   </nav>
@@ -1091,10 +1096,10 @@
     document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
     document.getElementById('page-'+name).classList.add('active');
     btn.classList.add('active');
-    document.getElementById('fab-main').classList.toggle('visible',name==='lotes'||name==='ingredientes'||name==='ventas'||name==='gastos');
+    document.getElementById('fab-main').classList.toggle('visible',name==='lotes'||name==='ingredientes'||name==='ventas'||name==='recursos');
     if(name==='lotes') loadLotes();
     else if(name==='ingredientes'){currentSubTab==='ingredientes'?loadIngredientes():loadRecetas();}
-    else if(name==='inventario') loadInventario();
+    else if(name==='recursos'){recursosSubTab==='inventario'?loadInventario():recursosSubTab==='gastos'?loadGastos():loadConceptos();}
     else if(name==='ventas'){ventasSubTab==='ventas'?loadVentas():loadClientes();}
     else if(name==='reportes') loadReportes();
     else if(name==='gastos') loadGastos();
@@ -1112,7 +1117,7 @@
     if(currentPage==='lotes') openLoteModal();
     else if(currentPage==='ingredientes') currentSubTab==='ingredientes'?openIngModal():openRecipeModal();
     else if(currentPage==='ventas') getVentasFabAction()();
-    else if(currentPage==='gastos') gastosSubTab==='gastos'?openGastoModal():openConceptoModal();
+    else if(currentPage==='recursos'){if(recursosSubTab==='inventario')openInvModal(null);else if(recursosSubTab==='gastos')openGastoModal();else openConceptoModal();}
   }
   // Inventario has no FAB — adjustments via card buttons
 
@@ -1751,13 +1756,14 @@
 
   // ── GASTOS ──
   let allGastos=[], allConceptos=[], gastosSubTab='gastos', gastoFilter='todos', editingConceptoId=null, selConceptoCat='Operación';
+  let recursosSubTab='inventario';
 
   function switchGastosTab(tab, btn){
     gastosSubTab=tab;
     document.querySelectorAll('#page-gastos .sub-tab').forEach(t=>t.classList.remove('active'));
     btn.classList.add('active');
-    document.getElementById('subtab-gastos-list').style.display=tab==='gastos'?'block':'none';
-    document.getElementById('subtab-conceptos-list').style.display=tab==='conceptos'?'block':'none';
+    // handled by switchRecursosTab
+    // handled by switchRecursosTab
     tab==='gastos'?loadGastos():loadConceptos();
   }
 
@@ -1943,6 +1949,18 @@
     }catch(e){showToast('❌ Error');}
   }
 
+  function switchRecursosTab(tab, btn){
+    recursosSubTab=tab;
+    document.querySelectorAll('#page-recursos .sub-tab').forEach(t=>t.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('subtab-rec-inventario').style.display=tab==='inventario'?'block':'none';
+    document.getElementById('subtab-rec-gastos').style.display=tab==='gastos'?'block':'none';
+    document.getElementById('subtab-rec-conceptos').style.display=tab==='conceptos'?'block':'none';
+    if(tab==='inventario') loadInventario();
+    else if(tab==='gastos') loadGastos();
+    else loadConceptos();
+  }
+  window.switchRecursosTab=switchRecursosTab;
   window.switchGastosTab=switchGastosTab;window.filterGastos=filterGastos;
   window.openGastoModal=openGastoModal;window.saveGasto=saveGasto;window.deleteGasto=deleteGasto;
   window.openConceptoModal=openConceptoModal;window.selectConceptoCat=selectConceptoCat;window.saveConcepto=saveConcepto;window.deleteConcepto=deleteConcepto;

@@ -377,41 +377,32 @@
     <div class="page" id="page-ventas">
       <p class="page-title">Ventas</p>
       <p class="page-subtitle">Registro de ventas y clientes</p>
-      <div style="display:flex;gap:4px;overflow-x:auto;padding-bottom:4px;margin-bottom:20px;scrollbar-width:none">
-        <button class="ventas-tab cat-tab active" style="border-radius:100px" onclick="switchVentasTab('ventas',this)">💰 Ventas</button>
-        <button class="ventas-tab cat-tab" style="border-radius:100px" onclick="switchVentasTab('consignacion',this)">🤝 Consignación</button>
-        <button class="ventas-tab cat-tab" style="border-radius:100px" onclick="switchVentasTab('eventos',this)">🎪 Eventos</button>
-        <button class="ventas-tab cat-tab" style="border-radius:100px" onclick="switchVentasTab('muestras',this)">🎁 Muestras</button>
-        <button class="ventas-tab cat-tab" style="border-radius:100px" onclick="switchVentasTab('clientes',this)">👤 Clientes</button>
+      <div class="sub-tabs">
+        <button class="ventas-main-tab sub-tab active" onclick="switchVentasMainTab('ventas',this)">💰 Ventas</button>
+        <button class="ventas-main-tab sub-tab" onclick="switchVentasMainTab('clientes',this)">👤 Clientes</button>
       </div>
-      <!-- Ventas -->
-      <div id="subtab-ventas">
+
+      <!-- VENTAS TAB -->
+      <div id="subtab-ventas-main">
         <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
           <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-value" id="venta-stat-total" style="font-size:18px">$0</div><div class="stat-label">Ingresos</div></div>
           <div class="stat-card"><div class="stat-icon">🍶</div><div class="stat-value" id="venta-stat-botellas">0</div><div class="stat-label">Botellas</div></div>
-          <div class="stat-card"><div class="stat-icon">📦</div><div class="stat-value" id="venta-stat-cajas">0</div><div class="stat-label">Cajas</div></div>
+          <div class="stat-card"><div class="stat-icon">🤝</div><div class="stat-value" id="cons-stat-pendiente" style="font-size:18px;color:var(--danger)">$0</div><div class="stat-label">Por cobrar</div></div>
+        </div>
+        <!-- Filtros tipo de venta -->
+        <div class="cat-tabs" id="ventas-tipo-tabs" style="margin-bottom:16px">
+          <button class="ventas-tipo-tab cat-tab active" onclick="filterVentasTipo('todos',this)">Todos</button>
+          <button class="ventas-tipo-tab cat-tab" onclick="filterVentasTipo('Venta directa',this)">🛒 Directa</button>
+          <button class="ventas-tipo-tab cat-tab" onclick="filterVentasTipo('Distribuidor',this)">🚚 Distribuidor</button>
+          <button class="ventas-tipo-tab cat-tab" onclick="filterVentasTipo('Consignación',this)">🤝 Consignación</button>
+          <button class="ventas-tipo-tab cat-tab" onclick="filterVentasTipo('Muestra',this)">🎁 Muestra</button>
+          <button class="ventas-tipo-tab cat-tab" onclick="filterVentasTipo('Evento',this)">🎪 Evento</button>
         </div>
         <div id="ventas-list"><div class="loading"><div class="spinner"></div> Cargando...</div></div>
       </div>
-      <!-- Consignación -->
-      <div id="subtab-consignacion" style="display:none">
-        <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
-          <div class="stat-card"><div class="stat-icon">🤝</div><div class="stat-value" id="cons-stat-pendiente" style="font-size:18px;color:var(--danger)">$0</div><div class="stat-label">Por cobrar</div></div>
-          <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-value" id="cons-stat-cobrado" style="font-size:18px">$0</div><div class="stat-label">Cobrado</div></div>
-          <div class="stat-card"><div class="stat-icon">⚠️</div><div class="stat-value" id="cons-stat-vencidas" style="color:var(--danger)">0</div><div class="stat-label">Vencidas</div></div>
-        </div>
-        <div id="consignacion-list"><div class="loading"><div class="spinner"></div> Cargando...</div></div>
-      </div>
-      <!-- Eventos -->
-      <div id="subtab-eventos" style="display:none">
-        <div id="eventos-list"><div class="loading"><div class="spinner"></div> Cargando...</div></div>
-      </div>
-      <!-- Muestras -->
-      <div id="subtab-muestras" style="display:none">
-        <div id="muestras-list"><div class="loading"><div class="spinner"></div> Cargando...</div></div>
-      </div>
-      <!-- Clientes -->
-      <div id="subtab-clientes" style="display:none">
+
+      <!-- CLIENTES TAB -->
+      <div id="subtab-clientes-main" style="display:none">
         <div id="clientes-list"><div class="loading"><div class="spinner"></div> Cargando...</div></div>
       </div>
     </div>
@@ -651,8 +642,22 @@
   <div class="modal">
     <p class="modal-title" id="venta-modal-title">Nueva venta</p>
     <div class="form-group">
+      <label>Tipo de venta</label>
+      <div class="cat-select" style="grid-template-columns:repeat(3,1fr)">
+        <button class="cat-option venta-tipo-opt selected" onclick="selectVentaTipo('Venta directa',this)">🛒 Directa</button>
+        <button class="cat-option venta-tipo-opt" onclick="selectVentaTipo('Distribuidor',this)">🚚 Distribuidor</button>
+        <button class="cat-option venta-tipo-opt" onclick="selectVentaTipo('Consignación',this)">🤝 Consignación</button>
+        <button class="cat-option venta-tipo-opt" onclick="selectVentaTipo('Muestra',this)">🎁 Muestra</button>
+        <button class="cat-option venta-tipo-opt" onclick="selectVentaTipo('Evento',this)">🎪 Evento</button>
+      </div>
+    </div>
+    <div class="form-group" id="venta-evento-nombre-group" style="display:none">
+      <label>Nombre del evento</label>
+      <input type="text" id="venta-evento-nombre" placeholder="Ej: Expo Orgánica CDMX"/>
+    </div>
+    <div class="form-group">
       <label>Cliente</label>
-      <select id="venta-cliente-select" onchange="onClienteChange()"><option value="">Seleccionar cliente</option><option value="__nuevo__">+ Nuevo cliente</option></select>
+      <select id="venta-cliente-select" onchange="onClienteChange()"><option value="">Sin cliente registrado</option><option value="__nuevo__">+ Nuevo cliente</option></select>
     </div>
     <div id="nuevo-cliente-fields" style="display:none">
       <div class="form-group"><label>Nombre del cliente</label><input type="text" id="venta-nuevo-nombre" placeholder="Nombre completo"/></div>
@@ -1128,7 +1133,7 @@
     if(name==='lotes'){lotesSubTab==='lotes'?loadLotes():(ingSubTab==='ingredientes'?loadIngredientes():loadRecetas());}
     else if(name==='ingredientes'){currentSubTab==='ingredientes'?loadIngredientes():loadRecetas();}
     else if(name==='recursos'){recursosSubTab==='inventario'?loadInventario():recursosSubTab==='gastos'?loadGastos():loadConceptos();}
-    else if(name==='ventas'){ventasSubTab==='ventas'?loadVentas():loadClientes();}
+    else if(name==='ventas'){ventasMainTab==='ventas'?loadVentas():loadClientes();}
     else if(name==='reportes') loadReportes();
     else if(name==='gastos') loadGastos();
     else if(name==='dashboard') window.loadDashboard&&window.loadDashboard();
@@ -1138,7 +1143,7 @@
   function onFabClick(){
     if(currentPage==='lotes'){if(lotesSubTab==='lotes')openLoteModal();else if(ingSubTab==='ingredientes')openIngModal();else openRecipeModal();}
     else if(currentPage==='ingredientes') currentSubTab==='ingredientes'?openIngModal():openRecipeModal();
-    else if(currentPage==='ventas') getVentasFabAction()();
+    else if(currentPage==='ventas'){ventasMainTab==='ventas'?openVentaModal():openClienteModal();}
     else if(currentPage==='recursos'){if(recursosSubTab==='inventario')openInvModal(null);else if(recursosSubTab==='gastos')openGastoModal();else openConceptoModal();}
   }
   // Inventario has no FAB — adjustments via card buttons
@@ -2137,21 +2142,36 @@
   let allConsignaciones=[], allEventos=[], allMuestras=[];
   let aboningConsId=null, selMuestraMotivo='Degustación';
 
-  function switchVentasTab(tab, btn){
-    ventasSubTab=tab;
-    const tabs=['ventas','consignacion','eventos','muestras','clientes'];
-    tabs.forEach(t=>{
-      const el=document.getElementById('subtab-'+t);
-      if(el) el.style.display=t===tab?'block':'none';
-    });
-    document.querySelectorAll('.ventas-tab').forEach(t=>t.classList.remove('active'));
+  let ventasMainTab='ventas', ventasTipoFilter='todos', selVentaTipo='Venta directa';
+
+  function switchVentasMainTab(tab, btn){
+    ventasMainTab=tab;
+    document.querySelectorAll('.ventas-main-tab').forEach(t=>t.classList.remove('active'));
     btn.classList.add('active');
-    if(tab==='ventas') loadVentas();
-    else if(tab==='consignacion') loadConsignaciones();
-    else if(tab==='eventos') loadEventos();
-    else if(tab==='muestras') loadMuestras();
-    else if(tab==='clientes') loadClientes();
+    document.getElementById('subtab-ventas-main').style.display=tab==='ventas'?'block':'none';
+    document.getElementById('subtab-clientes-main').style.display=tab==='clientes'?'block':'none';
+    tab==='ventas'?loadVentas():loadClientes();
   }
+
+  function filterVentasTipo(tipo, btn){
+    ventasTipoFilter=tipo;
+    document.querySelectorAll('.ventas-tipo-tab').forEach(t=>t.classList.remove('active'));
+    btn.classList.add('active');
+    renderVentas();
+  }
+
+  function selectVentaTipo(tipo, btn){
+    selVentaTipo=tipo;
+    document.querySelectorAll('.venta-tipo-opt').forEach(o=>o.classList.remove('selected'));
+    btn.classList.add('selected');
+    document.getElementById('venta-evento-nombre-group').style.display=tipo==='Evento'?'block':'none';
+  }
+  window.selectVentaTipo=selectVentaTipo;
+  window.switchVentasMainTab=switchVentasMainTab;
+  window.filterVentasTipo=filterVentasTipo;
+
+  // Legacy stub
+  function switchVentasTab(){}
 
   // FAB action per tab
   function getVentasFabAction(){
@@ -2516,39 +2536,63 @@
   async function loadVentas(){
     document.getElementById('ventas-list').innerHTML='<div class="loading"><div class="spinner"></div> Cargando...</div>';
     try{
-      const snap=await window._fb.getDocs(window._fb.collection(window._db,'ventas'));
-      allVentas=[];snap.forEach(d=>allVentas.push({id:d.id,...d.data()}));
+      const [vSnap,cSnap,eSnap,mSnap]=await Promise.all([
+        window._fb.getDocs(window._fb.collection(window._db,'ventas')),
+        window._fb.getDocs(window._fb.collection(window._db,'consignaciones')),
+        window._fb.getDocs(window._fb.collection(window._db,'eventos')),
+        window._fb.getDocs(window._fb.collection(window._db,'muestras')),
+      ]);
+      allVentas=[];
+      vSnap.forEach(d=>allVentas.push({id:d.id,_col:'ventas',...d.data()}));
+      cSnap.forEach(d=>allVentas.push({id:d.id,_col:'consignaciones',tipoVenta:'Consignación',...d.data(),clienteNombre:d.data().clienteNombre||''}));
+      eSnap.forEach(d=>allVentas.push({id:d.id,_col:'eventos',tipoVenta:'Evento',clienteNombre:d.data().nombre||'Evento',...d.data()}));
+      mSnap.forEach(d=>allVentas.push({id:d.id,_col:'muestras',tipoVenta:'Muestra',clienteNombre:d.data().destinatario||'',total:0,...d.data()}));
       allVentas.sort((a,b)=>b.fecha-a.fecha);
+      // Consig stats
+      const consigs=allVentas.filter(v=>v._col==='consignaciones');
+      const pendiente=consigs.reduce((s,c)=>s+(c.totalPendiente||0),0);
+      document.getElementById('cons-stat-pendiente').textContent='$'+pendiente.toLocaleString('es-MX',{minimumFractionDigits:0});
       renderVentas();
     }catch(e){document.getElementById('ventas-list').innerHTML='<div class="empty-state"><p>Error al cargar.</p></div>';}
   }
 
   function renderVentas(){
     const el=document.getElementById('ventas-list');
-    const totalIngresos=allVentas.reduce((s,v)=>s+(v.total||0),0);
+    const tipoIcons={'Venta directa':'🛒','Distribuidor':'🚚','Consignación':'🤝','Muestra':'🎁','Evento':'🎪'};
+    // Filter
+    const filtered=ventasTipoFilter==='todos'?allVentas:allVentas.filter(v=>(v.tipoVenta||'Venta directa')===ventasTipoFilter);
+    // Stats (all ventas, not filtered)
+    const totalIngresos=allVentas.filter(v=>v._col!=='muestras').reduce((s,v)=>s+(v.total||0),0);
     const totalBotellas=allVentas.reduce((s,v)=>s+(v.botellas||0)+(v.cajas||0)*12,0);
-    const totalCajas=allVentas.reduce((s,v)=>s+(v.cajas||0),0);
     document.getElementById('venta-stat-total').textContent='$'+totalIngresos.toLocaleString('es-MX',{minimumFractionDigits:0});
     document.getElementById('venta-stat-botellas').textContent=totalBotellas;
-    document.getElementById('venta-stat-cajas').textContent=totalCajas;
-    if(!allVentas.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">💰</div><p>No hay ventas registradas.<br>Toca + para registrar la primera.</p></div>';return;}
-    el.innerHTML='<div class="ventas-list-wrap">'+allVentas.map(v=>{
+    if(!filtered.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">💰</div><p>No hay registros.<br>Toca + para agregar.</p></div>';return;}
+    el.innerHTML='<div class="ventas-list-wrap">'+filtered.map(v=>{
       const fecha=v.fecha?new Date(v.fecha).toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'}):'—';
+      const tipo=v.tipoVenta||'Venta directa';
+      const icon=tipoIcons[tipo]||'💰';
       const detalle=[];
       if(v.cajas) detalle.push(`📦 ${v.cajas} caja${v.cajas>1?'s':''}`);
       if(v.botellas) detalle.push(`🍶 ${v.botellas} botella${v.botellas>1?'s':''}`);
       if(v.loteCodigo) detalle.push(`🫙 ${v.loteCodigo}`);
-      if(v.canal) detalle.push(v.canal);
-      if(v.tipoCliente) detalle.push(v.tipoCliente);
+      if(v.motivo) detalle.push(v.motivo);
+      // Consig extra
+      const isPending=v._col==='consignaciones'&&(v.totalPendiente||0)>0;
+      const consigInfo=v._col==='consignaciones'?`<div style="margin-top:8px"><span style="font-size:12px;color:var(--danger)">💵 Pendiente: $${(v.totalPendiente||0).toLocaleString('es-MX',{minimumFractionDigits:0})}</span>${isPending?`<button class="btn-status" style="margin-left:8px;font-size:11px" onclick="openAbonoModal('${v.id}')">Abonar</button>`:' <span style="color:var(--accent2);font-size:12px">✅ Liquidada</span>'}</div>`:'';
+      const deleteAction=`deleteVenta('${v.id}','${v._col||"ventas"}')`;
       return `<div class="venta-card">
         <div class="venta-top">
-          <div><div class="venta-cliente">${v.clienteNombre||'Cliente directo'}</div><div class="venta-fecha">${fecha}</div></div>
-          <div class="venta-monto">$${(v.total||0).toLocaleString('es-MX',{minimumFractionDigits:0})}</div>
+          <div>
+            <div class="venta-cliente">${icon} ${v.clienteNombre||'Sin cliente'}</div>
+            <div class="venta-fecha">${fecha} · <span style="color:var(--accent2)">${tipo}</span></div>
+          </div>
+          ${v._col!=='muestras'?`<div class="venta-monto">$${(v.total||0).toLocaleString('es-MX',{minimumFractionDigits:0})}</div>`:`<div style="font-family:'Space Mono',monospace;font-size:18px;color:var(--accent)">🎁 ${v.botellas||0}</div>`}
         </div>
         <div class="venta-detail">${detalle.map(d=>`<span class="venta-tag">${d}</span>`).join('')}</div>
+        ${consigInfo}
         ${v.notas?`<p style="font-size:12px;color:var(--text2);margin-top:8px">📝 ${v.notas}</p>`:''}
         <div style="display:flex;gap:8px;margin-top:10px">
-          <button class="btn-del" onclick="deleteVenta('${v.id}')">🗑️ Eliminar</button>
+          <button class="btn-del" onclick="${deleteAction}">🗑️ Eliminar</button>
         </div>
       </div>`;
     }).join('')+'</div>';
@@ -2600,6 +2644,10 @@
     document.getElementById('venta-notas').value='';
     document.getElementById('venta-total-display').textContent='$0';
     document.getElementById('nuevo-cliente-fields').style.display='none';
+    document.getElementById('venta-evento-nombre-group').style.display='none';
+    if(document.getElementById('venta-evento-nombre')) document.getElementById('venta-evento-nombre').value='';
+    selVentaTipo='Venta directa';
+    document.querySelectorAll('.venta-tipo-opt').forEach((o,i)=>o.classList.toggle('selected',i===0));
     selTipoCliente='Menudeo';
     // Load clientes
     const cliSel=document.getElementById('venta-cliente-select');
@@ -2656,6 +2704,8 @@
     const lote=allLotes.find(l=>l.id===loteId);
     if(!fecha) return showToast('⚠️ Selecciona la fecha');
     if(!cajas&&!botellas) return showToast('⚠️ Agrega al menos una caja o botella');
+    const tipoVenta=selVentaTipo||'Venta directa';
+    const eventoNombre=document.getElementById('venta-evento-nombre')?.value.trim()||'';
     let clienteId='', clienteNombre='', canal='', tipoCliente='', ciudad='';
     // Handle new client
     if(cliVal==='__nuevo__'){
@@ -2671,7 +2721,7 @@
       if(cl){clienteId=cl.id;clienteNombre=cl.nombre;canal=cl.canal||'';tipoCliente=cl.tipo||'';ciudad=cl.ciudad||'';}
     }
     try{
-      const ventaData={clienteId,clienteNombre,canal,tipoCliente,ciudad,fecha:new Date(fecha).getTime(),cajas,botellas,precioCaja:pCaja,precioBotella:pBotella,total,notas,loteId:loteId||'',loteCodigo:lote?.codigo||'',creadoEn:Date.now()};
+      const ventaData={clienteId,clienteNombre,canal,tipoCliente,ciudad,tipoVenta,eventoNombre,fecha:new Date(fecha).getTime(),cajas,botellas,precioCaja:pCaja,precioBotella:pBotella,total,notas,loteId:loteId||'',loteCodigo:lote?.codigo||'',creadoEn:Date.now()};
       await window._fb.addDoc(window._fb.collection(window._db,'ventas'),ventaData);
       // Descontar botellas del lote
       if(loteId&&lote){
@@ -2690,14 +2740,14 @@
     }catch(e){showToast('❌ Error al guardar');}
   }
 
-  async function deleteVenta(id){
-    if(!confirm('¿Eliminar esta venta?')) return;
+  async function deleteVenta(id, col='ventas'){
+    if(!confirm('¿Eliminar este registro?')) return;
     try{
-      await window._fb.deleteDoc(window._fb.doc(window._db,'ventas',id));
-      await logAudit('eliminó una venta');
+      await window._fb.deleteDoc(window._fb.doc(window._db,col,id));
+      await logAudit('eliminó un registro de '+col);
       allVentas=allVentas.filter(v=>v.id!==id);
       renderVentas();
-      showToast('Venta eliminada');
+      showToast('Registro eliminado');
     }catch(e){showToast('❌ Error');}
   }
 
@@ -2764,6 +2814,7 @@
   }
 
   window.switchVentasTab=switchVentasTab;window.loadVentas=loadVentas;window.loadClientes=loadClientes;
+  window.deleteVenta=deleteVenta;
   window.openVentaModal=openVentaModal;window.onClienteChange=onClienteChange;window.selectTipoCliente=selectTipoCliente;
   window.calcVentaTotal=calcVentaTotal;window.saveVenta=saveVenta;window.deleteVenta=deleteVenta;
   window.openClienteModal=openClienteModal;window.selectCliTipo=selectCliTipo;window.saveCliente=saveCliente;window.deleteCliente=deleteCliente;

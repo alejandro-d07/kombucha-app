@@ -3034,25 +3034,38 @@
   async function editVenta(id){
     const v=allVentas.find(x=>x.id===id&&x._col==='ventas');
     if(!v) return;
+    // Open modal and wait for it to load
     await openVentaModal();
-    // Pre-fill fields
-    setTimeout(()=>{
-      // Set tipo
-      selVentaTipo=v.tipoVenta||'Venta directa';
-      document.querySelectorAll('.venta-tipo-opt').forEach(o=>o.classList.toggle('selected',o.textContent.replace(/[^a-zA-ZáéíóúüñÁÉÍÓÚÜÑ ]/g,'').trim()===selVentaTipo.replace(/[^a-zA-ZáéíóúüñÁÉÍÓÚÜÑ ]/g,'').trim()));
-      if(v.eventoNombre){document.getElementById('venta-evento-nombre').value=v.eventoNombre;document.getElementById('venta-evento-nombre-group').style.display='block';}
-      document.getElementById('venta-fecha').value=v.fecha?new Date(v.fecha).toISOString().split('T')[0]:'';
-      document.getElementById('venta-cajas').value=v.cajas||'';
-      document.getElementById('venta-botellas').value=v.botellas||'';
-      document.getElementById('venta-precio-caja').value=v.precioCaja||'';
-      document.getElementById('venta-precio-botella').value=v.precioBotella||'';
-      document.getElementById('venta-notas').value=v.notas||'';
-      calcVentaTotal();
-      if(v.clienteId) document.getElementById('venta-cliente-select').value=v.clienteId;
-      // Store editing id
-      window._editingVentaId=id;
-      document.getElementById('venta-modal-title').textContent='Editar venta';
-    },400);
+    // Now fill fields (modal is open, Firebase data loaded)
+    selVentaTipo=v.tipoVenta||'Venta directa';
+    document.querySelectorAll('.venta-tipo-opt').forEach(o=>{
+      const label=o.textContent.replace(/[^\w\s]/g,'').trim().toLowerCase();
+      o.classList.toggle('selected', label===selVentaTipo.toLowerCase()||o.textContent.includes(selVentaTipo));
+    });
+    // Show consig fields if needed
+    document.getElementById('venta-consig-fields').style.display=selVentaTipo==='Consignación'?'block':'none';
+    document.getElementById('venta-evento-nombre-group').style.display=selVentaTipo==='Evento'?'block':'none';
+    if(v.eventoNombre) document.getElementById('venta-evento-nombre').value=v.eventoNombre;
+    if(v.totalCobrado&&document.getElementById('venta-anticipo')){
+      document.getElementById('venta-anticipo').value=v.totalCobrado;
+    }
+    // Set date - format timestamp back to YYYY-MM-DD local
+    if(v.fecha){
+      const d=new Date(v.fecha);
+      const dateStr=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+      document.getElementById('venta-fecha').value=dateStr;
+    }
+    document.getElementById('venta-cajas').value=v.cajas||'';
+    document.getElementById('venta-botellas').value=v.botellas||'';
+    document.getElementById('venta-precio-caja').value=v.precioCaja||'';
+    document.getElementById('venta-precio-botella').value=v.precioBotella||'';
+    document.getElementById('venta-notas').value=v.notas||'';
+    calcVentaTotal();
+    if(v.clienteId) document.getElementById('venta-cliente-select').value=v.clienteId;
+    if(v.loteId) document.getElementById('venta-lote-select').value=v.loteId;
+    // Set editing mode AFTER reset (openVentaModal sets it to null)
+    window._editingVentaId=id;
+    document.getElementById('venta-modal-title').textContent='Editar venta';
   }
   window.editVenta=editVenta;
   window.openVentaModal=openVentaModal;window.onClienteChange=onClienteChange;window.selectTipoCliente=selectTipoCliente;

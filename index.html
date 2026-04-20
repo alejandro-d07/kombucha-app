@@ -692,17 +692,16 @@
       <input type="text" id="venta-evento-nombre" placeholder="Ej: Expo Orgánica CDMX"/>
     </div>
     <div id="venta-consig-fields" style="display:none">
-      <div class="form-group">
-        <label>Estado de pago</label>
-        <div class="cat-select">
-          <button class="cat-option consig-pago-opt selected" onclick="selectConsigPago('pendiente',this)">⏳ Pendiente</button>
-          <button class="cat-option consig-pago-opt" onclick="selectConsigPago('parcial',this)">💵 Pago parcial</button>
-          <button class="cat-option consig-pago-opt" onclick="selectConsigPago('pagado',this)">✅ Pagado</button>
+      <div style="background:var(--surface2);border-radius:var(--radius);padding:14px 16px;margin-bottom:16px">
+        <p style="font-size:12px;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">💵 Detalle de pago</p>
+        <div class="form-group" style="margin-bottom:12px">
+          <label>Monto ya cobrado ($) <span style="color:var(--text2);font-weight:400">— deja en 0 si aún no se ha pagado nada</span></label>
+          <input type="number" id="venta-anticipo" placeholder="0.00" min="0" step="0.01" oninput="updateConsigBalance()"/>
         </div>
-      </div>
-      <div class="form-group" id="venta-anticipo-group" style="display:none">
-        <label>Monto ya cobrado ($)</label>
-        <input type="number" id="venta-anticipo" placeholder="0.00" min="0" step="0.01"/>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding-top:8px;border-top:1px solid var(--border)">
+          <span style="font-size:13px;color:var(--text2)">Saldo pendiente</span>
+          <span id="venta-pendiente-display" style="font-family:'Space Mono',monospace;font-size:16px;color:var(--danger)">$0</span>
+        </div>
       </div>
     </div>
     <div class="form-group">
@@ -1145,8 +1144,9 @@
       document.getElementById('stat-ready').textContent=ready;
       document.getElementById('stat-bottles').textContent=bottles;
       const al=document.getElementById('alerts-list');
-      if(alerts.length){
-        al.innerHTML=alerts.map((a,i)=>`<div class="alert-item ${a.type}" id="alert-item-${i}"><span class="alert-icon">${a.icon}</span><div class="alert-text"><strong>${a.title}</strong><p>${a.desc}</p></div><button onclick="closeAlert('alert-item-${i}')" style="background:none;border:none;color:var(--text2);font-size:16px;cursor:pointer;padding:4px;flex-shrink:0;line-height:1">✕</button></div>`).join('');
+      const visibleAlerts=alerts.slice(0,4);
+      if(visibleAlerts.length){
+        al.innerHTML=visibleAlerts.map((a,i)=>`<div class="alert-item ${a.type}" id="alert-item-${i}"><span class="alert-icon">${a.icon}</span><div class="alert-text"><strong>${a.title}</strong><p>${a.desc}</p></div><button onclick="closeAlert('alert-item-${i}')" style="background:none;border:none;color:var(--text2);font-size:16px;cursor:pointer;padding:4px;flex-shrink:0;line-height:1">✕</button></div>`).join('');
         // Push notification for ready lotes
         if(Notification.permission==='granted'){
           alerts.filter(a=>a.type==='ready'||a.type==='warn').forEach(a=>{
@@ -1155,8 +1155,14 @@
         }
         // Schedule future notifications via service worker
         if('serviceWorker'in navigator && navigator.serviceWorker.controller){
-          navigator.serviceWorker.controller.postMessage({type:'SCHEDULE_CHECKS',alerts:alerts.map(a=>({title:a.title,desc:a.desc,type:a.type}))});
+          navigator.serviceWorker.controller.postMessage({type:'SCHEDULE_CHECKS',alerts:visibleAlerts.map(a=>({title:a.title,desc:a.desc,type:a.type}))});
         }
+        // Re-hide dismissed alerts
+        dismissedAlerts.forEach(id=>{
+          const el=document.getElementById(id);
+          if(el) el.style.display='none';
+        });
+      } else if(alerts.length>4){
       } else {
         al.innerHTML='<div class="empty-state" style="padding:24px 0"><div class="empty-icon" style="font-size:32px">🌿</div><p>No hay alertas por ahora.</p></div>';
       }
@@ -2341,13 +2347,17 @@
     document.getElementById('venta-evento-nombre-group').style.display=tipo==='Evento'?'block':'none';
     document.getElementById('venta-consig-fields').style.display=tipo==='Consignación'?'block':'none';
   }
-  function selectConsigPago(pago, btn){
-    selConsigPago=pago;
-    document.querySelectorAll('.consig-pago-opt').forEach(o=>o.classList.remove('selected'));
-    btn.classList.add('selected');
-    document.getElementById('venta-anticipo-group').style.display=pago==='parcial'?'block':'none';
-  }
+  function selectConsigPago(pago, btn){}
   window.selectConsigPago=selectConsigPago;
+
+  function updateConsigBalance(){
+    const total=parseFloat(document.getElementById('venta-total-display').textContent.replace(/[$,]/g,''))||0;
+    const cobrado=parseFloat(document.getElementById('venta-anticipo')?.value)||0;
+    const pendiente=Math.max(0,total-cobrado);
+    const el=document.getElementById('venta-pendiente-display');
+    if(el) el.textContent='$'+pendiente.toLocaleString('es-MX',{minimumFractionDigits:2});
+  }
+  window.updateConsigBalance=updateConsigBalance;
   window.selectVentaTipo=selectVentaTipo;
   window.switchVentasMainTab=switchVentasMainTab;
   window.filterVentasTipo=filterVentasTipo;
@@ -2836,11 +2846,12 @@
     document.getElementById('venta-consig-fields').style.display='none';
     document.getElementById('venta-anticipo-group').style.display='none';
     if(document.getElementById('venta-evento-nombre')) document.getElementById('venta-evento-nombre').value='';
-    if(document.getElementById('venta-anticipo')) document.getElementById('venta-anticipo').value='';
+    if(document.getElementById('venta-anticipo')){document.getElementById('venta-anticipo').value='';}
+    const pendEl=document.getElementById('venta-pendiente-display');if(pendEl)pendEl.textContent='$0';
     selVentaTipo='Venta directa';
     selConsigPago='pendiente';
     document.querySelectorAll('.venta-tipo-opt').forEach((o,i)=>o.classList.toggle('selected',i===0));
-    document.querySelectorAll('.consig-pago-opt').forEach((o,i)=>o.classList.toggle('selected',i===0));
+
     selTipoCliente='Menudeo';
     window._editingVentaId=null;
     // Load clientes
@@ -2883,6 +2894,7 @@
     const pBotella=parseFloat(document.getElementById('venta-precio-botella').value)||0;
     const total=cajas*pCaja+botellas*pBotella;
     document.getElementById('venta-total-display').textContent='$'+total.toLocaleString('es-MX',{minimumFractionDigits:2});
+    if(typeof updateConsigBalance==='function') updateConsigBalance();
   }
 
   async function saveVenta(){
@@ -2901,7 +2913,6 @@
     const tipoVenta=selVentaTipo||'Venta directa';
     const eventoNombre=document.getElementById('venta-evento-nombre')?.value.trim()||'';
     const anticipo=tipoVenta==='Consignación'?(parseFloat(document.getElementById('venta-anticipo')?.value)||0):0;
-    const pagadoTotal=tipoVenta==='Consignación'&&selConsigPago==='pagado';
     let clienteId='', clienteNombre='', canal='', tipoCliente='', ciudad='';
     // Handle new client
     if(cliVal==='__nuevo__'){
@@ -2917,7 +2928,7 @@
       if(cl){clienteId=cl.id;clienteNombre=cl.nombre;canal=cl.canal||'';tipoCliente=cl.tipo||'';ciudad=cl.ciudad||'';}
     }
     try{
-      const totalCobrado=pagadoTotal?total:anticipo;
+      const totalCobrado=tipoVenta==='Consignación'?anticipo:total;
       const totalPendiente=Math.max(0,total-totalCobrado);
       const ventaData={clienteId,clienteNombre,canal,tipoCliente,ciudad,tipoVenta,eventoNombre,fecha:parseFecha(fecha),cajas,botellas,precioCaja:pCaja,precioBotella:pBotella,total,totalCobrado,totalPendiente,estadoPago:selConsigPago,notas,loteId:loteId||'',loteCodigo:lote?.codigo||'',creadoEn:Date.now()};
       if(window._editingVentaId){
@@ -3400,7 +3411,9 @@
   window.saveAjuste = saveAjuste;
 
   // Date fix: parse YYYY-MM-DD as local date to avoid timezone offset
+  const dismissedAlerts = new Set();
   function closeAlert(id){
+    dismissedAlerts.add(id);
     const el=document.getElementById(id);
     if(el) el.style.display='none';
   }

@@ -266,10 +266,15 @@
         <button class="btn-secondary" onclick="requestNotifPermission()">Activar</button>
       </div>
       <div class="stats-grid">
-        <div class="stat-card"><div class="stat-icon">🫙</div><div class="stat-value" id="stat-f1">0</div><div class="stat-label">Lotes F1</div></div>
-        <div class="stat-card"><div class="stat-icon">🍶</div><div class="stat-value" id="stat-f2">0</div><div class="stat-label">Lotes F2</div></div>
+        <div class="stat-card"><div class="stat-icon">🫙</div><div class="stat-value" id="stat-f1">0</div><div class="stat-label">En F1</div></div>
+        <div class="stat-card"><div class="stat-icon">🍶</div><div class="stat-value" id="stat-f2">0</div><div class="stat-label">En F2</div></div>
         <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-value" id="stat-ready">0</div><div class="stat-label">Listos venta</div></div>
         <div class="stat-card"><div class="stat-icon">📦</div><div class="stat-value" id="stat-bottles">0</div><div class="stat-label">Botellas</div></div>
+      </div>
+      <!-- Lotes en proceso -->
+      <div style="margin-bottom:20px">
+        <p class="section-title">🔬 Lotes en fermentación</p>
+        <div id="lotes-en-proceso"><div class="loading" style="padding:16px"><div class="spinner"></div></div></div>
       </div>
       <div style="margin-bottom:28px">
         <p class="section-title">🔔 Alertas activas</p>
@@ -466,9 +471,11 @@
         <canvas id="chart-lotes" height="200"></canvas>
       </div>
       <!-- Download -->
-      <button class="btn-primary" onclick="downloadReportePDF()" style="margin-top:0">
-        📄 Descargar reporte PDF
-      </button>
+      <div style="display:flex;gap:8px;margin-top:0">
+        <button class="btn-primary" style="margin-top:0;flex:1" onclick="downloadReportePDF('semana')">📄 PDF Semana</button>
+        <button class="btn-primary" style="margin-top:0;flex:1" onclick="downloadReportePDF('mes')">📄 PDF Mes</button>
+        <button class="btn-primary" style="margin-top:0;flex:1" onclick="downloadReportePDF('anio')">📄 PDF Año</button>
+      </div>
     </div>
 
 
@@ -647,7 +654,14 @@
     <p class="modal-title">Actualizar lote</p>
     <p id="estado-lote-nombre" style="color:var(--accent);font-weight:600;margin-bottom:16px;font-size:16px"></p>
     <div class="form-group">
-      <label>Nuevo estado</label>
+      <label>Etapa de fermentación</label>
+      <div class="cat-select">
+        <button class="cat-option estado-etapa-opt" onclick="selectEstadoEtapa('F1',this)">🫙 F1</button>
+        <button class="cat-option estado-etapa-opt" onclick="selectEstadoEtapa('F2',this)">🍶 F2</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Estado del lote</label>
       <div id="estado-options" style="display:flex;flex-direction:column;gap:8px"></div>
     </div>
     <div class="form-group" id="estado-botellas-group" style="display:none">
@@ -1120,7 +1134,7 @@
       ['stat-f1','stat-f2','stat-ready','stat-bottles'].forEach((id,i)=>document.getElementById(id).textContent=[f1,f2,ready,bottles][i]);
       const al=document.getElementById('alerts-list');
       if(alerts.length){
-        al.innerHTML=alerts.map(a=>`<div class="alert-item ${a.type}"><span class="alert-icon">${a.icon}</span><div class="alert-text"><strong>${a.title}</strong><p>${a.desc}</p></div></div>`).join('');
+        al.innerHTML=alerts.map((a,i)=>`<div class="alert-item ${a.type}" id="alert-item-${i}"><span class="alert-icon">${a.icon}</span><div class="alert-text"><strong>${a.title}</strong><p>${a.desc}</p></div><button onclick="closeAlert('alert-item-${i}')" style="background:none;border:none;color:var(--text2);font-size:16px;cursor:pointer;padding:4px;flex-shrink:0;line-height:1">✕</button></div>`).join('');
         // Push notification for ready lotes
         if(Notification.permission==='granted'){
           alerts.filter(a=>a.type==='ready'||a.type==='warn').forEach(a=>{
@@ -1439,12 +1453,15 @@
   }
 
   function openEstadoModal(id){
-    updatingLoteId=id;selNuevoEstado=null;
+    updatingLoteId=id;selNuevoEstado=null;selEstadoEtapa=null;
     const l=allLotes.find(x=>x.id===id);if(!l)return;
     document.getElementById('estado-lote-nombre').textContent=`${l.codigo} — ${ESTADOS[l.estado]?.label||l.estado}`;
     document.getElementById('estado-obs-input').value='';
     document.getElementById('estado-botellas-group').style.display='block';
     document.getElementById('estado-botellas-input').value=l.botellas||0;
+    // Pre-select current etapa
+    selEstadoEtapa=l.etapa||null;
+    document.querySelectorAll('.estado-etapa-opt').forEach(o=>o.classList.toggle('selected',o.textContent.includes(l.etapa||'')));
     const currentIdx=FLUJO.indexOf(l.estado);
     const opts=document.getElementById('estado-options');
     opts.innerHTML='';
@@ -1470,6 +1487,13 @@
     document.getElementById('estado-modal').classList.add('open');
   }
 
+  function selectEstadoEtapa(etapa,btn){
+    selEstadoEtapa=etapa;
+    document.querySelectorAll('.estado-etapa-opt').forEach(o=>o.classList.remove('selected'));
+    btn.classList.add('selected');
+  }
+  window.selectEstadoEtapa=selectEstadoEtapa;
+
   async function saveEstado(){
     if(!selNuevoEstado)return showToast('⚠️ Selecciona el nuevo estado');
     const l=allLotes.find(x=>x.id===updatingLoteId);if(!l)return;
@@ -1477,6 +1501,7 @@
     const obs=document.getElementById('estado-obs-input').value.trim();
     try{
       const update={estado:selNuevoEstado,botellas};
+      if(selEstadoEtapa) update.etapa=selEstadoEtapa;
       if(obs) update.observaciones=obs;
       await window._updateDoc(window._fb.doc(window._db,'lotes',updatingLoteId),update);
       await logAudit(`cambió estado del lote "${l.codigo}" a ${ESTADOS[selNuevoEstado].label}`);
@@ -1839,7 +1864,7 @@
     } catch(e) { console.log('Error reportes:', e); }
   }
 
-   async function downloadReportePDF() {
+   async function downloadReportePDF(periodo='mes') {
     showToast('⏳ Generando PDF...');
     try {
       const [ventasSnap, lotesSnap, clientesSnap, gastosSnapPDF] = await Promise.all([
@@ -1853,9 +1878,24 @@
       const gastos = []; gastosSnapPDF.forEach(d => gastos.push(d.data()));
 
       const now = new Date();
-      const mes = now.toLocaleDateString('es-MX', {month:'long', year:'numeric'});
-      const mStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
-      const mEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1).getTime();
+      let pStart, pEnd, periodoLabel;
+      if(periodo==='semana'){
+        const day=now.getDay();
+        pStart=new Date(now.getFullYear(),now.getMonth(),now.getDate()-day,0,0,0).getTime();
+        pEnd=new Date(now.getFullYear(),now.getMonth(),now.getDate()-day+7,0,0,0).getTime();
+        periodoLabel='Semana del '+new Date(pStart).toLocaleDateString('es-MX',{day:'2-digit',month:'short'})+' al '+new Date(pEnd-1).toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'});
+      } else if(periodo==='anio'){
+        pStart=new Date(now.getFullYear(),0,1).getTime();
+        pEnd=new Date(now.getFullYear()+1,0,1).getTime();
+        periodoLabel='Año '+now.getFullYear();
+      } else {
+        pStart=new Date(now.getFullYear(),now.getMonth(),1).getTime();
+        pEnd=new Date(now.getFullYear(),now.getMonth()+1,1).getTime();
+        periodoLabel=now.toLocaleDateString('es-MX',{month:'long',year:'numeric'});
+        periodoLabel=periodoLabel.charAt(0).toUpperCase()+periodoLabel.slice(1);
+      }
+      const mes = periodoLabel;
+      const mStart=pStart, mEnd=pEnd;
       const ventasMes = ventas.filter(v => v.fecha >= mStart && v.fecha < mEnd);
       const lotesMes = lotes.filter(l => l.creadoEn >= mStart && l.creadoEn < mEnd);
       const gastosMes = gastos.filter(g => g.fecha >= mStart && g.fecha < mEnd);
@@ -2015,7 +2055,8 @@
         });
       }
 
-      doc.save('Kombuchan_Reporte_'+now.getFullYear()+'_'+String(now.getMonth()+1).padStart(2,'0')+'.pdf');
+      const sufijo=periodo==='semana'?'Semana':periodo==='anio'?String(now.getFullYear()):now.getFullYear()+'_'+String(now.getMonth()+1).padStart(2,'0');
+      doc.save('Kombuchan_Reporte_'+sufijo+'.pdf');
       showToast('✅ PDF descargado');
     } catch(e) { console.error(e); showToast('❌ Error al generar PDF'); }
   }
@@ -2125,7 +2166,7 @@
     if(!fecha) return showToast('⚠️ Selecciona la fecha');
     const conc=allConceptos.find(c=>c.id===conceptoId);
     try{
-      await window._fb.addDoc(window._fb.collection(window._db,'gastos'),{conceptoId,conceptoNombre:conc?.nombre||'',categoria:conc?.categoria||'',fecha:new Date(fecha).getTime(),monto,descripcion:desc,proveedor,creadoEn:Date.now()});
+      await window._fb.addDoc(window._fb.collection(window._db,'gastos'),{conceptoId,conceptoNombre:conc?.nombre||'',categoria:conc?.categoria||'',fecha:parseFecha(fecha),monto,descripcion:desc,proveedor,creadoEn:Date.now()});
       await logAudit(`registró gasto de $${monto.toLocaleString('es-MX')} en "${conc?.nombre||''}"`);
       showToast('✅ Gasto registrado');
       closeModal('gasto-modal');await loadGastos();
@@ -2260,7 +2301,7 @@
 
   // ── CONSIGNACIÓN, EVENTOS, MUESTRAS ──
   let allConsignaciones=[], allEventos=[], allMuestras=[];
-  let aboningConsId=null, selMuestraMotivo='Degustación';
+  let aboningConsId=null, selMuestraMotivo='Degustación', selEstadoEtapa=null;
 
   let ventasMainTab='ventas', ventasTipoFilter='todos', selVentaTipo='Venta directa';
 
@@ -2402,7 +2443,7 @@
     if(!cajas&&!botellas) return showToast('⚠️ Agrega cajas o botellas');
     const cl=allClientes.find(x=>x.id===cliId);
     try{
-      const data={clienteId:cliId,clienteNombre:cl?.nombre||'',fecha:new Date(fecha).getTime(),cajas,botellas,precioCaja:pCaja,precioBotella:pBotella,total,totalPendiente:total,totalCobrado:0,abonos:[],notas,loteId:loteId||'',loteCodigo:lote?.codigo||'',creadoEn:Date.now()};
+      const data={clienteId:cliId,clienteNombre:cl?.nombre||'',fecha:parseFecha(fecha),cajas,botellas,precioCaja:pCaja,precioBotella:pBotella,total,totalPendiente:total,totalCobrado:0,abonos:[],notas,loteId:loteId||'',loteCodigo:lote?.codigo||'',creadoEn:Date.now()};
       await window._fb.addDoc(window._fb.collection(window._db,'consignaciones'),data);
       if(loteId&&lote){
         const totalBotellas=botellas+(cajas*12);
@@ -2435,7 +2476,7 @@
     if(!c)return;
     const fecha=document.getElementById('abono-fecha').value;
     const notas=document.getElementById('abono-notas').value.trim();
-    const abonos=[...(c.abonos||[]),{monto,fecha:new Date(fecha).getTime(),notas}];
+    const abonos=[...(c.abonos||[]),{monto,fecha:parseFecha(fecha),notas}];
     const totalCobrado=(c.totalCobrado||0)+monto;
     const totalPendiente=Math.max(0,(c.total||0)-totalCobrado);
     try{
@@ -2528,7 +2569,7 @@
     if(!fecha) return showToast('⚠️ Selecciona la fecha');
     if(!cajas&&!botellas) return showToast('⚠️ Agrega cajas o botellas');
     try{
-      await window._fb.addDoc(window._fb.collection(window._db,'eventos'),{nombre,fecha:new Date(fecha).getTime(),cajas,botellas,precioCaja:pCaja,precioBotella:pBotella,total,notas,loteId:loteId||'',loteCodigo:lote?.codigo||'',creadoEn:Date.now()});
+      await window._fb.addDoc(window._fb.collection(window._db,'eventos'),{nombre,fecha:parseFecha(fecha),cajas,botellas,precioCaja:pCaja,precioBotella:pBotella,total,notas,loteId:loteId||'',loteCodigo:lote?.codigo||'',creadoEn:Date.now()});
       if(loteId&&lote){
         const totalBotellas=botellas+(cajas*12);
         const newBotellas=Math.max(0,(lote.botellas||0)-totalBotellas);
@@ -2613,7 +2654,7 @@
     if(!dest) return showToast('⚠️ Escribe el destinatario');
     if(!botellas) return showToast('⚠️ Agrega el número de botellas');
     try{
-      await window._fb.addDoc(window._fb.collection(window._db,'muestras'),{destinatario:dest,fecha:new Date(fecha).getTime(),botellas,motivo:selMuestraMotivo,notas,loteId:loteId||'',loteCodigo:lote?.codigo||'',creadoEn:Date.now()});
+      await window._fb.addDoc(window._fb.collection(window._db,'muestras'),{destinatario:dest,fecha:parseFecha(fecha),botellas,motivo:selMuestraMotivo,notas,loteId:loteId||'',loteCodigo:lote?.codigo||'',creadoEn:Date.now()});
       if(loteId&&lote){
         const newBotellas=Math.max(0,(lote.botellas||0)-botellas);
         await window._updateDoc(window._fb.doc(window._db,'lotes',loteId),{botellas:newBotellas});
@@ -2671,7 +2712,8 @@
       // Consig stats
       const consigs=allVentas.filter(v=>v._col==='consignaciones');
       const pendiente=consigs.reduce((s,c)=>s+(c.totalPendiente||0),0);
-      document.getElementById('cons-stat-pendiente').textContent='$'+pendiente.toLocaleString('es-MX',{minimumFractionDigits:0});
+      const pendienteCons=allVentas.filter(v=>v._col==='consignaciones').reduce((s,v)=>s+(v.totalPendiente||0),0);
+      document.getElementById('cons-stat-pendiente').textContent='$'+pendienteCons.toLocaleString('es-MX',{minimumFractionDigits:0});
       renderVentas();
     }catch(e){document.getElementById('ventas-list').innerHTML='<div class="empty-state"><p>Error al cargar.</p></div>';}
   }
@@ -2712,6 +2754,7 @@
         ${consigInfo}
         ${v.notas?`<p style="font-size:12px;color:var(--text2);margin-top:8px">📝 ${v.notas}</p>`:''}
         <div style="display:flex;gap:8px;margin-top:10px">
+          ${v._col==='ventas'?`<button class="btn-edit" onclick="editVenta('${v.id}')">✏️ Editar</button>`:''}
           <button class="btn-del" onclick="${deleteAction}">🗑️ Eliminar</button>
         </div>
       </div>`;
@@ -2769,6 +2812,7 @@
     selVentaTipo='Venta directa';
     document.querySelectorAll('.venta-tipo-opt').forEach((o,i)=>o.classList.toggle('selected',i===0));
     selTipoCliente='Menudeo';
+    window._editingVentaId=null;
     // Load clientes
     const cliSel=document.getElementById('venta-cliente-select');
     cliSel.innerHTML='<option value="">Seleccionar cliente</option><option value="__nuevo__">+ Nuevo cliente</option>';
@@ -2841,8 +2885,14 @@
       if(cl){clienteId=cl.id;clienteNombre=cl.nombre;canal=cl.canal||'';tipoCliente=cl.tipo||'';ciudad=cl.ciudad||'';}
     }
     try{
-      const ventaData={clienteId,clienteNombre,canal,tipoCliente,ciudad,tipoVenta,eventoNombre,fecha:new Date(fecha).getTime(),cajas,botellas,precioCaja:pCaja,precioBotella:pBotella,total,notas,loteId:loteId||'',loteCodigo:lote?.codigo||'',creadoEn:Date.now()};
-      await window._fb.addDoc(window._fb.collection(window._db,'ventas'),ventaData);
+      const ventaData={clienteId,clienteNombre,canal,tipoCliente,ciudad,tipoVenta,eventoNombre,fecha:parseFecha(fecha),cajas,botellas,precioCaja:pCaja,precioBotella:pBotella,total,notas,loteId:loteId||'',loteCodigo:lote?.codigo||'',creadoEn:Date.now()};
+      if(window._editingVentaId){
+        await window._updateDoc(window._fb.doc(window._db,'ventas',window._editingVentaId),ventaData);
+        await logAudit(`editó una venta de $${total.toLocaleString('es-MX')} a "${clienteNombre||'cliente directo'}"`);
+        window._editingVentaId=null;
+        showToast('✅ Venta actualizada');
+      } else {
+        await window._fb.addDoc(window._fb.collection(window._db,'ventas'),ventaData);
       // Descontar botellas del lote
       if(loteId&&lote){
         const totalBotellas=botellas+(cajas*12);
@@ -2852,7 +2902,8 @@
         const idx=allLotes.findIndex(l=>l.id===loteId);
         if(idx>=0) allLotes[idx].botellas=newBotellas;
       }
-      await logAudit(`registró una venta de $${total.toLocaleString('es-MX')} a "${clienteNombre||'cliente directo'}"`);
+        await logAudit(`registró una venta de $${total.toLocaleString('es-MX')} a "${clienteNombre||'cliente directo'}"`);  
+      }
       showToast('✅ Venta registrada');
       closeModal('venta-modal');
       await loadVentas();
@@ -2935,6 +2986,31 @@
 
   window.switchVentasTab=switchVentasTab;window.loadVentas=loadVentas;window.loadClientes=loadClientes;
   window.deleteVenta=deleteVenta;
+
+  async function editVenta(id){
+    const v=allVentas.find(x=>x.id===id&&x._col==='ventas');
+    if(!v) return;
+    await openVentaModal();
+    // Pre-fill fields
+    setTimeout(()=>{
+      // Set tipo
+      selVentaTipo=v.tipoVenta||'Venta directa';
+      document.querySelectorAll('.venta-tipo-opt').forEach(o=>o.classList.toggle('selected',o.textContent.replace(/[^a-zA-ZáéíóúüñÁÉÍÓÚÜÑ ]/g,'').trim()===selVentaTipo.replace(/[^a-zA-ZáéíóúüñÁÉÍÓÚÜÑ ]/g,'').trim()));
+      if(v.eventoNombre){document.getElementById('venta-evento-nombre').value=v.eventoNombre;document.getElementById('venta-evento-nombre-group').style.display='block';}
+      document.getElementById('venta-fecha').value=v.fecha?new Date(v.fecha).toISOString().split('T')[0]:'';
+      document.getElementById('venta-cajas').value=v.cajas||'';
+      document.getElementById('venta-botellas').value=v.botellas||'';
+      document.getElementById('venta-precio-caja').value=v.precioCaja||'';
+      document.getElementById('venta-precio-botella').value=v.precioBotella||'';
+      document.getElementById('venta-notas').value=v.notas||'';
+      calcVentaTotal();
+      if(v.clienteId) document.getElementById('venta-cliente-select').value=v.clienteId;
+      // Store editing id
+      window._editingVentaId=id;
+      document.getElementById('venta-modal-title').textContent='Editar venta';
+    },400);
+  }
+  window.editVenta=editVenta;
   window.openVentaModal=openVentaModal;window.onClienteChange=onClienteChange;window.selectTipoCliente=selectTipoCliente;
   window.calcVentaTotal=calcVentaTotal;window.saveVenta=saveVenta;window.deleteVenta=deleteVenta;
   window.openClienteModal=openClienteModal;window.selectCliTipo=selectCliTipo;window.saveCliente=saveCliente;window.deleteCliente=deleteCliente;
@@ -3288,6 +3364,20 @@
   window.openAjusteModal = openAjusteModal;
   window.selectAjusteTipo = selectAjusteTipo;
   window.saveAjuste = saveAjuste;
+
+  // Date fix: parse YYYY-MM-DD as local date to avoid timezone offset
+  function closeAlert(id){
+    const el=document.getElementById(id);
+    if(el) el.style.display='none';
+  }
+  window.closeAlert=closeAlert;
+
+  function parseFecha(str){
+    if(!str) return Date.now();
+    const [y,m,d]=str.split('-').map(Number);
+    return new Date(y,m-1,d,12,0,0).getTime(); // noon local time
+  }
+  window.parseFecha=parseFecha;
 
   // GLOBALS
   window.switchTab=switchTab;window.handleLogin=handleLogin;window.handleRegister=handleRegister;window.handleLogout=handleLogout;

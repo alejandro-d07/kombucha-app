@@ -2743,7 +2743,7 @@
       // Consig stats
       const consigs=allVentas.filter(v=>v._col==='consignaciones');
       const pendiente=consigs.reduce((s,c)=>s+(c.totalPendiente||0),0);
-      const pendienteCons=allVentas.filter(v=>v._col==='consignaciones').reduce((s,v)=>s+(v.totalPendiente||0),0);
+      const pendienteCons=allVentas.filter(v=>v._col==='consignaciones'||(v._col==='ventas'&&v.tipoVenta==='Consignación')).reduce((s,v)=>s+(v.totalPendiente||0),0);
       document.getElementById('cons-stat-pendiente').textContent='$'+pendienteCons.toLocaleString('es-MX',{minimumFractionDigits:0});
       renderVentas();
     }catch(e){document.getElementById('ventas-list').innerHTML='<div class="empty-state"><p>Error al cargar.</p></div>';}

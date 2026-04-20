@@ -266,15 +266,9 @@
         <button class="btn-secondary" onclick="requestNotifPermission()">Activar</button>
       </div>
       <div class="stats-grid">
-        <div class="stat-card"><div class="stat-icon">🫙</div><div class="stat-value" id="stat-f1">0</div><div class="stat-label">En F1</div></div>
-        <div class="stat-card"><div class="stat-icon">🍶</div><div class="stat-value" id="stat-f2">0</div><div class="stat-label">En F2</div></div>
-        <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-value" id="stat-ready">0</div><div class="stat-label">Listos venta</div></div>
-        <div class="stat-card"><div class="stat-icon">📦</div><div class="stat-value" id="stat-bottles">0</div><div class="stat-label">Botellas</div></div>
-      </div>
-      <!-- Lotes en proceso -->
-      <div style="margin-bottom:20px">
-        <p class="section-title">🔬 Lotes en fermentación</p>
-        <div id="lotes-en-proceso"><div class="loading" style="padding:16px"><div class="spinner"></div></div></div>
+        <div class="stat-card"><div class="stat-icon">🔬</div><div class="stat-value" id="stat-en-proceso">0</div><div class="stat-label">En proceso</div></div>
+        <div class="stat-card"><div class="stat-icon">🏷️</div><div class="stat-value" id="stat-ready">0</div><div class="stat-label">Listos venta</div></div>
+        <div class="stat-card"><div class="stat-icon">🍶</div><div class="stat-value" id="stat-bottles">0</div><div class="stat-label">Piezas disp.</div></div>
       </div>
       <div style="margin-bottom:28px">
         <p class="section-title">🔔 Alertas activas</p>
@@ -1097,8 +1091,9 @@
       let f1=0,f2=0,ready=0,bottles=0; const alerts=[]; const now=Date.now();
       snap.forEach(d=>{
         const l=d.data();
-        if(l.etapa==='F1')f1++;if(l.etapa==='F2')f2++;
-        if(l.estado==='venta')ready++;
+        if(['activo','envasar'].includes(l.estado)&&l.etapa==='F1') f1++;
+        if(l.estado==='f2'||l.etapa==='F2') f2++;
+        if(l.estado==='venta') ready++;
         bottles+=(l.botellas||0);
         // F1 alert
         if(l.fechaFinF1||(l.fechaFin&&l.estado==='activo')){
@@ -1131,7 +1126,10 @@
           }
         });
       }catch(e){}
-      ['stat-f1','stat-f2','stat-ready','stat-bottles'].forEach((id,i)=>document.getElementById(id).textContent=[f1,f2,ready,bottles][i]);
+      const enProceso=f1+f2;
+      document.getElementById('stat-en-proceso').textContent=f1+f2;
+      document.getElementById('stat-ready').textContent=ready;
+      document.getElementById('stat-bottles').textContent=bottles;
       const al=document.getElementById('alerts-list');
       if(alerts.length){
         al.innerHTML=alerts.map((a,i)=>`<div class="alert-item ${a.type}" id="alert-item-${i}"><span class="alert-icon">${a.icon}</span><div class="alert-text"><strong>${a.title}</strong><p>${a.desc}</p></div><button onclick="closeAlert('alert-item-${i}')" style="background:none;border:none;color:var(--text2);font-size:16px;cursor:pointer;padding:4px;flex-shrink:0;line-height:1">✕</button></div>`).join('');

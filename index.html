@@ -1992,70 +1992,56 @@
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
       const W = doc.internal.pageSize.getWidth();
-      const accent = [184, 255, 102];
-      const teal = [41, 115, 115];
-      const dark = [32, 30, 30];
-      const gray = [140, 138, 128];
-      const cream = [252, 251, 242];
-      const coral = [255, 133, 82];
+      const black = [20, 20, 20];
+      const gray = [100, 100, 100];
+      const lightGray = [200, 200, 200];
+      const white = [255, 255, 255];
 
-      // Header
-      doc.setFillColor(...dark);
-      doc.rect(0, 0, W, 28, 'F');
-      doc.setTextColor(...accent);
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(16);
-      doc.text('KOMBUCHAN', 14, 12);
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(9);
-      doc.setTextColor(...cream);
-      doc.text('Reporte Mensual de Produccion y Ventas', 14, 19);
-      doc.setTextColor(...gray);
-      doc.text(mes.charAt(0).toUpperCase()+mes.slice(1), 14, 25);
-      doc.setTextColor(...cream);
-      doc.setFont('helvetica','bold');
-      doc.setFontSize(9);
-      doc.text(now.toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'}), W-14, 25, {align:'right'});
+      // Header — printer friendly
+      doc.setDrawColor(...lightGray);
+      doc.line(14, 14, W-14, 14);
+      doc.setTextColor(...black);doc.setFont('helvetica','bold');doc.setFontSize(18);
+      doc.text('KOMBUCHAN', 14, 11);
+      doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(...gray);
+      doc.text('Reporte de Produccion y Ventas', 14, 17);
+      doc.setFont('helvetica','bold');doc.setFontSize(11);doc.setTextColor(...black);
+      doc.text(mes.charAt(0).toUpperCase()+mes.slice(1), W-14, 11, {align:'right'});
+      doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(...gray);
+      doc.text(now.toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'}), W-14, 17, {align:'right'});
 
-      let y = 36;
+      let y = 22;
 
-      // KPI boxes
+      // KPI grid — bordered boxes, no fill
       const kpis = [
-        {label:'INGRESOS', val:'$'+totalIngresos.toLocaleString('es-MX',{minimumFractionDigits:0}), color:accent},
-        {label:'GASTOS', val:'$'+totalGastosMes.toLocaleString('es-MX',{minimumFractionDigits:0}), color:coral},
-        {label:utilidadMes>=0?'UTILIDAD':'PERDIDA', val:'$'+Math.abs(utilidadMes).toLocaleString('es-MX',{minimumFractionDigits:0}), color:utilidadMes>=0?teal:coral},
-        {label:'BOTELLAS', val:String(totalBotellas), color:cream},
-        {label:'CAJAS', val:String(totalCajas), color:cream},
-        {label:'LOTES', val:String(lotesMes.length), color:cream},
+        {label:'INGRESOS', val:'$'+totalIngresos.toLocaleString('es-MX',{minimumFractionDigits:0})},
+        {label:'GASTOS', val:'$'+totalGastosMes.toLocaleString('es-MX',{minimumFractionDigits:0})},
+        {label:utilidadMes>=0?'UTILIDAD':'PERDIDA', val:'$'+Math.abs(utilidadMes).toLocaleString('es-MX',{minimumFractionDigits:0})},
+        {label:'BOTELLAS', val:String(totalBotellas)},
+        {label:'CAJAS', val:String(totalCajas)},
+        {label:'LOTES', val:String(lotesMes.length)},
       ];
       const boxW = (W - 28 - 10) / 3;
       kpis.forEach((k, i) => {
         const col = i % 3;
         const row = Math.floor(i / 3);
         const x = 14 + col * (boxW + 5);
-        const by = y + row * 20;
-        doc.setFillColor(42, 40, 40);
-        doc.roundedRect(x, by, boxW, 17, 2, 2, 'F');
-        doc.setTextColor(...k.color);
-        doc.setFont('helvetica','bold');
-        doc.setFontSize(12);
-        doc.text(k.val, x + boxW/2, by + 9, {align:'center'});
-        doc.setTextColor(...gray);
-        doc.setFont('helvetica','normal');
-        doc.setFontSize(7);
-        doc.text(k.label, x + boxW/2, by + 14, {align:'center'});
+        const by = y + row * 18;
+        doc.setDrawColor(...lightGray);
+        doc.roundedRect(x, by, boxW, 15, 1, 1, 'S');
+        doc.setTextColor(...black);doc.setFont('helvetica','bold');doc.setFontSize(11);
+        doc.text(k.val, x + boxW/2, by + 8, {align:'center'});
+        doc.setTextColor(...gray);doc.setFont('helvetica','normal');doc.setFontSize(7);
+        doc.text(k.label, x + boxW/2, by + 13, {align:'center'});
       });
-      y += 46;
+      y += 42;
 
-      const section = (title, color=teal) => {
+      const section = (title) => {
         if (y > 250) { doc.addPage(); y = 16; }
-        doc.setFillColor(...color);
-        doc.rect(14, y, 3, 6, 'F');
-        doc.setTextColor(30, 30, 30);
-        doc.setFont('helvetica','bold');
-        doc.setFontSize(9);
-        doc.text(title, 20, y + 5);
-        y += 9;
+        doc.setDrawColor(...lightGray);
+        doc.line(14, y, W-14, y);
+        doc.setTextColor(...gray);doc.setFont('helvetica','bold');doc.setFontSize(8);
+        doc.text(title, 14, y + 5);
+        y += 8;
       };
 
       if (ventasMes.length) {
@@ -2507,84 +2493,87 @@
       const {jsPDF}=window.jspdf;
       const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
       const W=doc.internal.pageSize.getWidth();
-      const accent=[184,255,102],teal=[41,115,115],dark=[32,30,30],gray=[140,138,128],cream=[252,251,242],coral=[255,133,82];
+      const black=[20,20,20], gray=[100,100,100], lightGray=[200,200,200], white=[255,255,255];
       const numStr='REM-'+String(r.numero||'?').padStart(4,'0');
 
-      // Header
-      doc.setFillColor(...dark);
-      doc.rect(0,0,W,28,'F');
-      doc.setTextColor(...accent);doc.setFont('helvetica','bold');doc.setFontSize(16);
-      doc.text('KOMBUCHAN',14,12);
-      doc.setFont('helvetica','normal');doc.setFontSize(9);
-      doc.setTextColor(...cream);doc.text('Nota de Remisión',14,19);
-      doc.setTextColor(...gray);doc.text(new Date(r.fecha).toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'}),14,25);
-      doc.setTextColor(...accent);doc.setFont('helvetica','bold');doc.setFontSize(14);
-      doc.text(numStr,W-14,20,{align:'right'});
+      // Header — just text, no fill
+      doc.setDrawColor(...lightGray);
+      doc.line(14,14,W-14,14);
+      doc.setTextColor(...black);doc.setFont('helvetica','bold');doc.setFontSize(18);
+      doc.text('KOMBUCHAN',14,11);
+      doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(...gray);
+      doc.text('Nota de Remisión',14,17);
+      doc.setFont('helvetica','bold');doc.setFontSize(13);doc.setTextColor(...black);
+      doc.text(numStr,W-14,11,{align:'right'});
+      doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(...gray);
+      doc.text(new Date(r.fecha).toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'}),W-14,17,{align:'right'});
 
-      let y=36;
-      // Cliente info
-      doc.setFillColor(42,40,40);doc.roundedRect(14,y,W-28,24,2,2,'F');
+      let y=22;
+
+      // Cliente info — just text
       doc.setTextColor(...gray);doc.setFont('helvetica','normal');doc.setFontSize(8);
-      doc.text('CLIENTE / DESTINATARIO',18,y+7);
-      doc.setTextColor(...cream);doc.setFont('helvetica','bold');doc.setFontSize(12);
-      doc.text(r.clienteNombre||r.destinatario||'Sin especificar',18,y+16);
-      doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(...gray);
-      if(r.loteCodigo) doc.text('Lote: '+r.loteCodigo,W-18,y+16,{align:'right'});
-      y+=32;
+      doc.text('CLIENTE / DESTINATARIO',14,y+6);
+      doc.setTextColor(...black);doc.setFont('helvetica','bold');doc.setFontSize(12);
+      doc.text(r.clienteNombre||r.destinatario||'Sin especificar',14,y+13);
+      if(r.loteCodigo){doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(...gray);doc.text('Lote: '+r.loteCodigo,W-14,y+13,{align:'right'});}
+      doc.setDrawColor(...lightGray);doc.line(14,y+18,W-14,y+18);
+      y+=24;
 
-      // Products table
+      // Products table — minimal styling
       doc.autoTable({
         startY:y,
-        head:[['Producto','Cantidad','Precio unitario','Subtotal']],
+        head:[['Producto','Cant.','Precio unit.','Subtotal']],
         body:[
-          ...(r.cajas?[['Caja (12 botellas 360ml)',r.cajas+' cajas','$'+r.precioCaja.toLocaleString('es-MX',{minimumFractionDigits:2}),'$'+(r.cajas*r.precioCaja).toLocaleString('es-MX',{minimumFractionDigits:2})]]:[] ),
-          ...(r.botellas?[['Botella 360ml',r.botellas+' piezas','$'+r.precioBotella.toLocaleString('es-MX',{minimumFractionDigits:2}),'$'+(r.botellas*r.precioBotella).toLocaleString('es-MX',{minimumFractionDigits:2})]]:[] ),
+          ...(r.cajas?[['Caja (12 botellas 360ml)',r.cajas,'$'+r.precioCaja.toLocaleString('es-MX',{minimumFractionDigits:2}),'$'+(r.cajas*r.precioCaja).toLocaleString('es-MX',{minimumFractionDigits:2})]]:[] ),
+          ...(r.botellas?[['Botella 360ml',r.botellas,'$'+r.precioBotella.toLocaleString('es-MX',{minimumFractionDigits:2}),'$'+(r.botellas*r.precioBotella).toLocaleString('es-MX',{minimumFractionDigits:2})]]:[] ),
         ],
-        styles:{fontSize:9,cellPadding:4,textColor:[30,30,30]},
-        headStyles:{fillColor:dark,textColor:accent,fontStyle:'bold',fontSize:8},
-        bodyStyles:{fillColor:[255,255,255]},
-        alternateRowStyles:{fillColor:[248,248,245]},
+        styles:{fontSize:9,cellPadding:3,textColor:black,lineColor:lightGray,lineWidth:0.3},
+        headStyles:{fillColor:white,textColor:gray,fontStyle:'bold',fontSize:8,lineColor:lightGray,lineWidth:0.3},
+        bodyStyles:{fillColor:white},
+        alternateRowStyles:{fillColor:[248,248,248]},
         margin:{left:14,right:14},
+        tableLineColor:lightGray,tableLineWidth:0.3,
       });
-      y=doc.lastAutoTable.finalY+8;
+      y=doc.lastAutoTable.finalY+6;
 
-      // Total box
-      doc.setFillColor(42,40,40);doc.roundedRect(W-80,y,66,28,2,2,'F');
+      // Total — right aligned text only
+      doc.setDrawColor(...lightGray);doc.line(W-80,y,W-14,y);
       doc.setTextColor(...gray);doc.setFont('helvetica','normal');doc.setFontSize(8);
-      doc.text('TOTAL',W-77,y+8);
-      doc.setTextColor(...accent);doc.setFont('helvetica','bold');doc.setFontSize(16);
-      doc.text('$'+r.total.toLocaleString('es-MX',{minimumFractionDigits:2}),W-18,y+20,{align:'right'});
+      doc.text('TOTAL',W-80,y+6);
+      doc.setTextColor(...black);doc.setFont('helvetica','bold');doc.setFontSize(16);
+      doc.text('$'+r.total.toLocaleString('es-MX',{minimumFractionDigits:2}),W-14,y+14,{align:'right'});
 
-      // Payment status
-      const pagoColor=r.estadoPago==='pagado'?teal:coral;
-      doc.setFillColor(...pagoColor);doc.roundedRect(14,y,60,14,2,2,'F');
-      doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(9);
-      const pagoLabel=r.estadoPago==='pagado'?'✓ PAGADO':r.estadoPago==='parcial'?'PAGO PARCIAL':'PENDIENTE DE PAGO';
-      doc.text(pagoLabel,44,y+9,{align:'center'});
+      // Payment status — text with border only
+      const pagoLabel=r.estadoPago==='pagado'?'PAGADO':r.estadoPago==='parcial'?'PAGO PARCIAL':'PENDIENTE DE PAGO';
+      doc.setDrawColor(...lightGray);doc.roundedRect(14,y+2,50,10,1,1,'S');
+      doc.setTextColor(...black);doc.setFont('helvetica','bold');doc.setFontSize(8);
+      doc.text(pagoLabel,39,y+8.5,{align:'center'});
       if(r.estadoPago==='parcial'){
-        doc.setTextColor(...gray);doc.setFont('helvetica','normal');doc.setFontSize(8);
-        doc.text('Cobrado: $'+r.totalCobrado.toLocaleString('es-MX',{minimumFractionDigits:2})+'  Pendiente: $'+r.totalPendiente.toLocaleString('es-MX',{minimumFractionDigits:2}),14,y+22);
+        doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(...gray);
+        doc.text('Cobrado: $'+(r.totalCobrado||0).toLocaleString('es-MX',{minimumFractionDigits:2})+'   Pendiente: $'+(r.totalPendiente||0).toLocaleString('es-MX',{minimumFractionDigits:2}),14,y+18);
+        y+=6;
       }
-      y+=40;
+      y+=24;
 
       // Notes
       if(r.notas){
         doc.setTextColor(...gray);doc.setFontSize(8);doc.setFont('helvetica','normal');
         doc.text('Observaciones: '+r.notas,14,y);
-        y+=10;
+        y+=8;
       }
 
       // Signature lines
       y=Math.max(y,230);
-      doc.setDrawColor(...gray);
-      doc.line(14,y,80,y);doc.line(W-80,y,W-14,y);
-      doc.setTextColor(...gray);doc.setFontSize(8);
-      doc.text('Entregó',47,y+5,{align:'center'});
-      doc.text('Recibió',W-47,y+5,{align:'center'});
+      doc.setDrawColor(...lightGray);
+      doc.line(14,y,75,y);doc.line(W-75,y,W-14,y);
+      doc.setTextColor(...gray);doc.setFontSize(8);doc.setFont('helvetica','normal');
+      doc.text('Entregó',44,y+5,{align:'center'});
+      doc.text('Recibió',W-44,y+5,{align:'center'});
 
       // Footer
+      doc.setDrawColor(...lightGray);doc.line(14,282,W-14,282);
       doc.setTextColor(...gray);doc.setFontSize(7);
-      doc.text('Kombuchan · '+numStr+' · '+new Date().toLocaleDateString('es-MX'),W/2,285,{align:'center'});
+      doc.text('Kombuchan · '+numStr+' · Generado el '+new Date().toLocaleDateString('es-MX'),W/2,286,{align:'center'});
 
       doc.save('Kombuchan_'+numStr+'.pdf');
       showToast('✅ PDF descargado');

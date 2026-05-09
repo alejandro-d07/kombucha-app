@@ -678,8 +678,13 @@
       <div id="estado-options" style="display:flex;flex-direction:column;gap:8px"></div>
     </div>
     <div class="form-group" id="estado-botellas-group" style="display:none">
-      <label>Número de botellas envasadas (360ml)</label>
-      <input type="number" id="estado-botellas-input" placeholder="0" min="0"/>
+      <label>Botellas por sabor</label>
+      <div id="sabores-builder"></div>
+      <button class="add-ing-btn" onclick="addSaborRow()" style="margin-top:8px">+ Agregar sabor</button>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+        <span style="font-size:13px;color:var(--text2)">Total botellas</span>
+        <span id="sabores-total" style="font-family:'Space Mono',monospace;font-size:16px;color:var(--accent)">0</span>
+      </div>
     </div>
     <div class="form-group">
       <label>Observaciones (opcional)</label>
@@ -1174,7 +1179,8 @@
         if(['activo','envasar'].includes(l.estado)&&l.etapa==='F1') f1++;
         if(l.estado==='f2'||l.etapa==='F2') f2++;
         if(l.estado==='venta') ready++;
-        bottles+=(l.botellas||0);
+        // Sum bottles from sabores if available, else use total
+        bottles+=(l.sabores&&l.sabores.length?l.sabores.reduce((s,x)=>s+x.botellas,0):l.botellas||0);
         // F1 alert
         if(l.fechaFinF1||(l.fechaFin&&l.estado==='activo')){
           const fF1=l.fechaFinF1||l.fechaFin;
@@ -1397,6 +1403,7 @@
           <div class="lote-stat"><div class="lote-stat-label">Jarras</div><div class="lote-stat-value">🫙 ${l.jarras||0}</div></div>
           <div class="lote-stat"><div class="lote-stat-label">Botellas</div><div class="lote-stat-value">🍶 ${l.botellas||0}</div></div>
         </div>
+        ${l.sabores&&l.sabores.length>0?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">${l.sabores.map(s=>`<span style="background:var(--surface2);border:1px solid var(--border);border-radius:100px;padding:3px 12px;font-size:12px;color:var(--text2)">🍶 ${s.botellas} <strong style="color:var(--text)">${s.sabor}</strong></span>`).join('')}</div>`:''}
         <div class="lote-dates">
           <div class="lote-date">📅 Elaboración: <strong>${fi}</strong></div>
           ${l.fechaFinF1?`<div class="lote-date">🫙 Fin F1: <strong>${new Date(l.fechaFinF1).toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'})}</strong></div>`:''}
@@ -1543,7 +1550,16 @@
     document.getElementById('estado-lote-nombre').textContent=`${l.codigo} — ${ESTADOS[l.estado]?.label||l.estado}`;
     document.getElementById('estado-obs-input').value='';
     document.getElementById('estado-botellas-group').style.display='block';
-    document.getElementById('estado-botellas-input').value=l.botellas||0;
+    // Load recetas F2 and pre-populate sabores builder
+    const builder=document.getElementById('sabores-builder');
+    builder.innerHTML='';
+    if(window.loadRecetasF2) window.loadRecetasF2().then(()=>{
+      if(l.sabores&&l.sabores.length){
+        l.sabores.forEach(s=>addSaborRow(s));
+      } else {
+        addSaborRow();
+      }
+    });
     // Pre-select current etapa
     selEstadoEtapa=l.etapa||null;
     document.querySelectorAll('.estado-etapa-opt').forEach(o=>o.classList.toggle('selected',o.textContent.includes(l.etapa||'')));
@@ -1582,14 +1598,20 @@
   async function saveEstado(){
     if(!selNuevoEstado)return showToast('⚠️ Selecciona el nuevo estado');
     const l=allLotes.find(x=>x.id===updatingLoteId);if(!l)return;
-    const botellas=parseInt(document.getElementById('estado-botellas-input').value)||l.botellas||0;
     const obs=document.getElementById('estado-obs-input').value.trim();
+    // Get sabores data
+    const sabores=getSaboresData();
+    const totalBotellas=sabores.reduce((s,x)=>s+x.botellas,0)||l.botellas||0;
     try{
-      const update={estado:selNuevoEstado,botellas};
+      const update={estado:selNuevoEstado,botellas:totalBotellas,sabores};
       if(selEstadoEtapa) update.etapa=selEstadoEtapa;
       if(obs) update.observaciones=obs;
       await window._updateDoc(window._fb.doc(window._db,'lotes',updatingLoteId),update);
-      await logAudit(`cambió estado del lote "${l.codigo}" a ${ESTADOS[selNuevoEstado].label}`);
+      // Deduct F2 ingredients if moving to F2 or envasar
+      if((selNuevoEstado==='f2'||selNuevoEstado==='envasar')&&sabores.length){
+        await descontarSaboresIngredientes(sabores);
+      }
+      await logAudit(`cambió estado del lote "${l.codigo}" a ${ESTADOS[selNuevoEstado].label} (${totalBotellas} botellas${sabores.length?' en '+sabores.length+' sabores':''})`);
       showToast(`✅ Estado actualizado`);
       closeModal('estado-modal');await loadLotes();await window.loadDashboard();
     }catch(e){showToast('❌ Error al actualizar');}
@@ -2232,6 +2254,114 @@
   window.setReportePeriodo = setReportePeriodo;
   window.loadReportes = loadReportes;
   window.downloadReportePDF = downloadReportePDF;
+
+  // ── SABORES ──
+  let allRecetasF2 = [];
+
+  async function loadRecetasF2(){
+    try{
+      const snap=await window._fb.getDocs(window._fb.collection(window._db,'recetas'));
+      allRecetasF2=[];
+      snap.forEach(d=>{
+        const r=d.data();
+        if(r.etapa==='F2') allRecetasF2.push({id:d.id,...r});
+      });
+    }catch(e){}
+  }
+
+  function addSaborRow(data){
+    const builder=document.getElementById('sabores-builder');
+    const div=document.createElement('div');
+    div.className='sabor-row';
+    div.style.cssText='display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap';
+    const recetaOpts=allRecetasF2.map(r=>`<option value="${r.id}" data-nombre="${r.nombre}" ${data&&data.recetaId===r.id?'selected':''}>${r.nombre}</option>`).join('');
+    div.innerHTML=`
+      <input type="text" placeholder="Nombre del sabor" value="${data?data.sabor:''}"
+        style="flex:2;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px;font-family:'DM Sans',sans-serif;min-width:100px"
+        oninput="calcSaboresTotal()"/>
+      <select style="flex:2;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px;font-family:'DM Sans',sans-serif;min-width:100px">
+        <option value="">Sin receta</option>${recetaOpts}
+      </select>
+      <input type="number" placeholder="Botellas" min="0" value="${data?data.botellas:''}"
+        style="width:80px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px;font-family:'DM Sans',sans-serif"
+        oninput="calcSaboresTotal()"/>
+      <button onclick="this.parentElement.remove();calcSaboresTotal()"
+        style="background:none;border:1px solid rgba(255,133,82,.4);color:var(--danger);border-radius:8px;padding:8px 10px;cursor:pointer;flex-shrink:0">✕</button>
+    `;
+    builder.appendChild(div);
+    calcSaboresTotal();
+  }
+
+  function calcSaboresTotal(){
+    const rows=document.querySelectorAll('.sabor-row');
+    let total=0;
+    rows.forEach(row=>{
+      const num=parseInt(row.querySelectorAll('input[type="number"]')[0]?.value)||0;
+      total+=num;
+    });
+    const el=document.getElementById('sabores-total');
+    if(el) el.textContent=total;
+  }
+
+  function getSaboresData(){
+    const rows=document.querySelectorAll('.sabor-row');
+    const sabores=[];
+    rows.forEach(row=>{
+      const sabor=row.querySelectorAll('input[type="text"]')[0]?.value.trim();
+      const sel=row.querySelector('select');
+      const recetaId=sel?.value||'';
+      const recetaNombre=sel?.options[sel.selectedIndex]?.dataset?.nombre||sel?.options[sel.selectedIndex]?.text||'';
+      const botellas=parseInt(row.querySelectorAll('input[type="number"]')[0]?.value)||0;
+      if(sabor&&botellas>0) sabores.push({sabor,recetaId,recetaNombre,botellas});
+    });
+    return sabores;
+  }
+
+  async function descontarSaboresIngredientes(sabores){
+    if(!sabores||!sabores.length) return;
+    try{
+      // Load all recipes needed
+      const recetaIds=[...new Set(sabores.filter(s=>s.recetaId).map(s=>s.recetaId))];
+      const recetasData={};
+      for(const rid of recetaIds){
+        const snap=await window._fb.getDoc(window._fb.doc(window._db,'recetas',rid));
+        if(snap.exists()) recetasData[rid]=snap.data();
+      }
+      // Load ingredient catalog for name→id mapping
+      const ingSnap=await window._fb.getDocs(window._fb.collection(window._db,'ingredientes'));
+      const ingByName={};
+      ingSnap.forEach(d=>ingByName[d.data().nombre]=d.id);
+      // Load current inventory
+      const invSnap=await window._fb.getDocs(window._fb.collection(window._db,'inventario'));
+      const stockMap={};
+      invSnap.forEach(d=>stockMap[d.id]={...d.data(),id:d.id});
+      // Calculate total consumption per ingredient
+      const consumo={};
+      for(const s of sabores){
+        if(!s.recetaId||!recetasData[s.recetaId]) continue;
+        const receta=recetasData[s.recetaId];
+        if(!receta.ingredientes) continue;
+        for(const ing of receta.ingredientes){
+          const ingId=ingByName[ing.nombre];
+          if(!ingId) continue;
+          consumo[ingId]=(consumo[ingId]||0)+(ing.cantidad*s.botellas);
+        }
+      }
+      // Apply deductions
+      for(const [ingId,cantidad] of Object.entries(consumo)){
+        const current=stockMap[ingId]?.stock||0;
+        const newStock=Math.max(0,current-cantidad);
+        const existing=stockMap[ingId]||{unidad:'',costo:0,minimo:0};
+        await window._fb.setDoc(window._fb.doc(window._db,'inventario',ingId),{
+          stock:newStock,unidad:existing.unidad,costo:existing.costo,minimo:existing.minimo,actualizadoEn:Date.now()
+        });
+      }
+    }catch(e){console.error('Error descontando sabores:',e);}
+  }
+
+  window.addSaborRow=addSaborRow;window.calcSaboresTotal=calcSaboresTotal;
+  window.getSaboresData=getSaboresData;window.descontarSaboresIngredientes=descontarSaboresIngredientes;
+  window.loadRecetasF2=loadRecetasF2;
 
   // ── GASTOS ──
   let allGastos=[], allConceptos=[], gastosSubTab='gastos', gastoFilter='todos', editingConceptoId=null, selConceptoCat='Operación';

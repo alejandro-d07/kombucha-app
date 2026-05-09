@@ -1219,19 +1219,23 @@
 
       // Build sabores breakdown across all active lotes
       const saboresMap={};
-      snap.forEach(d=>{
-        const l=d.data();
-        if(l.estado==='vendido') return;
-        if(l.sabores&&l.sabores.length){
-          l.sabores.forEach(s=>{
-            if(s.botellas>0){
-              saboresMap[s.sabor]=(saboresMap[s.sabor]||0)+s.botellas;
-            }
-          });
-        } else if(l.botellas>0){
-          saboresMap['Natural']=(saboresMap['Natural']||0)+(l.botellas||0);
-        }
-      });
+      // Re-fetch lotes to ensure we have latest sabores data
+      try{
+        const lotesSnap2=await window._fb.getDocs(window._fb.collection(db,'lotes'));
+        lotesSnap2.forEach(d=>{
+          const l=d.data();
+          if(!l||l.estado==='vendido') return;
+          if(l.sabores&&l.sabores.length){
+            l.sabores.forEach(s=>{
+              if(s.botellas>0){
+                saboresMap[s.sabor]=(saboresMap[s.sabor]||0)+s.botellas;
+              }
+            });
+          } else if(l.botellas>0){
+            saboresMap['Natural']=(saboresMap['Natural']||0)+(l.botellas||0);
+          }
+        });
+      }catch(e){}
       const saboresList=document.getElementById('sabores-dashboard-list');
       const saboresSection=document.getElementById('sabores-dashboard-section');
       const saboresEntries=Object.entries(saboresMap).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
@@ -2320,6 +2324,15 @@
         style="background:none;border:1px solid rgba(255,133,82,.4);color:var(--danger);border-radius:8px;padding:8px 10px;cursor:pointer;flex-shrink:0">✕</button>
     `;
     builder.appendChild(div);
+    // If loading existing data with a receta, ensure name is set
+    if(data&&data.recetaId){
+      const sel=div.querySelector('select');
+      const input=div.querySelector('input[type="text"]');
+      if(sel&&input&&!data.sabor){
+        const opt=sel.options[sel.selectedIndex];
+        input.value=opt.dataset.nombre||opt.text||'Natural';
+      }
+    }
     calcSaboresTotal();
   }
 

@@ -270,6 +270,12 @@
         <div class="stat-card"><div class="stat-icon">🏷️</div><div class="stat-value" id="stat-ready">0</div><div class="stat-label">Listos venta</div></div>
         <div class="stat-card"><div class="stat-icon">🍶</div><div class="stat-value" id="stat-bottles">0</div><div class="stat-label">Piezas disp.</div></div>
       </div>
+      <!-- Botellas por sabor -->
+      <div style="margin-bottom:20px" id="sabores-dashboard-section" style="display:none">
+        <p class="section-title">🍶 Botellas disponibles por sabor</p>
+        <div id="sabores-dashboard-list"></div>
+      </div>
+
       <div style="margin-bottom:28px">
         <p class="section-title">🔔 Alertas activas</p>
         <div id="alerts-list"><div class="empty-state" style="padding:24px 0"><div class="empty-icon" style="font-size:32px">🌿</div><p>No hay alertas por ahora.</p></div></div>
@@ -1210,6 +1216,37 @@
       document.getElementById('stat-en-proceso').textContent=f1+f2;
       document.getElementById('stat-ready').textContent=ready;
       document.getElementById('stat-bottles').textContent=bottles;
+
+      // Build sabores breakdown across all active lotes
+      const saboresMap={};
+      snap.forEach(d=>{
+        const l=d.data();
+        if(l.estado==='vendido') return;
+        if(l.sabores&&l.sabores.length){
+          l.sabores.forEach(s=>{
+            if(s.botellas>0){
+              saboresMap[s.sabor]=(saboresMap[s.sabor]||0)+s.botellas;
+            }
+          });
+        } else if(l.botellas>0){
+          saboresMap['Natural']=(saboresMap['Natural']||0)+(l.botellas||0);
+        }
+      });
+      const saboresList=document.getElementById('sabores-dashboard-list');
+      const saboresSection=document.getElementById('sabores-dashboard-section');
+      const saboresEntries=Object.entries(saboresMap).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
+      if(saboresEntries.length){
+        saboresSection.style.display='block';
+        saboresList.innerHTML='<div style="display:flex;flex-wrap:wrap;gap:8px">'+
+          saboresEntries.map(([sabor,cant])=>`
+            <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;display:flex;align-items:center;gap:10px;min-width:140px">
+              <div style="font-family:'Space Mono',monospace;font-size:22px;color:var(--accent)">${cant}</div>
+              <div><div style="font-size:13px;font-weight:600">${sabor}</div><div style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:1px">botellas</div></div>
+            </div>`).join('')+
+        '</div>';
+      } else {
+        saboresSection.style.display='none';
+      }
       const al=document.getElementById('alerts-list');
       const visibleAlerts=alerts.slice(0,4);
       if(visibleAlerts.length){
@@ -2270,12 +2307,12 @@
     div.style.cssText='display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap';
     const recetaOpts=allRecetasF2.map(r=>`<option value="${r.id}" data-nombre="${r.nombre}" ${data&&data.recetaId===r.id?'selected':''}>${r.nombre}</option>`).join('');
     div.innerHTML=`
-      <input type="text" placeholder="Nombre del sabor" value="${data?data.sabor:''}"
+      <select onchange="autoFillSabor(this)" style="flex:2;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px;font-family:'DM Sans',sans-serif;min-width:100px">
+        <option value="" data-nombre="">Natural (sin saborizante)</option>${recetaOpts}
+      </select>
+      <input type="text" placeholder="Nombre del sabor" value="${data?data.sabor:'Natural'}"
         style="flex:2;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px;font-family:'DM Sans',sans-serif;min-width:100px"
         oninput="calcSaboresTotal()"/>
-      <select style="flex:2;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px;font-family:'DM Sans',sans-serif;min-width:100px">
-        <option value="">Sin receta</option>${recetaOpts}
-      </select>
       <input type="number" placeholder="Botellas" min="0" value="${data?data.botellas:''}"
         style="width:80px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px;font-family:'DM Sans',sans-serif"
         oninput="calcSaboresTotal()"/>
@@ -2285,6 +2322,17 @@
     builder.appendChild(div);
     calcSaboresTotal();
   }
+
+  function autoFillSabor(sel){
+    const nombre=sel.options[sel.selectedIndex].dataset.nombre||sel.options[sel.selectedIndex].text;
+    const row=sel.closest('.sabor-row');
+    if(row){
+      const input=row.querySelector('input[type="text"]');
+      if(input&&nombre) input.value=nombre==='Natural (sin saborizante)'?'Natural':nombre;
+    }
+    calcSaboresTotal();
+  }
+  window.autoFillSabor=autoFillSabor;
 
   function calcSaboresTotal(){
     const rows=document.querySelectorAll('.sabor-row');
@@ -2301,12 +2349,12 @@
     const rows=document.querySelectorAll('.sabor-row');
     const sabores=[];
     rows.forEach(row=>{
-      const sabor=row.querySelectorAll('input[type="text"]')[0]?.value.trim();
       const sel=row.querySelector('select');
       const recetaId=sel?.value||'';
-      const recetaNombre=sel?.options[sel.selectedIndex]?.dataset?.nombre||sel?.options[sel.selectedIndex]?.text||'';
-      const botellas=parseInt(row.querySelectorAll('input[type="number"]')[0]?.value)||0;
-      if(sabor&&botellas>0) sabores.push({sabor,recetaId,recetaNombre,botellas});
+      const recetaNombre=recetaId?(sel?.options[sel.selectedIndex]?.dataset?.nombre||sel?.options[sel.selectedIndex]?.text||''):'Natural';
+      const sabor=row.querySelector('input[type="text"]')?.value.trim()||recetaNombre||'Natural';
+      const botellas=parseInt(row.querySelector('input[type="number"]')?.value)||0;
+      if(botellas>0) sabores.push({sabor,recetaId,recetaNombre,botellas});
     });
     return sabores;
   }

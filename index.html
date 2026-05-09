@@ -282,15 +282,16 @@
 
     <!-- LOTES -->
     <div class="page" id="page-lotes">
-      <p class="page-title" id="lotes-page-title">Lotes</p>
-      <p class="page-subtitle" id="lotes-page-subtitle">Registro y seguimiento de fermentación</p>
+      <p class="page-title">Producción</p>
+      <p class="page-subtitle">Lotes, ingredientes y recetas</p>
       <div class="sub-tabs">
-        <button class="sub-tab active" onclick="switchLotesTab('lotes',this)">🫙 Lotes</button>
-        <button class="sub-tab" onclick="switchLotesTab('recetas',this)">📋 Recetas</button>
+        <button class="lotes-main-tab sub-tab active" onclick="switchLotesMainTab('lotes',this)">🫙 Lotes</button>
+        <button class="lotes-main-tab sub-tab" onclick="switchLotesMainTab('ingredientes',this)">🌿 Ingredientes</button>
+        <button class="lotes-main-tab sub-tab" onclick="switchLotesMainTab('recetas',this)">📋 Recetas</button>
       </div>
 
-      <!-- Sub: Lotes -->
-      <div id="subtab-lotes-main">
+      <!-- Lotes -->
+      <div id="sublotes-lotes">
         <div class="cat-tabs" id="lote-filter-tabs">
           <button class="lote-filter-tab cat-tab active" onclick="filterLotes('todos',this)">Todos</button>
           <button class="lote-filter-tab cat-tab" onclick="filterLotes('activo',this)">🟡 Activo</button>
@@ -302,25 +303,21 @@
         <div class="lote-list" id="lote-list"><div class="loading"><div class="spinner"></div> Cargando...</div></div>
       </div>
 
-      <!-- Sub: Recetas -->
-      <div id="subtab-lotes-recetas" style="display:none">
-        <div class="sub-tabs" style="margin-bottom:16px">
-          <button class="sub-tab active" onclick="switchIngSubTab('ingredientes',this)">🌿 Ingredientes</button>
-          <button class="sub-tab" onclick="switchIngSubTab('recetas',this)">📋 Recetas</button>
+      <!-- Ingredientes -->
+      <div id="sublotes-ingredientes" style="display:none">
+        <div class="cat-tabs">
+          <button class="ing-filter-tab cat-tab active" onclick="filterCat('todos',this)">Todos</button>
+          <button class="ing-filter-tab cat-tab" onclick="filterCat('Tés',this)">🍃 Tés</button>
+          <button class="ing-filter-tab cat-tab" onclick="filterCat('Frutas',this)">🍓 Frutas</button>
+          <button class="ing-filter-tab cat-tab" onclick="filterCat('Azúcares',this)">🍯 Azúcares</button>
+          <button class="ing-filter-tab cat-tab" onclick="filterCat('Otros',this)">🌿 Otros</button>
         </div>
-        <div id="subtab-lotes-ingredientes">
-          <div class="cat-tabs">
-            <button class="ing-filter-tab cat-tab active" onclick="filterCat('todos',this)">Todos</button>
-            <button class="ing-filter-tab cat-tab" onclick="filterCat('Tés',this)">🍃 Tés</button>
-            <button class="ing-filter-tab cat-tab" onclick="filterCat('Frutas',this)">🍓 Frutas</button>
-            <button class="ing-filter-tab cat-tab" onclick="filterCat('Azúcares',this)">🍯 Azúcares</button>
-            <button class="ing-filter-tab cat-tab" onclick="filterCat('Otros',this)">🌿 Otros</button>
-          </div>
-          <div class="ing-list" id="ing-list"><div class="loading"><div class="spinner"></div> Cargando...</div></div>
-        </div>
-        <div id="subtab-lotes-recetas-list" style="display:none">
-          <div class="recipe-list" id="recipe-list"><div class="loading"><div class="spinner"></div> Cargando...</div></div>
-        </div>
+        <div class="ing-list" id="ing-list"><div class="loading"><div class="spinner"></div> Cargando...</div></div>
+      </div>
+
+      <!-- Recetas -->
+      <div id="sublotes-recetas" style="display:none">
+        <div class="recipe-list" id="recipe-list"><div class="loading"><div class="spinner"></div> Cargando...</div></div>
       </div>
     </div>
 
@@ -626,10 +623,7 @@
       <label>Número de jarras</label>
       <input type="number" id="lote-jarras" placeholder="0" min="0"/>
     </div>
-    <div class="form-group" id="lote-botellas-group">
-      <label>Número de botellas (360ml)</label>
-      <input type="number" id="lote-botellas" placeholder="0" min="0"/>
-    </div>
+
     <div class="form-group">
       <label>📅 Fecha de elaboración</label>
       <input type="date" id="lote-fecha-inicio"/>
@@ -1312,7 +1306,7 @@
     document.getElementById('page-'+name).classList.add('active');
     btn.classList.add('active');
     document.getElementById('fab-main').classList.toggle('visible',name==='lotes'||name==='ingredientes'||name==='ventas'||name==='recursos');
-    if(name==='lotes'){lotesSubTab==='lotes'?loadLotes():(ingSubTab==='ingredientes'?loadIngredientes():loadRecetas());}
+    if(name==='lotes'){if(lotesMainTab==='lotes')loadLotes();else if(lotesMainTab==='ingredientes')loadIngredientes();else loadRecetas();}
     else if(name==='ingredientes'){currentSubTab==='ingredientes'?loadIngredientes():loadRecetas();}
     else if(name==='recursos'){recursosSubTab==='inventario'?loadInventario():recursosSubTab==='gastos'?loadGastos():loadConceptos();}
     else if(name==='ventas'){ventasMainTab==='ventas'?loadVentas():loadClientes();}
@@ -1323,7 +1317,7 @@
   }
   function switchSubTab(tab,btn){} // legacy - replaced by switchLotesTab/switchIngSubTab
   function onFabClick(){
-    if(currentPage==='lotes'){if(lotesSubTab==='lotes')openLoteModal();else if(ingSubTab==='ingredientes')openIngModal();else openRecipeModal();}
+    if(currentPage==='lotes'){if(lotesMainTab==='lotes')openLoteModal();else if(lotesMainTab==='ingredientes')openIngModal();else openRecipeModal();}
     else if(currentPage==='ingredientes') currentSubTab==='ingredientes'?openIngModal():openRecipeModal();
     else if(currentPage==='ventas'){if(ventasMainTab==='ventas')openVentaModal();else if(ventasMainTab==='remisiones')openRemisionModal();else openClienteModal();}
     else if(currentPage==='recursos'){if(recursosSubTab==='inventario'){invMainTab==='ingredientes'?openInvModal(null):openInsumoModal();}else if(recursosSubTab==='gastos')openGastoModal();else openConceptoModal();}
@@ -1445,7 +1439,7 @@
     document.getElementById('lote-num-display').value=num;
     // Reset fields
     document.getElementById('lote-jarras').value='';
-    document.getElementById('lote-botellas').value='';
+
     document.getElementById('lote-obs-input').value='';
 
     document.querySelectorAll('#lote-modal .cat-option').forEach(o=>o.classList.remove('selected'));
@@ -1463,7 +1457,7 @@
         document.querySelectorAll('#lote-modal .cat-option').forEach(o=>{if(o.textContent.includes(l.etapa))o.classList.add('selected');});
         sel.value=l.recetaId||'';
         document.getElementById('lote-jarras').value=l.jarras||'';
-        document.getElementById('lote-botellas').value=l.botellas||'';
+
 
         document.getElementById('lote-fecha-inicio').value=l.fechaInicio?new Date(l.fechaInicio).toISOString().split('T')[0]:'';
         document.getElementById('lote-fecha-fin-f1').value=l.fechaFinF1?new Date(l.fechaFinF1).toISOString().split('T')[0]:(l.fechaFin?new Date(l.fechaFin).toISOString().split('T')[0]:'');
@@ -1497,7 +1491,7 @@
     const recetaId=sel.value;
     const recetaNombre=sel.options[sel.selectedIndex].text.replace(/ \(F[12]\)$/,'');
     const jarras=parseInt(document.getElementById('lote-jarras').value)||0;
-    const botellas=parseInt(document.getElementById('lote-botellas').value)||0;
+    const botellas=0; // Defined at bottling time
     const obs=document.getElementById('lote-obs-input').value.trim();
     try{
       if(editLoteId){
@@ -2571,25 +2565,23 @@
   }
   window.switchRecursosTab=switchRecursosTab;
 
-  // Lotes sub-tabs
-  let lotesSubTab='lotes', ingSubTab='ingredientes';
-  function switchLotesTab(tab, btn){
-    lotesSubTab=tab;
-    document.querySelectorAll('#page-lotes .sub-tab:not(#subtab-lotes-recetas .sub-tab)').forEach(t=>t.classList.remove('active'));
+  // Lotes tabs
+  let lotesMainTab='lotes';
+  function switchLotesMainTab(tab, btn){
+    lotesMainTab=tab;
+    document.querySelectorAll('.lotes-main-tab').forEach(t=>t.classList.remove('active'));
     btn.classList.add('active');
-    document.getElementById('subtab-lotes-main').style.display=tab==='lotes'?'block':'none';
-    document.getElementById('subtab-lotes-recetas').style.display=tab==='recetas'?'block':'none';
+    document.getElementById('sublotes-lotes').style.display=tab==='lotes'?'block':'none';
+    document.getElementById('sublotes-ingredientes').style.display=tab==='ingredientes'?'block':'none';
+    document.getElementById('sublotes-recetas').style.display=tab==='recetas'?'block':'none';
     if(tab==='lotes') loadLotes();
-    else ingSubTab==='ingredientes'?loadIngredientes():loadRecetas();
+    else if(tab==='ingredientes') loadIngredientes();
+    else loadRecetas();
   }
-  function switchIngSubTab(tab, btn){
-    ingSubTab=tab;
-    document.querySelectorAll('#subtab-lotes-recetas .sub-tab').forEach(t=>t.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById('subtab-lotes-ingredientes').style.display=tab==='ingredientes'?'block':'none';
-    document.getElementById('subtab-lotes-recetas-list').style.display=tab==='recetas'?'block':'none';
-    tab==='ingredientes'?loadIngredientes():loadRecetas();
-  }
+  window.switchLotesMainTab=switchLotesMainTab;
+  // Legacy stubs
+  function switchLotesTab(){}
+  function switchIngSubTab(){}
   window.switchLotesTab=switchLotesTab;
   window.switchIngSubTab=switchIngSubTab;
   window.switchGastosTab=switchGastosTab;window.filterGastos=filterGastos;
